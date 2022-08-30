@@ -46,8 +46,8 @@ void insertProcQ(pcb_t **tp, pcb_t *p)
     if (emptyQ(*tp))
     {
         /* make p the one and only node in this queue */
-		p->next = p;
-		p->prev = p;
+		p->p_next = p;
+		p->p_prev = p;
     	*tp = p;
     }
     else
@@ -57,10 +57,10 @@ void insertProcQ(pcb_t **tp, pcb_t *p)
             This is a circular queue, so the tail must point to head, i.e.
             (*tp)->next must always be the front of the queue 
         */
-	   p->next = (*tp)->next;
-	   p->prev = *tp;
-	   ((*tp)->next)->prev = p;
-	   (*tp)->next = p;
+	   p->p_next = (*tp)->p_next;
+	   p->p_prev = *tp;
+	   ((*tp)->p_next)->p_prev = p;
+	   (*tp)->p_next = p;
 	   *tp = p;
     }
 }
@@ -69,7 +69,7 @@ void insertProcQ(pcb_t **tp, pcb_t *p)
 tail-pointer is pointed to by tp. Return NULL if the process queue was initially empty; 
 otherwise return the pointer to the removed element. Update the 
 queue’s tail pointer if necessary. (Note: since *tp is a pointer to the tail,
-(*tp)->next is the head, if it exists)*/
+(*tp)->p_next is the head, if it exists)*/
 pcb_t *removeProcQ(pcb_t **tp)
 {
     if (emptyProcQ(*tp))
@@ -80,19 +80,19 @@ pcb_t *removeProcQ(pcb_t **tp)
     {
         /* disconnect the head node from the queue, update the tail,
         return the head */
-		if ((*tp)->next == *tp){ //then there's only one element in the queue
-			pcb_t *temp1 = (*tp)->next; //the node we want to remove 
-			temp1->next = NULL;
-			temp1->prev = NULL;
+		if ((*tp)->p_next == *tp){ //then there's only one element in the queue
+			pcb_t *temp1 = (*tp)->p_next; //the node we want to remove 
+			temp1->p_next = NULL;
+			temp1->p_prev = NULL;
 			*tp = NULL;
 			return temp1;
 		}
 		else{ //then there's more than one element in the queue
-			pcb_t *temp2 = (*tp)->next; //the node we want to remove
-			(*tp)->next = ((*tp)->next)->next;
-			((*tp)->next)->prev = *tp;
-			temp2->next = NULL;
-			temp2->prev = NULL;
+			pcb_t *temp2 = (*tp)->p_next; //the node we want to remove
+			(*tp)->p_next = ((*tp)->p_next)->p_next;
+			((*tp)->p_next)->p_prev = *tp;
+			temp2->p_next = NULL;
+			temp2->p_prev = NULL;
 			return temp2;
 		}	
 	}
@@ -104,7 +104,7 @@ if the process queue is empty. */
 pcb_t *headProcQ(pcb_t *tp)
 {
     if (emptyProcQ(tp)) return NULL;
-    else return tp->next;
+    else return tp->p_next;
 }
 /* Remove the pcb pointed to by p from the process queue whose 
 tail-pointer is pointed to by tp. Update the process queue's tail pointer if 
@@ -115,17 +115,17 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
     pcb_t *previous, *current;
     if (emptyProcQ(*tp)) return NULL;
     previous = *tp;
-    current = (*tp)->next; /* head of queue */
+    current = (*tp)->p_next; /* head of queue */
     /* loop through the queue checking current against p.
     As you advance through the loop, update previous and current.
     If you find p, you have to disconnect it from the queue by causing the node
-    referred to by previous to connect to p->next 
+    referred to by previous to connect to p->p_next 
     */
    if (current == previous){ //then there's only one element in the queue
 		if (current == p){ //if the node that p points to is the one node in the queue
 			pcb_t *temp1 = current; //the node we want to remove 
-			temp1->next = NULL;
-			temp2->prev = NULL;
+			temp1->p_next = NULL;
+			temp2->p_prev = NULL;
 			*tp = NULL;
 			return temp1;
 		}
@@ -135,20 +135,20 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
    }
    while (current != *tp){ //looping through the queue
 		if (current == p){ //if the node p points to is the current node in the queue
-			previous->next = current->next; //removing current
-			(current->next)->prev = previous;
-			current->next = NULL;
-			current->prev = NULL;
+			previous->p_next = current->p_next; //removing current
+			(current->p_next)->p_prev = previous;
+			current->p_next = NULL;
+			current->p_prev = NULL;
 			return p;
 		}
-		current = current->next; //incrementing the current node
-		previous = previous->next; //incrementing the previous node
+		current = current->p_next; //incrementing the current node
+		previous = previous->p_next; //incrementing the previous node
    }
    if (current == p){ //if p points to the tail of the queue
-		previous->next = current->next; //removing the tail and updating the tail pointer
-		(current->next)->prev = previous;
-		current->next = NULL;
-		current->prev = NULL;
+		previous->p_next = current->p_next; //removing the tail and updating the tail pointer
+		(current->p_next)->p_prev = previous;
+		current->p_next = NULL;
+		current->p_prev = NULL;
 		*tp = previous;
 		return p;
    }
