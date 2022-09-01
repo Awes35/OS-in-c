@@ -64,8 +64,15 @@ typedef struct pcb_t {
 	int				*p_semAdd;	/* pointer to sema4 on which process blocked */
 
 	/* support layer information */
-	support_t		*p_supportStruct;
+	/*support_t		*p_supportStruct;	REMOVE THIS LINE? */
 } pcb_t;						/* ptr to support struct */
+
+/* Semaphore descriptor type */
+typedef struct semd_t {
+	struct semd_t	*s_next;	/* next element on the ASL */
+	int 			*s_semAdd;	/* pointer to the semaphore */
+	pcb_t			*s_procQ;	/* tail pointer to a process queue */
+} semd_t;
 
 /* Pass Up Vector */
 typedef struct passupvector {
