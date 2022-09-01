@@ -47,3 +47,4 @@ pcb_t *headBlocked(int *semAdd)
 of the array static semd_t semdTable[MAXPROC]. This method will be only
 called once during data structure initialization. */
 initASL
+{}
