@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include "pcb.h"
+#include "../h/pcb.h"
+#include "../h/types.h"
+#include "../h/const.h"
 
 /* Insert the element pointed to by p onto the pcbFree list. In other words,
 this method returns a pcb which is no longer in use to the pcbFree list. */
