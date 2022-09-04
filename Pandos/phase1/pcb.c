@@ -4,7 +4,7 @@
 #include "../h/const.h"
 
 /* Declaring global variables */
-HIDDEN pcb_t *pcbFree_h;
+HIDDEN pcb_t *pcbFree_h, pcb_t pcbList_h;
 
 /* Insert the element pointed to by p onto the pcbFree list. In other words,
 this method returns a pcb which is no longer in use to the pcbFree list. */
@@ -23,7 +23,14 @@ pcb_t *allocPcb(pcb_t *p)
 static array of MAXPROC pcbs. This method will be called only once during
 data structure initializaion. */
 initPcbs()
-{}
+{
+	static pcb_t procTable[MAXPROC];
+	pcbList_h = ??
+
+	for (int i=0; i<MAXPROC; i++){
+		freePcb(&(procTable[i]));
+	}
+}
 
 /* This function is used to initialize a variable to be tail pointer to a 
 process queue. Return a pointer to the tail of an empty process queue; 
@@ -46,7 +53,7 @@ void insertProcQ(pcb_t **tp, pcb_t *p)
 {
     if (emptyQ(*tp))
     {
-        /* make p the one and only node in this queue */
+        /* make p the one and only pcb in this queue */
 		p->p_next = p;
 		p->p_prev = p;
     	*tp = p;
@@ -79,17 +86,17 @@ pcb_t *removeProcQ(pcb_t **tp)
     }
     else
     {
-        /* disconnect the head node from the queue, update the tail,
+        /* disconnect the head pcb from the queue, update the tail,
         return the head */
 		if ((*tp)->p_next == *tp){ /* then there's only one element in the queue */
-			pcb_t *temp1 = (*tp)->p_next; /* the node we want to remove */
+			pcb_t *temp1 = (*tp)->p_next; /* the pcb we want to remove */
 			temp1->p_next = NULL;
 			temp1->p_prev = NULL;
 			*tp = NULL;
 			return temp1;
 		}
 		else{ /* then there's more than one element in the queue */
-			pcb_t *temp2 = (*tp)->p_next; /* the node we want to remove */
+			pcb_t *temp2 = (*tp)->p_next; /* the pcb we want to remove */
 			(*tp)->p_next = ((*tp)->p_next)->p_next;
 			((*tp)->p_next)->p_prev = *tp;
 			temp2->p_next = NULL;
@@ -119,32 +126,31 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
     current = (*tp)->p_next; /* head of queue */
 
     /* loop through the queue checking current against p.
-    As you advance through the loop, update previous and current.
-    If you find p, you have to disconnect it from the queue by causing the node
-    referred to by previous to connect to p->p_next 
-    */
+    As we advance through the loop, we will update previous and current.
+    If we find p, we will disconnect it from the queue by causing the pcb
+    referred to by previous to connect to p->p_next */
    if (current == previous){ /* then there's only one element in the queue */
-		if (current == p){ /* if the node that p points to is the one node in the queue */
-			pcb_t *temp1 = current; /* the node we want to remove */
+		if (current == p){ /* if the pcb that p points to is the one pcb in the queue */
+			pcb_t *temp1 = current; /* the pcb we want to remove */
 			temp1->p_next = NULL;
-			temp2->p_prev = NULL;
+			temp1->p_prev = NULL;
 			*tp = NULL;
 			return temp1;
 		}
-		else{ /* the node p points to is not in the queue */
+		else{ /* the pcb p points to is not in the queue */
 			return NULL;
 		}
    }
    while (current != *tp){ /*looping through the process queue */
-		if (current == p){ /* if the node p points to is the current node in the queue */
+		if (current == p){ /* if the pcb p points to is the current pcb in the queue */
 			previous->p_next = current->p_next; /* removing current */
 			(current->p_next)->p_prev = previous;
 			current->p_next = NULL;
 			current->p_prev = NULL;
 			return p;
 		}
-		current = current->p_next; /* incrementing the current node */
-		previous = previous->p_next; /* incrementing the previous node */
+		current = current->p_next; /* incrementing the current pcb */
+		previous = previous->p_next; /* incrementing the previous pcb */
    }
    if (current == p){ /* if p points to the tail of the queue */
 		previous->p_next = current->p_next; /* removing the tail and updating the tail pointer */
@@ -154,28 +160,100 @@ pcb_t *outProcQ(pcb_t **tp, pcb_t *p)
 		*tp = previous;
 		return p;
    }
-   return NULL; /* the node p points to is not in the queue */
+   return NULL; /* the pcb p points to is not in the queue */
 }
 
 /* This function returns TRUE if the pcb pointed to by p has no children. 
 Return FALSE otherwise. */
 int emptyChild(pcb_t *p)
-{}
+{
+	return (p->p_child == NULL);
+}
 
 /* This function makes the pcb pointed to by p a child of the pcb pointed to
 by prnt. */
 insertChild(pcb_t *prnt, pcb_t *p)
-{}
+{
+	if (prnt->p_child == NULL){ /* the parent has no children */
+		prnt->p_child = p;
+		p->p_prnt = prnt;
+		p->p_sib_next = NULL;
+		p->p_sib_prev = NULL;
+	}
+	else{ /* the parent has at least one child already */
+		p->p_prnt = prnt;
+		p->p_sib_next = prnt->p_child;
+		p->p_sib_prev = NULL;
+		prnt->p_child = p;
+	}
+}
 
 /* This function makes the first child of the pcb pointed to by p no longer a 
 child of p. Return NULL if initially there were no children of p. Otherwise,
 return a pointer to this removed first child pcb. */
 pcb_t *removeChild(pcb_t *p)
-{}
+{
+	if (p->p_child == NULL){ /* p has no children */
+		return NULL;
+	}
+	if ((p->p_child)->p_sib_next == NULL){ /* p has exactly one child */
+		pcb_t *temp1 = p->p_child;
+		temp1->p_prnt = NULL;
+		p->p_child = NULL;
+		return temp1;
+	}
+	/* p has more than one child if we made it to this point */
+	pcb_t *temp2 = p->p_child; /* DOUBLE CHECK THIS PART IF ERRORS */
+	temp2->p_prnt = NULL;
+	(temp2->p_sib_next)->p_sib_prev = NULL;
+	p->p_child = temp2->p_sib_next;
+	temp2->p_sib_next = NULL;
+	return temp2;
+}
 
 /* This function makes the pcb pointed to by p no longer the child of its 
 parent. If the pcb pointed to by p has no parent, return NULL; otherwise,
 return p. Note that the element pointed to by p need not be the first child
 of its parent. */
 pcb_t *outChild(pcb_t *p)
-{}
+{
+	pcb_t *current;
+	if (p->p_prnt == NULL){ /* the pcb pointed to by p has no parent */
+		return NULL;
+	}
+	current = (p->p_prnt)->p_child; /* the pcb at the top of the stack */
+	/* looping through the stack, checking current against the pcb p points
+	to. If we find p, we will disconnect it from the stack by causing the 
+	pcb referred to by p->p_prev to have a next field of p_p_next. */
+	if (current->p_sib_next == NULL){ /* there's only one pcb in the stack */
+		if (current == p){ /* the pcb p points to is the only pcb in the stack, and we want to remove it */
+			pcb_t *temp1 = current; /* CAN WE CALL REMOVECHILD() HERE? DON'T KNOW HOW TO HANDLE THE POINTERS */
+			temp1->p_prnt = NULL;
+			p->p_child = NULL;
+			return temp1;
+		}
+		else{
+			return NULL; /* the pcb p points to is not in the stack */
+		}
+	}
+	while (current != NULL){ /* looping through the stack */
+		if (current == p){ /* if the pcb p points to is the current pcb in the stack */
+			if (current->p_sib_next == NULL){ /*if the pcb p points to is the last pcb in the stack */
+				(current->p_sib_prev)->p_sib_next = NULL; /* removing current */
+				current->p_sib_prev = NULL;
+				current->p_prnt = NULL;
+				return p;
+			}
+			else{ /* the pcb p points to is not the last pcb in the stack */
+				(current->p_sib_prev)->p_sib_next = current->p_sib_next; /* removing current */
+				(current->p_sib_next)->p_sib_prev = current->p_sib_prev;
+				current->p_sib_prev = NULL;
+				current->p_sib_next = NULL;
+				current->p_prnt = NULL;
+				return p;
+			}
+		}
+		current = current->p_sib_next;
+	}
+	return NULL; /* the pcb p points to is not in the queue */
+}
