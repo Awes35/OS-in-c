@@ -189,6 +189,7 @@ void insertChild(pcb_PTR prnt, pcb_PTR p)
 		p->p_prnt = prnt;
 		p->p_sib_next = prnt->p_child;
 		p->p_sib_prev = NULL;
+		(prnt->p_child)->p_sib_prev = p;
 		prnt->p_child = p;
 	}
 }
@@ -227,9 +228,6 @@ pcb_PTR outChild(pcb_PTR p)
 		return NULL;
 	}
 	current = (p->p_prnt)->p_child; /* the pcb at the top of the stack */
-	/* looping through the stack, checking current against the pcb p points
-	to. If we find p, we will disconnect it from the stack by causing the 
-	pcb referred to by p->p_prev to have a next field of p_p_next. */
 	if (current->p_sib_next == NULL){ /* there's only one pcb in the stack */
 		if (current == p){ /* the pcb p points to is the only pcb in the stack, and we want to remove it */
 			pcb_t *temp1 = current; /* CAN WE CALL REMOVECHILD() HERE? DON'T KNOW HOW TO HANDLE THE POINTERS */
@@ -241,6 +239,8 @@ pcb_PTR outChild(pcb_PTR p)
 			return NULL; /* the pcb p points to is not in the stack */
 		}
 	}
+	/* At this point, we know the stack has at least two pcbs in it. We'll now loop through the 
+	stack, checking to see whether the pcb pointed to by current is the same pcb pointed to by p. */
 	while (current != NULL){ /* looping through the stack */
 		if (current == p){ /* if the pcb p points to is the current pcb in the stack */
 			if (current->p_sib_next == NULL){ /*if the pcb p points to is the last pcb in the stack */
@@ -249,13 +249,22 @@ pcb_PTR outChild(pcb_PTR p)
 				current->p_prnt = NULL;
 				return p;
 			}
-			else{ /* the pcb p points to is not the last pcb in the stack */
-				(current->p_sib_prev)->p_sib_next = current->p_sib_next; /* removing current */
-				(current->p_sib_next)->p_sib_prev = current->p_sib_prev;
-				current->p_sib_prev = NULL;
-				current->p_sib_next = NULL;
-				current->p_prnt = NULL;
-				return p;
+			else{
+				if (current->p_sib_prev == NULL){ /* if the pcb p points to is the first pcb in the stack */
+					(current->p_sib_next)->p_sib_prev = NULL; /* removing current */
+					(current->p_prnt)->p_child = current->p_sib_next;
+					current->p_prnt = NULL;
+					current->p_sib_next = NULL;
+					return p;
+				}
+				else{ /* the pcb p points to is in the middle of the stack */
+					(current->p_sib_prev)->p_sib_next = current->p_sib_next; /* removing current */
+					(current->p_sib_next)->p_sib_prev = current->p_sib_prev;
+					current->p_sib_prev = NULL;
+					current->p_sib_next = NULL;
+					current->p_prnt = NULL;
+					return p;
+				}
 			}
 		}
 		current = current->p_sib_next;
