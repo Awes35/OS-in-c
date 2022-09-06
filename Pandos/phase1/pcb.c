@@ -1,3 +1,8 @@
+/* This module handles the allocation and deallocation of pcbs, 
+process queue maintenance, and process tree maintenance
+
+Written by: Kollen Gruizenga and Jake Heyser */
+
 #include <stdio.h>
 #include "../h/const.h"
 #include "../h/types.h"
@@ -7,6 +12,15 @@
 //HIDDEN pcb_t *pcbFree_h, pcb_t pcbList_h;
 HIDDEN pcb_PTR pcbFree_h; //ptr to head of the free list
 HIDDEN pcb_t pcbList_h;
+
+/*****Functions that support the allocation and deallocation of pcbs*********
+ * 
+ * Since Pandos supports no more than MAXPROC concurrent processes, we need a 
+ * "pool" of MAXPROC pcbs to allocate from and deallocate to. The free (or 
+ * ununsed) pcbs can be kept on a NULL-terminated single, linearly 
+ * linked list (using the p_next field), called the pcbFreeList, whose 
+ * head is pointed to by the variable pcbFree_h. */ 
+
 
 /* Insert the element pointed to by p onto the pcbFree list. In other words,
 this method returns a pcb (which is no longer in use) to the pcbFree list. */
@@ -29,13 +43,20 @@ void initPcbs()
 {
 	static pcb_t procTable[MAXPROC];
 	//pcbList_h = ??
-	pcbFree_h = mkEmptyProcQ();
+	pcbFree_h = mkEmptyProcQ(); /* Do we want to maintain this as a stack or as a queue?? */
 
 	for (int i=0; i<MAXPROC; i++){
 		//freePcb(&(procTable[i]));
 		insertProcQ(&pcbFree_h, &procTable[i]);
 	}
 }
+
+/************Functions that support process queue maintenance***************
+ * 
+ * Note that all process queues are double, circularly linked lists that have
+ * the p_next and p_prev pointer fields. Each queue will be pointed at by a tail
+ * pointer. */
+
 
 /* This function is used to initialize a variable to be tail pointer to a 
 process queue. Return a pointer to the tail of an empty process queue; 
@@ -167,6 +188,15 @@ pcb_PTR outProcQ(pcb_PTR *tp, pcb_PTR p)
    }
    return NULL; /* the pcb p points to is not in the queue */
 }
+
+/***********Functions that support process tree maintenance************************
+ * 
+ * pcbs are also organized into trees of pcbs, called process trees. Such trees are 
+ * implemented so that a parent pcb contains a pointer (p_child) to a NULL-terminated
+ * double, linearly linked list of its child pcbs. Each child process has a pointer to
+ * its parent pcb (p_prnt) and possibly the next child pcb of its parent (p_next_sib)
+ * and/or the previous child pcb in the list (p_prev_sib). */
+
 
 /* This function returns TRUE if the pcb pointed to by p has no children. 
 Return FALSE otherwise. */
