@@ -90,5 +90,7 @@
 /* Maximum number of concurrent processes */
 #define MAXPROC     20
 
+/* Maximum Int (fixed value for 'inf') */
+#define MAXINT      0b11111111
 
 #endif
