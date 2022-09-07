@@ -48,18 +48,29 @@ pcb_PTR allocPcb()
 	if (pcbFree_h == NULL){ // if the free list is empty
 		return NULL;
 	}
-	pcb_t *temp1 = pcbFree_h;
+	pcb_PTR temp1 = pcbFree_h; //remove element from pcbFreeList
 	(temp1->p_next)->p_prev = NULL;
 	pcbFree_h = temp1->p_next;
+	/* provide initial values for ALL pcbs fields */
 	temp1->p_next = NULL;
 	temp1->p_prev = NULL;
 	temp1->p_prnt = NULL;
 	temp1->p_child = NULL;
 	temp1->p_next_sib = NULL;
 	temp1->p_prev_sib = NULL;
+
 	temp1->p_semAdd = NULL; //THIS MIGHT BE 0 IF ERRORS
-	temp1.p_time = 0; //MIGHT USE -> IF ERRORS
-	temp1.p_s = NULL;
+	/*
+	temp1->p_time = 0; //MIGHT USE -> IF ERRORS
+	temp1->p_s.s_entryHI = NULL;
+	temp1->p_s.s_cause = NULL;
+	temp1->p_s.s_status = NULL;
+	temp1->p_s.s_pc = NULL;
+	for (int i=0; i<STATEREGNUM; i++){
+		temp1->p_s.s_reg[i]=0;
+	}
+	*/
+
 	return temp1;
 }
 
@@ -297,7 +308,8 @@ pcb_PTR outChild(pcb_PTR p)
 	}
 	/* At this point, we know the stack has at least two pcbs in it. We'll now loop through the 
 	stack, checking to see whether the pcb pointed to by current is the same pcb pointed to by p. */
-	while (current != NULL){ /* looping through the stack */
+	while (current != NULL){ /* looping through the stack */ 
+	//~~~NO LOOP! (?) ^^
 		if (current == p){ /* if the pcb p points to is the current pcb in the stack */
 			if (current->p_next_sib == NULL){ /*if the pcb p points to is the last pcb in the stack */
 				(current->p_prev_sib)->p_next_sib = NULL; /* removing current */
