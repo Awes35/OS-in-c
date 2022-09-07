@@ -8,8 +8,8 @@
 #include "../phase1/pcb.c"
 
 /* Declaring global variables */
-HIDDEN semd_PTR semd_h; // ptr to the head of the ASL
-HIDDEN semd_PTR semdFree_h; // ptr to the head of the semaphore descriptors free list
+HIDDEN semd_PTR semd_h; // ptr to the head of the ASL (semd ACTIVE list)
+HIDDEN semd_PTR semdFree_h; // ptr to the head of the semaphore descriptors (semd) free list
 
 /* This function inserts the pcb pointed to by p at the tail of the
 process queue associated with the semaphore whose physical address is
@@ -23,8 +23,8 @@ and the semdFree list is empty, return TRUE. In all other cases, return
 FALSE. */
 int insertBlocked(int *semAdd, pcb_PTR p)
 {
-	if (findSemaphore(semAdd) == NULL){ // the semaphore is not currently active
-		// need to remove a semaphore from the free list
+	if (findSemaphore(semAdd) == NULL){ /*the semaphore is not currently active*/
+		/* need to remove a semaphore from the free list */
 		semd_PTR temp = semdFree_h;
 		semdFree_h = temp->s_next; // adjusting the head pointer of the free list
 		insertSemaphore(temp, semAdd); // inserting the semaphore into the appropriate position in the ASL
@@ -33,9 +33,9 @@ int insertBlocked(int *semAdd, pcb_PTR p)
 		
 
 	}
-	else{ // the semaphore is currently in the list
+	else{ /*the semaphore is currently in the list*/
 		semd_PTR s = findSemaphore(semAdd);
-		insertProcQ(s_procQ, p); // inserting the pcb pointed to by p into the process queue
+		insertProcQ(s->s_procQ, p); // inserting the pcb pointed to by p into the process queue
 		return FALSE;
 	}
 }
@@ -52,11 +52,12 @@ pcb_PTR removeBlocked(int *semAdd)
 		return NULL;
 	}
 	semd_PTR s = findSemaphore(semAdd); // the descriptor with the given address
-	pcb_PTR result = removeProcQ(s.s_procQ); // the first pcb from the process queue of the found semaphore descriptor IS THIS CALL RIGHT????
+	pcb_PTR result = removeProcQ(s->s_procQ); // the first pcb from the process queue of the found semaphore descriptor IS THIS CALL RIGHT????
 	if (emptyProcQ(s->s_procQ)){ // the process queue for the semaphore became empty
-
+		//NOT DONE
 
 	}
+}
 
 
 
@@ -67,9 +68,11 @@ by p does not appear in the process queue associated with p's semaphore,
 which is an error condition, return NULL; otherwise, return p. */
 pcb_PTR outBlocked(pcb_PTR p)
 {
-	if (findSemaphore(semAdd) == NULL){
-		
-	}
+	//NOT DONE
+	//if(findSemaphore(semAdd)==NULL){
+
+	//}
+}
 
 /* This function returns a pointer to the pcb that is at the head of the
 process queue associated with the semaphore semAdd. Return NULL if
@@ -81,7 +84,7 @@ pcb_PTR headBlocked(int *semAdd)
 		return NULL;
 	}
 	semd_PTR s = findSemaphore(semAdd); // the descriptor with the given address
-	return headProcQ(s.s_procQ); // returning a pointer to the head of the process queue associated with semAdd
+	return headProcQ(s->s_procQ); // returning a pointer to the head of the process queue associated with semAdd
 }
 
 /* This function initializes the semdFree list to contain all the elements
@@ -105,10 +108,10 @@ void initASL()
 		}
 	}
 
-	// initializing dummy nodes for the ASL
+	// initializing dummy nodes for the ASL (head:0, tail:inf)
 	semd_PTR temp = semdFree_h;
 	semdFree_h = temp->s_next; // removing temp from the free list
-	temp->s_next = NULL;
+	temp->s_next = NULL; 
 	semd_h = temp; // adding temp to the head of the ASL
 
 	semd_PTR temp2 = semdFree_h;
@@ -141,8 +144,7 @@ semd_PTR findSemaphore(int *semAdd){
 void insertSemaphore(semd_PTR s, int *semAdd){
 	semd_t *current;
 	current = semd_h; // the head of the ASL
-	if 
+	//if(){
 
-		
-	}
+	//}
 }
