@@ -11,7 +11,6 @@ Written by: Kollen Gruizenga and Jake Heyser */
 /* Declaring global variables */
 //HIDDEN pcb_t *pcbFree_h, pcb_t pcbList_h;
 HIDDEN pcb_PTR pcbFree_h; //ptr to head of the free list
-HIDDEN pcb_t pcbList_h;
 
 /*****Functions that support the allocation and deallocation of pcbs*********
  * 
@@ -25,16 +24,44 @@ HIDDEN pcb_t pcbList_h;
 /* Insert the element pointed to by p onto the pcbFree list. In other words,
 this method returns a pcb (which is no longer in use) to the pcbFree list. */
 void freePcb(pcb_PTR p)
-// freePcb(&(procTable[i])); == insertProcQ(&pcbFree_h, &procTable[i]); ?
-{}
+// freePcb(&(procTable[i])); == insertProcQ(&pcbFree_h, p); ? What about head vs. tail pointers--We're sending a head pointer into a function that wants a tp
+{
+	if (pcbFree_h == NULL){ // the free list is currently empty
+		p->p_next = NULL;
+		p->p_prev = NULL;
+	}
+	else{ // there's at least one pcb on the free list already
+		p->p_next = pcbFree_h;
+		p->p_prev = NULL;
+		pcbFree_h->p_prev = p;
+		pcbFree_h = p;
+	}
+}
 
 /* This function allocates pcbs. Return NULL if the pcbFree list is empty.
 Otherwise, remove an element from the pcbFree list, provide initial values
 for ALL of the pcbs fields (i.e., NULL and/or 0) and then return a pointer
 to the removed element. pcbs get reused, so it is important that no previous
 value persists in a pcb when it gets reallocated. */
-pcb_PTR allocPcb()// (pcb_t *p)
-{}
+pcb_PTR allocPcb()
+{
+	if (pcbFree_h == NULL){ // if the free list is empty
+		return NULL;
+	}
+	pcb_t *temp1 = pcbFree_h;
+	(temp1->p_next)->p_prev = NULL;
+	pcbFree_h = temp1->p_next;
+	temp1->p_next = NULL;
+	temp1->p_prev = NULL;
+	temp1->p_prnt = NULL;
+	temp1->p_child = NULL;
+	temp1->p_next_sib = NULL;
+	temp1->p_prev_sib = NULL;
+	temp1->p_semAdd = NULL; //THIS MIGHT BE 0 IF ERRORS
+	temp1.p_time = 0; //MIGHT USE -> IF ERRORS
+	temp1.p_s = NULL;
+	return temp1;
+}
 
 /* This function initializes the pcbFree list to contain all the elements of the
 static array of MAXPROC pcbs. This method will be called only once during
@@ -42,12 +69,11 @@ data structure initializaion. */
 void initPcbs()
 {
 	static pcb_t procTable[MAXPROC];
-	//pcbList_h = ??
-	pcbFree_h = mkEmptyProcQ(); /* Do we want to maintain this as a stack or as a queue?? */
+	pcbFree_h = NULL;
 
 	for (int i=0; i<MAXPROC; i++){
-		//freePcb(&(procTable[i]));
-		insertProcQ(&pcbFree_h, &procTable[i]);
+		freePcb(&(procTable[i]));
+		//insertProcQ(&pcbFree_h, &procTable[i]); /* Is this line */
 	}
 }
 
