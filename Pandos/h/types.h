@@ -66,14 +66,14 @@ typedef struct pcb_t {
 
 	/* support layer information */
 	/*support_t		*p_supportStruct;	REMOVE THIS LINE? */
-} pcb_t, *pcb_PTR;					/* ptr to support struct */
+} pcb_t, *pcb_PTR;				/* ptr to support struct */
 
 /* Semaphore descriptor type */
 typedef struct semd_t {
 	struct semd_t	*s_next;	/* next element on the ASL */
 	int 			*s_semAdd;	/* pointer to the semaphore */
 	pcb_t			*s_procQ;	/* tail pointer to a process queue */
-} semd_t;
+} semd_t, *semd_PTR;
 
 /* Pass Up Vector */
 typedef struct passupvector {
