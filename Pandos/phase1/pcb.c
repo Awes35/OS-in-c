@@ -69,13 +69,11 @@ pcb_PTR allocPcb(){
 static array of MAXPROC pcbs. This method will be called only once during
 data structure initializaion. */
 void initPcbs(){
+	int i;
 	static pcb_t procTable[MAXPROC];
 	pcbFree_h = NULL;
-
-	int i = 0;
-	while (i < MAXPROC){
+	for(i = 0; i < MAXPROC; i++){
 		freePcb(&(procTable[i]));
-		i++;
 	}
 }
 

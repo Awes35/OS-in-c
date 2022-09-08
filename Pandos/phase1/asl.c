@@ -14,14 +14,14 @@ a node with the given address pointer should belong in the ASL. It returns a poi
 to the semaphore descriptor whose address directly precedes where a semaphore descriptor with the
 given address pointer (semAdd) would belong in the ASL. */ 
 semd_PTR findSemaphore(int *semAdd){
-	semd_t *current, *previous;
+	semd_t *current;
+	semd_t *previous;
 	current = semd_h; /* the head of the ASL */
 	previous = NULL; /* the ASL is not a circular list, so there is no semd prior to the head of the ASL */
 	/* looping through the ASL to determine the location where a semd with the given address pointer would belong */
-	while (current != NULL){  /* traversing through the ASL */
-		if (current->s_semAdd >= semAdd){ /* IS THIS LINE RIGHT??? */
-			/* the address associated with current >= semAdd, so a semd with the address pointer of semAdd would belong in the position of previous */
-			break;
+	while (current->s_semAdd < semAdd){  /* traversing through the ASL */
+		if (current->s_semAdd == (int*) MAXINT){
+			return previous;
 		}
 		/* if the address associated with current < semAdd, we need to keep moving through the list */
 		previous = current; /* incrementing the previous pointer to the next semd in the ASL */
@@ -35,8 +35,8 @@ useful in initASL(), removeBlocked() and outBlocked(), where we need to handle c
 removing a semd from the ASL and adding it onto the free list. */
 void deallocateSemaphore(semd_PTR sem){
 	if (semdFree_h == NULL){ /* the semdFree list is currently empty */
-			sem->s_next = NULL;
-			semdFree_h = sem;
+		sem->s_next = NULL;
+		semdFree_h = sem;
 	}
 	else{ /* there's at least one semaphore descriptor on the ASL already */
 		sem->s_next = semdFree_h;
@@ -152,11 +152,10 @@ void initASL(){
 	static semd_t semdTable[MAXPROC + 2];
 	semdFree_h = NULL;
 
-	int i = 0;
-	while (i < MAXPROC){
+	int i;
+	for (i = 0; i < MAXPROC + 2; i++){
 		semd_PTR s = &(semdTable[i]);
 		deallocateSemaphore(s);
-		i++;
 	}
 
 	/* initializing dummy nodes for the ASL (head:0, tail:inf) */
@@ -170,5 +169,5 @@ void initASL(){
 	temp2->s_next = NULL;
 	temp->s_next = temp2; /* adding temp2 to the tail of the ASL */
 	temp2->s_semAdd = (int*) MAXINT; /* setting the address of the tail of the ASL to MAXINT */
-	temp->s_semAdd = (int *) LEASTINT; /* setting the address of the head of the ASL to 0 */
+	temp->s_semAdd = (int*) LEASTINT; /* setting the address of the head of the ASL to LEASTINT */
 }
