@@ -94,6 +94,6 @@
 #define MAXINT		0x0FFFFFFF
 
 /* Minimum int field for the value of a semaphore address in the ASL */
-#define LEASTINT	0
+#define LEASTINT	0x00000000
 
 #endif
