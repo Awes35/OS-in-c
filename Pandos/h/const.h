@@ -90,7 +90,10 @@
 /* Maximum number of concurrent processes */
 #define MAXPROC     20
 
-/* Maximum Int (fixed value for 'inf') */
-#define MAXINT      0b11111111
+/* Maximum int (fixed value for 'inf') */
+#define MAXINT		0x0FFFFFFF
+
+/* Minimum int field for the value of a semaphore address in the ASL */
+#define LEASTINT	0
 
 #endif
