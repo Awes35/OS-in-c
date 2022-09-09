@@ -45,6 +45,15 @@ typedef struct {
 	device_t	devreg[DEVINTNUM * DEVPERINT];
 } devregarea_t;
 
+#define STATEREGNUM	31
+typedef struct state_t {
+	unsigned int	s_entryHI;
+	unsigned int	s_cause;
+	unsigned int	s_status;
+	unsigned int 	s_pc;
+	int	 			s_reg[STATEREGNUM];
+} state_t, *state_PTR;
+
 /* Process control block type */
 typedef struct pcb_t {
 	/* process queue fields */
@@ -63,7 +72,7 @@ typedef struct pcb_t {
 	int				*p_semAdd;	/* pointer to sema4 on which process blocked */
 
 	/* support layer information */
-	/*support_t		*p_supportStruct;	REMOVE THIS LINE? */
+	/* support_t	*p_supportStruct */	
 } pcb_t, *pcb_PTR;				/* ptr to support struct */
 
 /* Semaphore descriptor type */
@@ -80,17 +89,6 @@ typedef struct passupvector {
     unsigned int execption_handler;
     unsigned int exception_stackPtr;
 } passupvector_t;
-
-
-#define STATEREGNUM	31
-typedef struct state_t {
-	unsigned int	s_entryHI;
-	unsigned int	s_cause;
-	unsigned int	s_status;
-	unsigned int 	s_pc;
-	int	 			s_reg[STATEREGNUM];
-
-} state_t, *state_PTR;
 
 #define	s_at	s_reg[0]
 #define	s_v0	s_reg[1]
