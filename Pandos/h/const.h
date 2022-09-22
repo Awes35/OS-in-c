@@ -96,4 +96,8 @@
 /* Minimum int field for the value of a semaphore address in the ASL */
 #define LEASTINT	0x00000000
 
+/* Maximum number of external (sub)devices in UMPS3, plus one additional semaphore to support
+the Pseudo-clock */
+#define MAXDEVICECNT	49
+
 #endif
