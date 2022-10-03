@@ -25,15 +25,29 @@
 #include "../h/const.h"
 #include "../h/pcb.h"
 #include "initial.c"
+#include "/mnt/c/Users/JakeH/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Ubuntu/libumps.h"
 
 void scheduler(){
 	currentProc = removeProcQ(&ReadyQueue); /* removing the pcb from the head of the ReadyQueue and storing its pointer in currentProc */
-	if (currentProc != NULL){
+	if (currentProc != NULL){ /* if the Ready Queue is not empty */
 		/* LOAD TIMER AND GENERATE THE INTERRUPT */
 		LDST(&(currentProc->p_s)); /* performing a LDST on the processor state stored in pcb of the Current Process */
-	}
-	else{
-		
+		return;
 	}
 
+	/* We know the ReadyQueue is empty. */
+	if (procCnt == 0){ /* if the number of started, but not yet terminated, processes is zero */
+		HALT(); /* invoking the HALT() function to halt the system and print a regular shutdown message on terminal 0 */
+		return;
+	}
+
+	if (procCnt > 0 && softBlockCnt > 0){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
+		/* SET THE STATUS REGISTER TO ENABLE INTERRUPTS AND DISABLE THE PLT OR LOAD IT WITH A LARGE VALUE */
+		WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
+		return;
+	}
+
+	/* A deadlock situation is occurring (i.e., procCnt > 0 && softBlockCnt == 0) */
+	PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
+	}
 }
