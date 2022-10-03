@@ -20,6 +20,7 @@
 #include "../h/types.h"
 #include "../h/const.h"
 #include "../h/pcb.h"
+#include "../h/initial.h"
 
 /* declaring global variables */
 pcb_PTR ReadyQueue; /* pointer to the tail of a queue of pcbs that are in the "ready" state */
@@ -56,6 +57,26 @@ int main(){
 
 	/* instantiating a single process so we can call the scheduler on it */
 	pcb_PTR p = allocPcb(); /* instantiating the process */
-	/* LEFT OFF HERE WITH SETTING THE FIELDS OF P */
+	/* FINISH INSTANTIATION OF THE PROCESS */
+	p->p_s.s_pc = (memaddr) test; /* assigning the PC to the address of test */
+	p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
 
+	/* initializng the all of the process tree fields to NULL */
+	p->p_prnt = NULL; /* setting the pointer to p's parent to NULL */
+	p->p_child = NULL; /* setting the pointer to p's child to NULL */
+	p->p_next_sib = NULL; /* setting the pointer to p's next sibling to NULL */
+	p->p_prev_sib = NULL; /* setting the pointer to p's previous sibling to NULL */
+
+	/* initializing the remaining pcb fields */
+	p->p_time = 0; /* setting p's accumulated time field to zero */
+	p->p_semAdd = NULL; /* setting p's blocking address to NULL */
+	p->p_supportStruct = NULL; /* setting p's Support Structure pointer to NULL */
+
+	/* placing p into the Ready Queue and incrementing the Process Count */
+	insertProcQ(&ReadyQueue, p); /* inserting p into the Ready Queue */
+	procCnt++; /* incrementing the Process Count */
+
+	/* calling the scheduler */
+	scheduler();
+	return SUCCESS;
 }
