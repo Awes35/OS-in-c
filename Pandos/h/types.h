@@ -54,6 +54,21 @@ typedef struct state_t {
 	int	 			s_reg[STATEREGNUM];
 } state_t, *state_PTR;
 
+/* process context type */
+typedef struct context_t {
+	/* process context fields */
+	unsigned int 	c_stackPtr,	/* stack pointer value */
+					c_status,	/* status reg value */
+					c_pc;		/* PC address */
+} context_t;
+
+/* Support structure type */
+typedef struct support_t {
+	int				sup_asid;				/* process Id (asid) */
+	state_t			sup_exceptionState[2];	/* stored except states */
+	context_t		sup_exceptContext[2];	/* pass up contexts */
+} support_t;
+
 /* Process control block type */
 typedef struct pcb_t {
 	/* process queue fields */

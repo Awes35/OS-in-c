@@ -100,10 +100,10 @@
 the Pseudo-clock */
 #define MAXDEVICECNT	49
 
-/* Constant denoting a successful run in the Nucleus initialization module (i.e., main()) */
-#define SUCCESS		0
+/* Address for initializing Process 0's Pass Up Vector's fields for the address of handling general exceptions and TLB-Refill events */
+#define PROC0STACKPTR	0x20001000
 
-/* Constant denoting an unsuccessful run in the Nucleus initialization module (i.e., main()) */
-#define FAILURE		1
+/* Value that the system-wide Interval Timer is initialized to (in milliseconds) */
+#define INITIALINTTIMER	100
 
 #endif
