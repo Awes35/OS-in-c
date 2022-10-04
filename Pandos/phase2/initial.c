@@ -20,7 +20,11 @@
 #include "../h/types.h"
 #include "../h/const.h"
 #include "../h/pcb.h"
-#include "../h/initial.h"
+
+/* function declarations */
+extern void test(); /* function declaration for test(), which will be defined in the test file for this module */
+extern void uTLB_RefillHandler(); /* function declaration for uTLB_RefillHandler(), which will be defined in exceptions.c */
+HIDDEN generalExceptionHandler(); /* function declaration for the internal function that is responsible for handling general exceptions */
 
 /* declaring global variables */
 pcb_PTR ReadyQueue; /* pointer to the tail of a queue of pcbs that are in the "ready" state */
@@ -37,6 +41,9 @@ int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspo
  * and calls the scheduler on it. The function also initializes the global variables for this
  * module. */
 int main(){
+	/* declaring local variables */
+	pcb_PTR p; /* a pointer to the process that we will instantiate in this function */
+	passupvector_t *procVec; /* a pointer to the Process 0 Pass Up Vector that we will initialize in this function */
 	
 	/* initializing global variables */
 	ReadyQueue = mkEmptyProcQ(); /* initializng the ReadyQueue's tail pointer to be NULL */
@@ -55,8 +62,18 @@ int main(){
 	initPcbs(); /* initializing the pcbFree list */
 	initASL(); /* initializing the semdFree list and the ASL's dummy nodes */
 
+	/* initializing the Processor 0 Pass Up Vector */
+	procVec = (passupvector_t *) PASSUPVECTOR; /* initializing procVec to be a pointer to the address of the Process 0 Pass Up Vector */
+	procVec->tlb_refll_handler = (memaddr) uTLB_RefillHandler; /* initializing the address for handling TLB-Refill events */
+	procVec->tlb_refll_stackPtr = (memaddr) PROC0STACKPTR; /* initializing the stack pointer for handling Nucleus TLB-Refill events */
+	procVec->execption_handler = (memaddr) generalExceptionHandler; /* initializing the address for handling general exceptions */
+	procVec->exception_stackPtr = (memaddr) PROC0STACKPTR; /* initializing the stack pointer for handling general exceptions */
+
+	/* loading the system-wide interval timer with 100 (INITIALINTTIMER) milliseconds. THIS IS WRONG. FIX THIS. */
+	LDIT(INITIALINTTIMER); /* invoking the macro function that handles setting the system-wide interval timer with a given value */
+
 	/* instantiating a single process so we can call the scheduler on it */
-	pcb_PTR p = allocPcb(); /* instantiating the process */
+	p = allocPcb(); /* instantiating the process */
 	/* FINISH INSTANTIATION OF THE PROCESS */
 	p->p_s.s_pc = (memaddr) test; /* assigning the PC to the address of test */
 	p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
@@ -78,5 +95,5 @@ int main(){
 
 	/* calling the scheduler */
 	scheduler();
-	return SUCCESS;
+	return (0);
 }
