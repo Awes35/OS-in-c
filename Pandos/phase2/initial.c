@@ -20,11 +20,13 @@
 #include "../h/types.h"
 #include "../h/const.h"
 #include "../h/pcb.h"
+#include "../h/scheduler.h"
+#include "../h/exceptions.h"
 
 /* function declarations */
 extern void test(); /* function declaration for test(), which will be defined in the test file for this module */
 extern void uTLB_RefillHandler(); /* function declaration for uTLB_RefillHandler(), which will be defined in exceptions.c */
-HIDDEN generalExceptionHandler(); /* function declaration for the internal function that is responsible for handling general exceptions */
+HIDDEN void generalExceptionHandler(); /* function declaration for the internal function that is responsible for handling general exceptions */
 
 /* declaring global variables */
 pcb_PTR ReadyQueue; /* pointer to the tail of a queue of pcbs that are in the "ready" state */
@@ -32,6 +34,20 @@ pcb_PTR currentProc; /* pointer to the pcb that is in the "running" state */
 int procCnt; /* integer indicating the number of started, but not yet terminated, processes */
 int softBlockCnt; /* integer indicating the number of started, but not yet terminated, processes that're in the "blocked" state" */
 int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock */
+
+/* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
+the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
+program traps, processing is passed along to the Program Trap exception handler. Finally, for exception code 8
+(SYCALL) events, processing is passed along to the SYSCALL exception handler. */
+void generalExceptionHandler(){
+	/* declaring local variables */
+	state_t *oldState; /* the saved execption state for Processor 0 */
+	int exceptionReason; /* the exception code */
+
+	/* initializing local variables */
+	oldState = (state_t *) BIOSDATAPAGE; /* initializing the saved exception state to the address of the start of the BIOS Data Page */
+	exceptionReason = oldState->s_cause; 
+}
 
 /* Function that represents the entry point of our program. It initializes the phase 1 data
  * structures (i.e., the ASL, free list of semaphore descriptors, and the process queue that we 
@@ -44,6 +60,8 @@ int main(){
 	/* declaring local variables */
 	pcb_PTR p; /* a pointer to the process that we will instantiate in this function */
 	passupvector_t *procVec; /* a pointer to the Process 0 Pass Up Vector that we will initialize in this function */
+	unsigned int ramtop; /* the last RAM frame */
+	devregarea_t *temp; /* devregarea that we can we use to determine the last RAM frame */
 	
 	/* initializing global variables */
 	ReadyQueue = mkEmptyProcQ(); /* initializng the ReadyQueue's tail pointer to be NULL */
@@ -74,6 +92,12 @@ int main(){
 
 	/* instantiating a single process so we can call the scheduler on it */
 	p = allocPcb(); /* instantiating the process */
+	
+	/* initializing temp in order to then set p's stack pointer to the address of the top of RAM */
+	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
+	ramtop = temp->rambase + temp->ramsize; /* initializing ramptop to the address of the top of RAM */
+	p->p_s.s_sp = (memaddr) ramtop; /* setting p's stack pointer to the address of the last RAM frame */
+
 	/* FINISH INSTANTIATION OF THE PROCESS */
 	p->p_s.s_pc = (memaddr) test; /* assigning the PC to the address of test */
 	p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
@@ -85,7 +109,7 @@ int main(){
 	p->p_prev_sib = NULL; /* setting the pointer to p's previous sibling to NULL */
 
 	/* initializing the remaining pcb fields */
-	p->p_time = 0; /* setting p's accumulated time field to zero */
+	p->p_time = INITIALACCTIME; /* setting p's accumulated time field to zero */
 	p->p_semAdd = NULL; /* setting p's blocking address to NULL */
 	p->p_supportStruct = NULL; /* setting p's Support Structure pointer to NULL */
 
