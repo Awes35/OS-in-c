@@ -65,11 +65,14 @@ pcb_PTR allocPcb(){
 	/* provide initial values for ALL of the pcb's fields */
 	temp1->p_next = NULL;
 	temp1->p_prev = NULL;
-	temp1->p_prnt = NULL;
-	temp1->p_child = NULL;
-	temp1->p_next_sib = NULL;
-	temp1->p_prev_sib = NULL;
-	temp1->p_semAdd = NULL;
+	temp1->p_prnt = NULL; /* setting the pointer to temp1's parent to NULL */
+	temp1->p_child = NULL; /* setting the pointer to temp1's child to NULL */
+	temp1->p_next_sib = NULL; /* setting the pointer to temp1's next sibling to NULL */
+	temp1->p_prev_sib = NULL; /* setting the pointer to temp1's previous sibling to NULL */
+	
+	temp1->p_semAdd = NULL; /* setting temp1's blocking sempahore address to NULL */
+	temp1->p_time = 0; /* setting temp1's accumulated time field to zero */
+	temp1->p_supportStruct; /* setting temp1's Support Structure pointer to NULL */
 	return temp1;
 }
 
