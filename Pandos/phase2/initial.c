@@ -119,7 +119,7 @@ int main(){
 	/* NOTE: setting the "previous" bits which will become current after LDST */
 	p->p_s.s_entryHI=NULL;
 	p->p_s.s_cause=NULL;
-	p->p_s.s_status=NULL;
+	/* p->p_s.s_status=NULL; */
 	for (int i=0; i<STATEREGNUM; i++){
 		p->p_s.s_reg[i]=0;
 	}
@@ -132,7 +132,7 @@ int main(){
 	/* process needs to have the processor Local Timer enabled */
 	TE (bit 27) = 1 
 
-	/* status reg = 0x0800000c */
+	/* p->p_s.s_status = 0x0800000c */
 	
 	
 
