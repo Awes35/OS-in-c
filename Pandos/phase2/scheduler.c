@@ -24,14 +24,21 @@
 #include "../h/types.h"
 #include "../h/const.h"
 #include "../h/pcb.h"
-#include "initial.c"
-#include "/mnt/c/Users/JakeH/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Ubuntu/libumps.h"
+#include "../h/scheduler.h"
+#include "../phase2/initial.c"
 
+/* Function that includes the implementation of the scheduling algorithm that we will use in this operating system. The function
+implements a simple preemptive round-robin scheduling algorithm with a time slice of five milliseconds. The function  begins by
+removing the pcb at the head of the Ready Queue. If such a pcb exists, the function loads five milliseconds on the PLT and then
+performs a Load Processor State (LDST) on the processor state stored in pcb of the Current Process. If the Ready Queue
+was empty, then it checks to see if the Process Count is zero. If so, the function invokes the HALT BIOS instruction. 
+If the Prcoess Count is greater than zero and Soft-block Count is greater than zero, the function enters a Wait State.
+And if the Process Count is greater than zero and the Soft-block Count is zero, the function invokes the PANIC BIOS instruction. */
 void scheduler(){
 	currentProc = removeProcQ(&ReadyQueue); /* removing the pcb from the head of the ReadyQueue and storing its pointer in currentProc */
 	if (currentProc != NULL){ /* if the Ready Queue is not empty */
-		/* LOAD TIMER AND GENERATE THE INTERRUPT */
-		LDST(&(currentProc->p_s)); /* performing a LDST on the processor state stored in pcb of the Current Process */
+		setTIMER(INITIALPLT); /* loading five milliseconds on the processor's Local Timer (PLT) */
+		LDST(&(currentProc->p_s)); /* loading the processor state for the processor state stored in pcb of the Current Process */
 		return;
 	}
 
@@ -49,5 +56,4 @@ void scheduler(){
 
 	/* A deadlock situation is occurring (i.e., procCnt > 0 && softBlockCnt == 0) */
 	PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
-	}
 }

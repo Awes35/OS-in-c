@@ -50,6 +50,20 @@ void generalExceptionHandler(){
 	exceptionReason = oldState->s_cause; 
 	}
 
+/* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
+the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
+program traps, processing is passed along to the Program Trap exception handler. Finally, for exception code 8
+(SYCALL) events, processing is passed along to the SYSCALL exception handler. */
+void generalExceptionHandler(){
+	/* declaring local variables */
+	state_t *oldState; /* the saved execption state for Processor 0 */
+	int exceptionReason; /* the exception code */
+
+	/* initializing local variables */
+	oldState = (state_t *) BIOSDATAPAGE; /* initializing the saved exception state to the address of the start of the BIOS Data Page */
+	exceptionReason = oldState->s_cause; 
+}
+
 /* Function that represents the entry point of our program. It initializes the phase 1 data
  * structures (i.e., the ASL, free list of semaphore descriptors, and the process queue that we 
  * we will use to hold processes that are ready to be executed), initializes four words in the 
