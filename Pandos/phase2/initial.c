@@ -47,22 +47,26 @@ void generalExceptionHandler(){
 
 	/* initializing local variables */
 	oldState = (state_t *) BIOSDATAPAGE; /* initializing the saved exception state to the address of the start of the BIOS Data Page */
-	exceptionReason = oldState->s_cause; 
+	exceptionReason = ((oldState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT;
+	switch(exceptionReason){
+		case (exceptionReason<INTCONST):
+			intTrapH();
+			break;
+		case (exceptionReason<=TLBCONST):
+			tlbTrapH();
+			break;
+		case (exceptionReason==SYSCONST):
+			sysTrapH();
+			break;
+		
+		/* if exception code not 1-8 */
+		default:
+			pgmTrapH(); 
 	}
 
-/* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
-the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
-program traps, processing is passed along to the Program Trap exception handler. Finally, for exception code 8
-(SYCALL) events, processing is passed along to the SYSCALL exception handler. */
-void generalExceptionHandler(){
-	/* declaring local variables */
-	state_t *oldState; /* the saved execption state for Processor 0 */
-	int exceptionReason; /* the exception code */
 
-	/* initializing local variables */
-	oldState = (state_t *) BIOSDATAPAGE; /* initializing the saved exception state to the address of the start of the BIOS Data Page */
-	exceptionReason = oldState->s_cause; 
 }
+
 
 /* Function that represents the entry point of our program. It initializes the phase 1 data
  * structures (i.e., the ASL, free list of semaphore descriptors, and the process queue that we 
@@ -110,28 +114,13 @@ int main(){
 	/* initializing temp in order to then set p's stack pointer to the address of the top of RAM */
  	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
  	ramtop = temp->rambase + temp->ramsize; /* initializing ramptop to the address of the top of RAM */
- 	p->p_s.s_sp = (memaddr) ramtop; /* setting p's stack pointer to the address of the last RAM frame for its stack */
+
+ 	/* initializing the processor state that is part of the pcb */
+	p->p_s.s_sp = ramtop; /* setting p's stack pointer to the address of the last RAM frame for its stack */
 	p->p_s.s_pc = (memaddr) test; /* assigning the PC to the address of test */
 	p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
-
-	/* FINISH INSTANTIATION OF THE PROCESS */
-	/* initializing the processor state that is part of the pcb */
 	/* NOTE: setting the "previous" bits which will become current after LDST */
-	p->p_s.s_entryHI=NULL;
-	p->p_s.s_cause=NULL;
-	/* p->p_s.s_status=NULL; */
-	for (int i=0; i<STATEREGNUM; i++){
-		p->p_s.s_reg[i]=0;
-	}
-	/* process needs to have interrupts enabled */
-	/* IEc (bit 0) = 1 */
-	IEp (bit 2) = 1
-	/* process needs to have kernel-mode on */
-	/* KUc (bit 1) = 0 */
-	KEp (bit 3) = 0
-	/* process needs to have the processor Local Timer enabled */
-	TE (bit 27) = 1 
-
+	p->p_s.s_status = ALLOFF | IEPON | KERNMODE | PLTON; /* process needs to have interrupts enabled, kernel-mode on, processor Local Timer enabled */
 	/* p->p_s.s_status = 0x08000004 */
 	
 	
