@@ -72,7 +72,17 @@ pcb_PTR allocPcb(){
 	
 	temp1->p_semAdd = NULL; /* setting temp1's blocking sempahore address to NULL */
 	temp1->p_time = 0; /* setting temp1's accumulated time field to zero */
+	/* initializing processor state fields */
+	temp1->p_s.s_entryHI=NULL;
+	temp1->p_s.s_cause=NULL;
+	temp1->p_s.s_status=NULL;
+	temp1->p_s.s_pc=NULL;
+	for (int i=0; i<STATEREGNUM; i++){
+		temp1->p_s.s_reg[i]=0;
+	}
+
 	temp1->p_supportStruct = NULL; /* setting temp1's Support Structure pointer to NULL */
+
 	return temp1;
 }
 
