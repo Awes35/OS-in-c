@@ -132,7 +132,7 @@ int main(){
 	/* process needs to have the processor Local Timer enabled */
 	TE (bit 27) = 1 
 
-	/* p->p_s.s_status = 0x0800000c */
+	/* p->p_s.s_status = 0x08000004 */
 	
 	
 
