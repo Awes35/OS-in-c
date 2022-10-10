@@ -70,6 +70,15 @@
 #define BIOSDATAPAGE    0x0FFFF000
 #define	PASSUPVECTOR	  0x0FFFF900
 
+/* Processor State - Status Register constants */
+#define ALLOFF  0x00000000
+#define IEPON   0x00000004 /* process needs to have interrupts enabled after LDST, ie: IEp (bit 2) = 1 */        /* IEc (bit 0) = 1 */
+#define KERNMODE  0x00000000 /* process needs to have kernel-mode on after LDST, ie: KUp (bit 3) = 0 */           /* KUc (bit 1) = 0 */
+#define PLTON   0x08000000 /* process needs to have the processor Local Timer enabled, ie: TE (bit 27) = 1 */
+
+#define USERMODE 0x00000008 /* process needs to have user-mode on after LDST, ie: KUp (bit 3) = 1 */
+
+
 /* Exceptions related constants */
 #define	PGFAULTEXCEPT	  0
 #define GENERALEXCEPT	  1
