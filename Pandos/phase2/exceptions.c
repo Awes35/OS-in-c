@@ -48,7 +48,7 @@ A SYSCALL exception occurs when the SYSCALL assembly instruction is executed. */
 wait(int *sema4, pcb_PTR p){
     sema4--;
     if(sema4 < 0){
-        insertBlocked(&sema4, p)
+        insertBlocked(&sema4, p);
         scheduler();
     }
     /* return to current proc */
