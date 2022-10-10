@@ -72,7 +72,7 @@ pcb_PTR allocPcb(){
 	
 	temp1->p_semAdd = NULL; /* setting temp1's blocking sempahore address to NULL */
 	temp1->p_time = 0; /* setting temp1's accumulated time field to zero */
-	temp1->p_supportStruct; /* setting temp1's Support Structure pointer to NULL */
+	temp1->p_supportStruct = NULL; /* setting temp1's Support Structure pointer to NULL */
 	return temp1;
 }
 
