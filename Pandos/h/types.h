@@ -46,12 +46,12 @@ typedef struct {
 } devregarea_t;
 
 #define STATEREGNUM	31
-typedef struct state_t {
-	unsigned int	s_entryHI;
-	unsigned int	s_cause;
-	unsigned int	s_status;
-	unsigned int 	s_pc;
-	int	 			s_reg[STATEREGNUM];
+typedef struct state_t { /* TEMP-- POO pg8 */
+	unsigned int	s_entryHI; /* the entryHI register, containing the current ASID --aka processID */
+	unsigned int	s_cause; /* Cause CP0 register */
+	unsigned int	s_status; /* Status CP0 register */ /* TEMP-- POO pg9 */
+	unsigned int 	s_pc; /* PC register */
+	int	 			s_reg[STATEREGNUM]; /* 29 words for the GPR registers + HI, LOW registers? */
 } state_t, *state_PTR;
 
 /* process context type */
@@ -82,7 +82,7 @@ typedef struct pcb_t {
 					*p_prev_sib;	/* pointer to prev sibling */
 
 	/* process status information */
-	state_t			p_s;		/* processor state */
+	state_t			p_s;		/* processor state (a 35 word block) */
 	cpu_t			p_time;		/* cpu time used by proc */
 	int				*p_semAdd;	/* pointer to sema4 on which process blocked */
 
@@ -101,7 +101,7 @@ typedef struct semd_t {
 typedef struct passupvector {
     unsigned int tlb_refll_handler;
     unsigned int tlb_refll_stackPtr;
-    unsigned int execption_handler;
+    unsigned int exception_handler;
     unsigned int exception_stackPtr;
 } passupvector_t;
 
