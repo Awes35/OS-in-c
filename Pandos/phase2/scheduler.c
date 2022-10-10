@@ -27,6 +27,21 @@
 #include "../h/scheduler.h"
 #include "../phase2/initial.c"
 
+/* Function to move processor state pointed to by source to processor state pointed to by dest. */
+void moveState(state_PTR source, state_PTR dest){
+
+	dest->s_entryHI = source->s_entryHI;
+	dest->s_cause = source->s_cause;
+	dest->s_status = source->s_status;
+	dest->s_pc = source->s_pc;
+
+	for (int i=0; i<STATEREGNUM; i++){
+		dest->s_reg[i] = source->s_reg[i];
+	}
+	
+}
+
+
 /* Function that includes the implementation of the scheduling algorithm that we will use in this operating system. The function
 implements a simple preemptive round-robin scheduling algorithm with a time slice of five milliseconds. The function  begins by
 removing the pcb at the head of the Ready Queue. If such a pcb exists, the function loads five milliseconds on the PLT and then
