@@ -70,15 +70,6 @@
 #define BIOSDATAPAGE    0x0FFFF000
 #define	PASSUPVECTOR	  0x0FFFF900
 
-/* Processor State - Status Register constants */
-#define ALLOFF  0x00000000
-#define IEPON   0x00000004 /* process needs to have interrupts enabled after LDST, ie: IEp (bit 2) = 1 */        /* IEc (bit 0) = 1 */
-#define KERNMODE  0x00000000 /* process needs to have kernel-mode on after LDST, ie: KUp (bit 3) = 0 */           /* KUc (bit 1) = 0 */
-#define PLTON   0x08000000 /* process needs to have the processor Local Timer enabled, ie: TE (bit 27) = 1 */
-
-#define USERMODE 0x00000008 /* process needs to have user-mode on after LDST, ie: KUp (bit 3) = 1 */
-
-
 /* Exceptions related constants */
 #define	PGFAULTEXCEPT	  0
 #define GENERALEXCEPT	  1
@@ -114,5 +105,27 @@ the Pseudo-clock */
 
 /* Value that the system-wide Interval Timer is initialized to (in milliseconds) */
 #define INITIALINTTIMER	100
+
+/* Value to set the accumulated time field for the first process that is instantiated */
+#define INITIALACCTIME	0
+
+/* Processor State--Status register constants */
+#define ALLOFF			0x00000000	/* every bit in the Status register is set to 0; this will prove helpful for bitwise-OR operations */
+#define USERPON			0x00000008	/* constant for setting the user-mode on after LDST (i.e., KUp (bit 3) = 1) */
+#define IEPON			0x00000004	/* constant for enabling interrupts after LDST (i.e., IEp (bit 2) = 1) */
+#define IECON			0x00000001	/* constant for enabling interrupts (i.e., IEc (bit 0) = 1) */
+#define PLTON			0x08000000	/* constant for enabling PLT (i.e., TE (bit 27) = 1) */
+#define PLTOFF			0xF7FFFFFF 	/* constant for disabling the PLT (i.e., TE (bit 27) = 0) */
+#define KERNON			0x00000000	/* constant for setting kernel-mode on after LDST (i.e., KUp (bit 3) = 0) */
+
+/* Value that the processor's Local Timer (PLT) is intialized to (in milliseconds) */
+#define INITIALPLT		5
+
+/* Cause register constants for generalExceptionHandler */
+#define GETEXCEPCODE	0x0000007C	/* constant for setting all bits to 0 in the Cause register except for the ExcCode field */
+#define CAUSESHIFT		2			/* number of bits needed to shift the ExcCode field over to the right so that we can read the ExcCode directly */
+#define INTCONST		0			/* exception code signaling an interrupt occurred */
+#define TLBCONST		3			/* upper bound on the exception codes that signal a TLB exception occurred */
+#define SYSCONST		8			/* exception code signaling a SYSCALL occurred */
 
 #endif
