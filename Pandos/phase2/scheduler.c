@@ -25,22 +25,8 @@
 #include "../h/const.h"
 #include "../h/pcb.h"
 #include "../h/scheduler.h"
+#include "../h/interrupts.h"
 #include "../phase2/initial.c"
-
-/* Function to move processor state pointed to by source to processor state pointed to by dest. */
-void moveState(state_PTR source, state_PTR dest){
-
-	dest->s_entryHI = source->s_entryHI;
-	dest->s_cause = source->s_cause;
-	dest->s_status = source->s_status;
-	dest->s_pc = source->s_pc;
-
-	for (int i=0; i<STATEREGNUM; i++){
-		dest->s_reg[i] = source->s_reg[i];
-	}
-	
-}
-
 
 /* Function that includes the implementation of the scheduling algorithm that we will use in this operating system. The function
 implements a simple preemptive round-robin scheduling algorithm with a time slice of five milliseconds. The function  begins by
@@ -64,7 +50,7 @@ void scheduler(){
 	}
 
 	if (procCnt > 0 && softBlockCnt > 0){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
-		/* SET THE STATUS REGISTER TO ENABLE INTERRUPTS AND DISABLE THE PLT OR LOAD IT WITH A LARGE VALUE */
+		currentProc->p_s.s_status = ((currentProc->p_s.s_status) | IECON) & PLTOFF; /* enabling interrupts and disabling PLT for the Current Process so we can call the WAIT() function */
 		WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
 		return;
 	}
