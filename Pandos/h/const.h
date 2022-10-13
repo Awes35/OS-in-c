@@ -106,7 +106,7 @@ the Pseudo-clock */
 /* Value that the system-wide Interval Timer is initialized to (in milliseconds) */
 #define INITIALINTTIMER	100
 
-/* Value to set the accumulated time field for the first process that is instantiated */
+/* Value to set the accumulated time field for a process that is instantiated */
 #define INITIALACCTIME	0
 
 /* Processor State--Status register constants */
@@ -127,5 +127,9 @@ the Pseudo-clock */
 #define INTCONST		0			/* exception code signaling an interrupt occurred */
 #define TLBCONST		3			/* upper bound on the exception codes that signal a TLB exception occurred */
 #define SYSCONST		8			/* exception code signaling a SYSCALL occurred */
+
+/* Constants for returning values in v0 to the caller */
+#define ERRORCONST		-1			/* constant denoting an error occurred in the caller's request */
+#define SUCCESSCONST	0			/* constant denoting that the caller's request completed successfully */
 
 #endif

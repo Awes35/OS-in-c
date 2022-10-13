@@ -8,9 +8,10 @@
  * Written by: Kollen Gruizenga and Jake Heyser
  * 
  ****************************************************************************/
+
 #include "../h/types.h"
 
+extern void uTLB_RefillHandler ();
+extern void exceptionHandler ();
 
-extern void uTLB_RefillHandler();
-
-#endif
+#endif EXCEPTIONS
