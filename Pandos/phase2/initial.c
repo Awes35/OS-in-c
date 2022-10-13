@@ -34,7 +34,7 @@ pcb_PTR ReadyQueue; /* pointer to the tail of a queue of pcbs that are in the "r
 pcb_PTR currentProc; /* pointer to the pcb that is in the "running" state */
 int procCnt; /* integer indicating the number of started, but not yet terminated, processes */
 int softBlockCnt; /* integer indicating the number of started, but not yet terminated, processes that're in the "blocked" state" */
-semd_PTR deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock */
+int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock */
 
 /* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
 the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
