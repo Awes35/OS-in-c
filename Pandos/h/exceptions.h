@@ -12,6 +12,6 @@
 #include "../h/types.h"
 
 extern void uTLB_RefillHandler ();
-extern void exceptionHandler ();
+extern void sysTrapH ();
 
 #endif EXCEPTIONS

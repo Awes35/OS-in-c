@@ -15,10 +15,10 @@
 /* timer, timescale, TOD-LO and other bus regs */
 #define RAMBASEADDR		0x10000000
 #define RAMBASESIZE		0x10000004
-#define TODLOADDR		  0x1000001C
+#define TODLOADDR		0x1000001C
 #define INTERVALTMR		0x10000020	
 #define TIMESCALEADDR	0x10000024
-
+#define	INTDEVICEADDR	0x10000040
 
 /* utility constants */
 #define	TRUE			    1
@@ -117,6 +117,7 @@ the Pseudo-clock */
 #define PLTON			0x08000000	/* constant for enabling PLT (i.e., TE (bit 27) = 1) */
 #define PLTOFF			0xF7FFFFFF 	/* constant for disabling the PLT (i.e., TE (bit 27) = 0) */
 #define KERNON			0x00000000	/* constant for setting kernel-mode on after LDST (i.e., KUp (bit 3) = 0) */
+#define IMON			0x00000000	/* constant for setting the Interrupt Mask bits to on so interrupts are fully enabled */
 
 /* Value that the processor's Local Timer (PLT) is intialized to (in milliseconds) */
 #define INITIALPLT		5
@@ -131,5 +132,44 @@ the Pseudo-clock */
 /* Constants for returning values in v0 to the caller */
 #define ERRORCONST		-1			/* constant denoting an error occurred in the caller's request */
 #define SUCCESSCONST	0			/* constant denoting that the caller's request completed successfully */
+
+/* Value to increment the PC by */
+#define	PCINCREMENT		4
+
+/* Constant to help determine the index in deviceSemaphores that a particular device is located at. This constant is subtracted from 
+the line number, since interrupt lines 3-7 are used for peripheral devices  */
+#define	OFFSET			3	
+
+/* Cause register constant for setting all bits to 1 in the Cause register except for the ExcCode field, which is set to 10 for the RI code */
+#define	RESINSTRCODE	0xFFFFFF28
+
+/* Cause register constants to help determine which line the highest-priority interrupt is located at */
+#define	LINE1INT		0x00000200		/* constant for setting all bits to 0 in the Cause register except for bit 9, which is tied to line 1 interrupts */
+#define	LINE2INT		0x00000400		/* constant for setting all bits to 0 in the Cause register except for bit 10, which is tied to line 2 interrupts */
+#define	LINE3INT		0x00000800		/* constant for setting all bits to 0 in the Cause register except for bit 11, which is tied to line 3 interrupts */
+#define	LINE4INT		0x00001000		/* constant for setting all bits to 0 in the Cause register except for bit 12, which is tied to line 4 interrupts */
+#define	LINE5INT		0x00002000		/* constant for setting all bits to 0 in the Cause register except for bit 13, which is tied to line 5 interrupts */
+#define	LINE6INT		0x00004000		/* constant for setting all bits to 0 in the Cause register except for bit 14, which is tied to line 6 interrupts */
+#define	LINE7INT		0x00008000		/* constant for setting all bits to 0 in the Cause register except for bit 15, which is tied to line 7 interrupts */
+
+/* Constants for the different line numbers an interrupt may occur on */
+#define	LINE1			1				/* constant representing line 1 */
+#define	LINE2			2				/* constant representing line 2 */
+#define	LINE3			3				/* constant representing line 3 */
+#define	LINE4			4				/* constant representing line 4 */
+#define	LINE5			5				/* constant representing line 5 */
+#define	LINE6			6				/* constant representing line 6 */
+#define	LINE7			7				/* constant representing line 7 */
+
+/* Constants for the different device numbers an interrupt may occur on */
+#define	DEV0			0				/* constant representing device 0 */
+#define	DEV1			1				/* constant representing device 1 */
+#define	DEV2			2				/* constant representing device 2 */
+#define	DEV3			3				/* constant representing device 3 */
+#define	DEV4			4				/* constant representing device 4 */
+#define	DEV5			5				/* constant representing device 5 */
+#define	DEV6			6				/* constant representing device 6 */
+#define	DEV0			7				/* constant representing device 7 */
+
 
 #endif
