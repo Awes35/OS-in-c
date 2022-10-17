@@ -35,6 +35,7 @@ pcb_PTR currentProc; /* pointer to the pcb that is in the "running" state */
 int procCnt; /* integer indicating the number of started, but not yet terminated, processes */
 int softBlockCnt; /* integer indicating the number of started, but not yet terminated, processes that're in the "blocked" state" */
 int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock */
+cpu_t *start_tod; /* a pointer to the value on the time of day clock that the given process began executing at */
 
 /* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
 the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
@@ -46,7 +47,7 @@ void generalExceptionHandler(){
 	int exceptionReason; /* the exception code */
 
 	/* initializing local variables */
-	oldState = (state_t *) BIOSDATAPAGE; /* initializing the saved exception state to the address of the start of the BIOS Data Page */
+	oldState = (state_t *) BIOSDATAPAGE; /* storing the saved exeption state at the start of the BIOS Data Page */
 	exceptionReason = ((oldState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
 
 	if (exceptionReason == INTCONST){ /* if the exception code is 0 */
@@ -113,7 +114,7 @@ int main(){
 	p->p_s.s_sp = (memaddr) ramtop; /* setting p's stack pointer to the address of the last RAM frame */
 	p->p_s.s_pc = (memaddr) test; /* assigning the PC to the address of test */
 	p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
-	p->p_s.s_status = ALLOFF | IEPON | KERNON | PLTON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
+	p->p_s.s_status = ALLOFF | IEPON | KERNON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
 
 	/* initializng the all of the process tree fields to NULL */
 	p->p_prnt = NULL; /* setting the pointer to p's parent to NULL */
@@ -131,6 +132,6 @@ int main(){
 	procCnt++; /* incrementing the Process Count */
 
 	/* calling the scheduler */
-	scheduler();
+	switchProcess();
 	return (0);
 }

@@ -28,9 +28,6 @@
 #include "../h/interrupts.h"
 #include "../phase2/initial.c"
 
-/* Declaring global variables */
-cpu_t original_tod; /* the time on the Time of Day clock that the most recent process began executing at */
-
 /* Function to move processor state pointed to by source to processor state pointed to by dest. */
 void moveState(state_PTR source, state_PTR dest){
 	dest->s_entryHI = source->s_entryHI; /* setting dest's entryHI field to that of source */
@@ -41,15 +38,16 @@ void moveState(state_PTR source, state_PTR dest){
 	/* setting the contents of all of the general purpose registers associated with dest to the contents of the general purpose registers
 	associated with source */ 
 	int i;
-	for (i=0; i<STATEREGNUM; i++){ 
+	for (i = 0; i <STATEREGNUM; i++){ 
 		dest->s_reg[i] = source->s_reg[i];
 	}
 }
 
 void switchContext(pcb_PTR curr_proc){
-	currentProc = curr_proc; /* DO WE NEED THIS LINE/ */
+	currentProc = curr_proc;
 	LDST(&(currentProc->p_s)); /* loading the processor state for the processor state stored in pcb of the Current Process */
 }
+
 
 /* Function that includes the implementation of the scheduling algorithm that we will use in this operating system. The function
 implements a simple preemptive round-robin scheduling algorithm with a time slice of five milliseconds. The function  begins by
@@ -62,7 +60,7 @@ void switchProcess(){
 	currentProc = removeProcQ(&ReadyQueue); /* removing the pcb from the head of the ReadyQueue and storing its pointer in currentProc */
 	if (currentProc != NULL){ /* if the Ready Queue is not empty */
 		setTIMER(INITIALPLT); /* loading five milliseconds on the processor's Local Timer (PLT) */
-
+		start_tod = (cpu_t *) TODLOADDR; /* updating the time that the new process begins executing at with the value of the Time of Day clock*/
 		switchContext(currentProc);
 	}
 
@@ -72,7 +70,7 @@ void switchProcess(){
 	}
 
 	if (procCnt > 0 && softBlockCnt > 0){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
-		currentProc->p_s.s_status = ((currentProc->p_s.s_status) | IECON) & PLTOFF; /* enabling interrupts and disabling PLT for the Current Process so we can call the WAIT() function */
+		currentProc->p_s.s_status = ((currentProc->p_s.s_status) | IECON | IMON) & PLTOFF; /* enabling interrupts and disabling PLT for the Current Process so we can call the WAIT() function */
 		WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
 	}
 
