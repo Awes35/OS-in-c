@@ -171,5 +171,13 @@ the line number, since interrupt lines 3-7 are used for peripheral devices  */
 #define	DEV6			6				/* constant representing device 6 */
 #define	DEV0			7				/* constant representing device 7 */
 
+/* Constants signifying the first and last indices of the deviceSemaphores array */
+#define	FIRSTDEVINDEX	0				/* the first index in deviceSemaphores */
+#define	LASTDEVINDEX	48				/* the last index in deviceSemaphores */
+
+/* Constants representing the initial values of softBlockCount, Process Count (i.e., procCnt) and the semaphores in the deviceSemaphores array */
+#define	INITIALPROCCNT		0			/* the initial value of procCnt */
+#define	INITIALSFTBLKCNT	0			/* the initial value of softBlockCnt */
+#define	INITIALDEVSEMA4		0			/* the initial value of the device semaphores */
 
 #endif
