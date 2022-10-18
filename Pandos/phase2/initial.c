@@ -34,8 +34,10 @@ pcb_PTR ReadyQueue; /* pointer to the tail of a queue of pcbs that are in the "r
 pcb_PTR currentProc; /* pointer to the pcb that is in the "running" state */
 int procCnt; /* integer indicating the number of started, but not yet terminated, processes */
 int softBlockCnt; /* integer indicating the number of started, but not yet terminated, processes that're in the "blocked" state" */
-int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock */
-cpu_t *start_tod; /* a pointer to the value on the time of day clock that the given process began executing at */
+int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock. 
+									Note that this array will be implemented so that terminal device semaphores are last and terminal device semaphores
+									associated with a read operation in the array come before those associated with a write operation. */
+cpu_t start_tod; /* the value on the time of day clock that the given process began executing at */
 
 /* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
 the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
@@ -79,13 +81,13 @@ int main(){
 	/* initializing global variables */
 	ReadyQueue = mkEmptyProcQ(); /* initializng the ReadyQueue's tail pointer to be NULL */
 	currentProc = NULL; /* setting the pointer to the pcb that is in the "running" state to NULL */
-	procCnt = 0; /* setting the number of started, but not yet terminated, processes to 0 */
-	softBlockCnt = 0; /* setting the number of started, but not yet terminated, processes that're in the "blocked" state to 0 */
+	procCnt = INITIALPROCCNT; /* setting the number of started, but not yet terminated, processes to 0 */
+	softBlockCnt = INITIALSFTBLKCNT; /* setting the number of started, but not yet terminated, processes that're in the "blocked" state to 0 */
 
 	int i;
 	for (i = 0; i < MAXDEVICECNT; i++){
 		/* initializing the device semaphores */
-		deviceSemaphores[i] = 0;
+		deviceSemaphores[i] = INITIALDEVSEMA4;
 	}
 
 	/* initializing the free list of semaphore descriptors (along with the dummy nodes for the ASL) 
@@ -131,7 +133,7 @@ int main(){
 	insertProcQ(&ReadyQueue, p); /* inserting p into the Ready Queue */
 	procCnt++; /* incrementing the Process Count */
 
-	/* calling the scheduler */
+	/* calling the Scheduler */
 	switchProcess();
 	return (0);
 }

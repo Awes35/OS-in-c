@@ -28,7 +28,10 @@
 #include "../h/interrupts.h"
 #include "../phase2/initial.c"
 
-/* Function to move processor state pointed to by source to processor state pointed to by dest. */
+/* Function to copy the processor state pointed to by source into the processor state pointed to by dest. This 
+function will prove particularly useful when handling non-blocking SYSCALL exceptions that need to copy the
+saved exception state into the Current Process' processor state so that the Current Process can continue
+executing once the exception is handled. */
 void moveState(state_PTR source, state_PTR dest){
 	dest->s_entryHI = source->s_entryHI; /* setting dest's entryHI field to that of source */
 	dest->s_cause = source->s_cause; /* setting dest's Cause register contents to those associated with source */
@@ -43,8 +46,10 @@ void moveState(state_PTR source, state_PTR dest){
 	}
 }
 
+/* Function that sets the Current Process to the parameter curr_proc and then performs a LDST on the Current Process' processor
+state so that it can begin (or perhaps resume) execution. */
 void switchContext(pcb_PTR curr_proc){
-	currentProc = curr_proc;
+	currentProc = curr_proc; /* setting the Current Process to curr_proc */
 	LDST(&(currentProc->p_s)); /* loading the processor state for the processor state stored in pcb of the Current Process */
 }
 
@@ -59,8 +64,8 @@ And if the Process Count is greater than zero and the Soft-block Count is zero, 
 void switchProcess(){
 	currentProc = removeProcQ(&ReadyQueue); /* removing the pcb from the head of the ReadyQueue and storing its pointer in currentProc */
 	if (currentProc != NULL){ /* if the Ready Queue is not empty */
+		STCK(start_tod); /* updating start_tod with the value on the Time of Day Clock, as this is the time that the process will begin executing at */
 		setTIMER(INITIALPLT); /* loading five milliseconds on the processor's Local Timer (PLT) */
-		start_tod = (cpu_t *) TODLOADDR; /* updating the time that the new process begins executing at with the value of the Time of Day clock*/
 		switchContext(currentProc);
 	}
 
