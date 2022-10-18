@@ -13,5 +13,7 @@
 
 extern void uTLB_RefillHandler ();
 extern void sysTrapH ();
+extern void tlbTrapH ();
+extern void pgmTrapH ();
 
 #endif EXCEPTIONS
