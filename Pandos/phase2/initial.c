@@ -10,7 +10,10 @@
  * TLB-Refill handler, and a corresponding stack pointer), and create one
  * process and call the scheduler on it. We also define the global variables
  * (and initialize them in main()) needed in Phase 2 of development, and we 
- * implement the general exception handler in this module.
+ * implement the general exception handler in this module. The general exception
+ * handler passes the handling of interrupts along to the device interrupt handler
+ * and it passes the handling of all exceptions to the appropriate function
+ * in the exceptions.c module to handle the particular type of exception.
  * 
  * Written by: Kollen Gruizenga and Jake Heyser
  *
@@ -38,7 +41,7 @@ int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspo
 									at the last index of the array, aka: PCLOCKIDX
 									Note that this array will be implemented so that terminal device semaphores are last and terminal device semaphores
 									associated with a read operation in the array come before those associated with a write operation. */
-cpu_t start_tod; /* the value on the time of day clock that the given process began executing at */
+cpu_t start_tod; /* the value on the time of day clock that the Current Process begins executing at */
 
 /* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
 the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
@@ -66,12 +69,12 @@ void generalExceptionHandler(){
 }
 
 /* Function that represents the entry point of our program. It initializes the phase 1 data
- * structures (i.e., the ASL, free list of semaphore descriptors, and the process queue that we 
- * we will use to hold processes that are ready to be executed), initializes four words in the 
- * BIOS data page (i.e., one word each for the general exception handler, a corresponding stack 
- * pointer, the TLB-Refill handler, and a corresponding stack pointer), and creates one process
- * and calls the scheduler on it. The function also initializes the global variables for this
- * module. */
+* structures (such as the ASL, the free list of pcbs, and the process queue that we 
+* will use to hold processes that are ready to be executed), initializes four words in the 
+* BIOS data page (i.e., one word each for the general exception handler, a corresponding stack 
+* pointer, the TLB-Refill handler, and a corresponding stack pointer), and creates one process
+* and calls the Scheduler on it. The function also initializes the global variables for this
+* module. */
 int main(){
 	/* declaring local variables */
 	pcb_PTR p; /* a pointer to the process that we will instantiate in this function */
@@ -106,7 +109,7 @@ int main(){
 	/* loading the system-wide interval timer with 100 (INITIALINTTIMER) milliseconds, before a Pseudo-Clock tick occurs. */
 	LDIT(INITIALINTTIMER); /* invoking the macro function that handles setting the system-wide interval timer with a given value */
 
-	/* instantiating a single process so we can call the scheduler on it */
+	/* instantiating a single process so we can call the Scheduler on it */
 	p = allocPcb(); /* instantiating the process */
 	
 	/* initializing temp in order to then set p's stack pointer to the address of the top of RAM */

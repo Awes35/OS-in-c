@@ -9,12 +9,16 @@
  * pcb at the head of the Ready Queue and stores the pointer to the pcb in the
  * Current Process field. Then, it loads five milliseconds on the processor's
  * Local Timer before performing a LDST on the processor state stored in the pcb
- * of the Current Process. If the Ready Queue is empty, we have a series of 
+ * of the Current Process. If the Ready Queue is empty, there are a series of 
  * conditionals that need to be examined. If the Process Count is zero, we 
  * invoke the HALT BIOS service/instruction. If the Process Count > 0 and
  * the Soft-block Count > 0, we enter a Wait State. Lastly, if the Process
  * Count > 0 and the Soft-block Count is zero, we invoke the PANIC BIOS
- * service/instruction to handle deadlock.
+ * service/instruction to handle deadlock. The module also includes several
+ * other functions pertaining to process scheduling, such as moveState(),
+ * which copies the contents of a processor state in one location to
+ * a processor state in another location, and switchContext(), which performs
+ * a LDST on the Current Process' processor state.
  * 
  * Written by: Kollen Gruizenga and Jake Heyser
  *
@@ -57,7 +61,7 @@ void switchContext(pcb_PTR curr_proc){
 /* Function that includes the implementation of the scheduling algorithm that we will use in this operating system. The function
 implements a simple preemptive round-robin scheduling algorithm with a time slice of five milliseconds. The function  begins by
 removing the pcb at the head of the Ready Queue. If such a pcb exists, the function loads five milliseconds on the PLT and then
-performs a Load Processor State (LDST) on the processor state stored in pcb of the Current Process. If the Ready Queue
+calls switchContext() (which then performs a LDST on the processor state stored in pcb of the Current Process). If the Ready Queue
 was empty, then it checks to see if the Process Count is zero. If so, the function invokes the HALT BIOS instruction. 
 If the Process Count is greater than zero and Soft-block Count is greater than zero, the function enters a Wait State.
 And if the Process Count is greater than zero and the Soft-block Count is zero, the function invokes the PANIC BIOS instruction. */
