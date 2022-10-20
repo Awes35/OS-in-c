@@ -59,7 +59,7 @@ implements a simple preemptive round-robin scheduling algorithm with a time slic
 removing the pcb at the head of the Ready Queue. If such a pcb exists, the function loads five milliseconds on the PLT and then
 performs a Load Processor State (LDST) on the processor state stored in pcb of the Current Process. If the Ready Queue
 was empty, then it checks to see if the Process Count is zero. If so, the function invokes the HALT BIOS instruction. 
-If the Prcoess Count is greater than zero and Soft-block Count is greater than zero, the function enters a Wait State.
+If the Process Count is greater than zero and Soft-block Count is greater than zero, the function enters a Wait State.
 And if the Process Count is greater than zero and the Soft-block Count is zero, the function invokes the PANIC BIOS instruction. */
 void switchProcess(){
 	currentProc = removeProcQ(&ReadyQueue); /* removing the pcb from the head of the ReadyQueue and storing its pointer in currentProc */
