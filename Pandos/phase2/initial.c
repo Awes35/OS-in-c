@@ -34,7 +34,8 @@ pcb_PTR ReadyQueue; /* pointer to the tail of a queue of pcbs that are in the "r
 pcb_PTR currentProc; /* pointer to the pcb that is in the "running" state */
 int procCnt; /* integer indicating the number of started, but not yet terminated, processes */
 int softBlockCnt; /* integer indicating the number of started, but not yet terminated, processes that're in the "blocked" state" */
-int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock. 
+int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock, located 
+									at the last index of the array, aka: PCLOCKIDX
 									Note that this array will be implemented so that terminal device semaphores are last and terminal device semaphores
 									associated with a read operation in the array come before those associated with a write operation. */
 cpu_t start_tod; /* the value on the time of day clock that the given process began executing at */
@@ -45,11 +46,11 @@ program traps, processing is passed along to the Program Trap exception handler.
 (SYSCALL) events, processing is passed along to the SYSCALL exception handler. */
 void generalExceptionHandler(){
 	/* declaring local variables */
-	state_t *oldState; /* the saved execption state for Processor 0 */
+	state_t *oldState; /* the saved exception state for Processor 0 */
 	int exceptionReason; /* the exception code */
 
 	/* initializing local variables */
-	oldState = (state_t *) BIOSDATAPAGE; /* storing the saved exeption state at the start of the BIOS Data Page */
+	oldState = (state_t *) BIOSDATAPAGE; /* getting the saved exception state at the start of the BIOS Data Page */
 	exceptionReason = ((oldState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
 
 	if (exceptionReason == INTCONST){ /* if the exception code is 0 */
@@ -99,10 +100,10 @@ int main(){
 	procVec = (passupvector_t *) PASSUPVECTOR; /* initializing procVec to be a pointer to the address of the Process 0 Pass Up Vector */
 	procVec->tlb_refll_handler = (memaddr) uTLB_RefillHandler; /* initializing the address for handling TLB-Refill events */
 	procVec->tlb_refll_stackPtr = (memaddr) PROC0STACKPTR; /* initializing the stack pointer for handling Nucleus TLB-Refill events */
-	procVec->execption_handler = (memaddr) generalExceptionHandler; /* initializing the address for handling general exceptions */
+	procVec->exception_handler = (memaddr) generalExceptionHandler; /* initializing the address for handling general exceptions */
 	procVec->exception_stackPtr = (memaddr) PROC0STACKPTR; /* initializing the stack pointer for handling general exceptions */
 
-	/* loading the system-wide interval timer with 100 (INITIALINTTIMER) milliseconds. THIS IS WRONG. FIX THIS. */
+	/* loading the system-wide interval timer with 100 (INITIALINTTIMER) milliseconds, before a Pseudo-Clock tick occurs. */
 	LDIT(INITIALINTTIMER); /* invoking the macro function that handles setting the system-wide interval timer with a given value */
 
 	/* instantiating a single process so we can call the scheduler on it */
