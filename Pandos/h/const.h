@@ -108,6 +108,7 @@ the Pseudo-clock */
 
 /* Value to set the accumulated time field for a process that is instantiated */
 #define INITIALACCTIME	0
+#define PCLOCKIDX       (MAXDEVICECNT-1)
 
 /* Processor State--Status register constants */
 #define ALLOFF			0x00000000	/* every bit in the Status register is set to 0; this will prove helpful for bitwise-OR operations */

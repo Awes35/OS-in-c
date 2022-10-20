@@ -98,7 +98,7 @@ typedef struct semd_t {
 } semd_t, *semd_PTR;
 
 /* Pass Up Vector */
-typedef struct passupvector {
+typedef struct passupvector_t {
     unsigned int tlb_refll_handler;
     unsigned int tlb_refll_stackPtr;
     unsigned int exception_handler;

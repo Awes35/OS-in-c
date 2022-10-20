@@ -13,4 +13,4 @@ extern void switchProcess ();
 extern void switchContext (pcb_PTR curr_proc);
 extern void moveState (state_PTR source, state_PTR dest);
 
-#endif SCHEDULER
+#endif
