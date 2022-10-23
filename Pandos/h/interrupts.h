@@ -13,5 +13,4 @@
 
 extern void deviceInterruptHandler();
 
-
 #endif

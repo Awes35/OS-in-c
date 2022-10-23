@@ -108,7 +108,9 @@ the Pseudo-clock */
 
 /* Value to set the accumulated time field for a process that is instantiated */
 #define INITIALACCTIME	0
-#define PCLOCKIDX       (MAXDEVICECNT-1)
+
+/* Value to */
+#define PCLOCKIDX       (MAXDEVICECNT - 1)
 
 /* Processor State--Status register constants */
 #define ALLOFF			0x00000000	/* every bit in the Status register is set to 0; this will prove helpful for bitwise-OR operations */
@@ -116,7 +118,6 @@ the Pseudo-clock */
 #define IEPON			0x00000004	/* constant for enabling interrupts after LDST (i.e., IEp (bit 2) = 1) */
 #define IECON			0x00000001	/* constant for enabling interrupts (i.e., IEc (bit 0) = 1) */
 #define PLTON			0x08000000	/* constant for enabling PLT (i.e., TE (bit 27) = 1) */
-#define PLTOFF			0xF7FFFFFF 	/* constant for disabling the PLT (i.e., TE (bit 27) = 0) */
 #define KERNON			0x00000000	/* constant for setting kernel-mode on after LDST (i.e., KUp (bit 3) = 0) */
 #define IMON			0x00000000	/* constant for setting the Interrupt Mask bits to on so interrupts are fully enabled */
 
@@ -180,5 +181,24 @@ the line number, since interrupt lines 3-7 are used for peripheral devices  */
 #define	INITIALPROCCNT		0			/* the initial value of procCnt */
 #define	INITIALSFTBLKCNT	0			/* the initial value of softBlockCnt */
 #define	INITIALDEVSEMA4		0			/* the initial value of the device semaphores */
+
+/* Constants representing the Syscall Numbers in Pandos */
+#define	SYS1NUM			1		
+#define	SYS2NUM			2
+#define	SYS3NUM			3
+#define	SYS4NUM			4
+#define	SYS5NUM			5
+#define	SYS6NUM			6
+#define	SYS7NUM			7
+#define	SYS8NUM			8
+
+/* Constant representing the lower bound on which we unblock semaphores and remove them from the ASL */
+#define	SEMA4THRESH		0
+
+/* Constant representing the initial value of the Pseudo-clock semaphore */
+#define	INITIALPCSEM	0
+
+/* Constant defining a large value to load the PLT with in switchProcess() when the Process Count and Soft Block Count are both greater than zero */
+#define NEVER			100000
 
 #endif
