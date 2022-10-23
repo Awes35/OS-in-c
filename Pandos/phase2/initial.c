@@ -38,8 +38,7 @@ pcb_PTR currentProc; /* pointer to the pcb that is in the "running" state */
 int procCnt; /* integer indicating the number of started, but not yet terminated, processes */
 int softBlockCnt; /* integer indicating the number of started, but not yet terminated, processes that're in the "blocked" state" */
 int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock, located 
-									at the last index of the array, aka: PCLOCKIDX
-									Note that this array will be implemented so that terminal device semaphores are last and terminal device semaphores
+									at the last index of the array (PCLOCKIDX). Note that this array will be implemented so that terminal device semaphores are last and terminal device semaphores
 									associated with a read operation in the array come before those associated with a write operation. */
 cpu_t start_tod; /* the value on the time of day clock that the Current Process begins executing at */
 
@@ -111,33 +110,38 @@ int main(){
 
 	/* instantiating a single process so we can call the Scheduler on it */
 	p = allocPcb(); /* instantiating the process */
+
+	if (p != NULL){ /* if the pcbFree list was not empty */
 	
-	/* initializing temp in order to then set p's stack pointer to the address of the top of RAM */
-	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
-	ramtop = temp->rambase + temp->ramsize; /* initializing ramptop to the address of the top of RAM */
+		/* initializing temp in order to then set p's stack pointer to the address of the top of RAM */
+		temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
+		ramtop = temp->rambase + temp->ramsize; /* initializing ramptop to the address of the top of RAM */
 
-	/* initializing the Processor State that is a part of p */
-	p->p_s.s_sp = (memaddr) ramtop; /* setting p's stack pointer to the address of the last RAM frame */
-	p->p_s.s_pc = (memaddr) test; /* assigning the PC to the address of test */
-	p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
-	p->p_s.s_status = ALLOFF | IEPON | KERNON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
+		/* initializing the Processor State that is a part of p */
+		p->p_s.s_sp = (memaddr) ramtop; /* setting p's stack pointer to the address of the last RAM frame */
+		p->p_s.s_pc = (memaddr) test; /* assigning the PC to the address of test */
+		p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
+		p->p_s.s_status = ALLOFF | IEPON | KERNON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
 
-	/* initializng the all of the process tree fields to NULL */
-	p->p_prnt = NULL; /* setting the pointer to p's parent to NULL */
-	p->p_child = NULL; /* setting the pointer to p's child to NULL */
-	p->p_next_sib = NULL; /* setting the pointer to p's next sibling to NULL */
-	p->p_prev_sib = NULL; /* setting the pointer to p's previous sibling to NULL */
+		/* initializng the all of the process tree fields to NULL */
+		p->p_prnt = NULL; /* setting the pointer to p's parent to NULL */
+		p->p_child = NULL; /* setting the pointer to p's child to NULL */
+		p->p_next_sib = NULL; /* setting the pointer to p's next sibling to NULL */
+		p->p_prev_sib = NULL; /* setting the pointer to p's previous sibling to NULL */
 
-	/* initializing the remaining pcb fields */
-	p->p_time = INITIALACCTIME; /* setting p's accumulated time field to zero */
-	p->p_semAdd = NULL; /* setting p's blocking address to NULL */
-	p->p_supportStruct = NULL; /* setting p's Support Structure pointer to NULL */
+		/* initializing the remaining pcb fields */
+		p->p_time = INITIALACCTIME; /* setting p's accumulated time field to zero */
+		p->p_semAdd = NULL; /* setting p's blocking address to NULL */
+		p->p_supportStruct = NULL; /* setting p's Support Structure pointer to NULL */
 
-	/* placing p into the Ready Queue and incrementing the Process Count */
-	insertProcQ(&ReadyQueue, p); /* inserting p into the Ready Queue */
-	procCnt++; /* incrementing the Process Count */
+		/* placing p into the Ready Queue and incrementing the Process Count */
+		insertProcQ(&ReadyQueue, p); /* inserting p into the Ready Queue */
+		procCnt++; /* incrementing the Process Count */
 
-	/* calling the Scheduler */
-	switchProcess();
+		/* calling the Scheduler function to begin executing a new process */
+		switchProcess();
+		return (0); 
+	}
+	PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
 	return (0);
 }
