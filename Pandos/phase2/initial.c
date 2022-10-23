@@ -78,8 +78,8 @@ int main(){
 	/* declaring local variables */
 	pcb_PTR p; /* a pointer to the process that we will instantiate in this function */
 	passupvector_t *procVec; /* a pointer to the Process 0 Pass Up Vector that we will initialize in this function */
-	memaddr ramtop; /* the last RAM frame */
-	devregarea_t *temp; /* devregarea that we can we use to determine the last RAM frame */
+	memaddr ramtop; /* the address of the last RAM frame */
+	devregarea_t *temp; /* device register area that we can we use to determine the last RAM frame */
 	
 	/* initializing global variables */
 	ReadyQueue = mkEmptyProcQ(); /* initializng the ReadyQueue's tail pointer to be NULL */
