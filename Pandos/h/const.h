@@ -116,10 +116,12 @@ the Pseudo-clock */
 #define ALLOFF			0x00000000	/* every bit in the Status register is set to 0; this will prove helpful for bitwise-OR operations */
 #define USERPON			0x00000008	/* constant for setting the user-mode on after LDST (i.e., KUp (bit 3) = 1) */
 #define IEPON			0x00000004	/* constant for enabling interrupts after LDST (i.e., IEp (bit 2) = 1) */
-#define IECON			0x00000001	/* constant for enabling interrupts (i.e., IEc (bit 0) = 1) */
+#define IECON			0x00000001	/* constant for enabling the global interrupt bit (i.e., IEc (bit 0) = 1) */
 #define PLTON			0x08000000	/* constant for enabling PLT (i.e., TE (bit 27) = 1) */
 #define KERNON			0x00000000	/* constant for setting kernel-mode on after LDST (i.e., KUp (bit 3) = 0) */
 #define IMON			0x00000000	/* constant for setting the Interrupt Mask bits to on so interrupts are fully enabled */
+#define IMOFF			0xFFFF00FF /* constant for disabling the Interrupt Mask bits */
+#define	IECOFF			0xFFFFFFFE	/* constant for disabling the global interrupt bit (i.e., IEc (bit 0) = 0) */
 
 /* Value that the processor's Local Timer (PLT) is intialized to (in milliseconds) */
 #define INITIALPLT		5
@@ -138,8 +140,8 @@ the Pseudo-clock */
 /* Value to increment the PC by */
 #define	PCINCREMENT		4
 
-/* Constant to help determine the index in deviceSemaphores that a particular device is located at. This constant is subtracted from 
-the line number, since interrupt lines 3-7 are used for peripheral devices  */
+/* Constant to help determine the index in deviceSemaphores and in the Interrupt Devices Bitmap that a particular device is located at. 
+This constant is subtracted from the line number, since interrupt lines 3-7 are used for peripheral devices  */
 #define	OFFSET			3	
 
 /* Cause register constant for setting all bits to 1 in the Cause register except for the ExcCode field, which is set to 10 for the RI code */
@@ -163,6 +165,16 @@ the line number, since interrupt lines 3-7 are used for peripheral devices  */
 #define	LINE6			6				/* constant representing line 6 */
 #define	LINE7			7				/* constant representing line 7 */
 
+/* Constants to help determine which device the highest-priority interrupt occurred on */
+#define	DEV0INT			0x00000001		/* constant for setting all bits in the Interrupting Devices Bit Map to 0, except for bit 0, which is tied to device 0 interrupts */
+#define	DEV1INT			0x00000002		/* constant for setting all bits in the Interrupting Devices Bit Map to 0, except for bit 1, which is tied to device 1 interrupts */
+#define	DEV2INT			0x00000004		/* constant for setting all bits in the Interrupting Devices Bit Map to 0, except for bit 2, which is tied to device 2 interrupts */
+#define	DEV3INT			0x00000008		/* constant for setting all bits in the Interrupting Devices Bit Map to 0, except for bit 3, which is tied to device 3 interrupts */
+#define	DEV4INT			0x00000010		/* constant for setting all bits in the Interrupting Devices Bit Map to 0, except for bit 4, which is tied to device 4 interrupts */
+#define	DEV5INT			0x00000020		/* constant for setting all bits in the Interrupting Devices Bit Map to 0, except for bit 5, which is tied to device 5 interrupts */
+#define	DEV6INT			0x00000040		/* constant for setting all bits in the Interrupting Devices Bit Map to 0, except for bit 6, which is tied to device 6 interrupts */
+#define	DEV7INT			0x00000080		/* constant for setting all bits in the Interrupting Devices Bit Map to 0, except for bit 7, which is tied to device 7 interrupts */
+
 /* Constants for the different device numbers an interrupt may occur on */
 #define	DEV0			0				/* constant representing device 0 */
 #define	DEV1			1				/* constant representing device 1 */
@@ -171,7 +183,7 @@ the line number, since interrupt lines 3-7 are used for peripheral devices  */
 #define	DEV4			4				/* constant representing device 4 */
 #define	DEV5			5				/* constant representing device 5 */
 #define	DEV6			6				/* constant representing device 6 */
-#define	DEV0			7				/* constant representing device 7 */
+#define	DEV7			7				/* constant representing device 7 */
 
 /* Constants signifying the first and last indices of the deviceSemaphores array */
 #define	FIRSTDEVINDEX	0				/* the first index in deviceSemaphores */
