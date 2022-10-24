@@ -132,6 +132,7 @@ void IOInt(pcb_PTR proc){
 
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
 		moveState(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
+		proc->p_s.s_status = ((proc->p_s.s_status) | IECON | IMON); /* re-enabling interrupts for the Current Process */
 		if (currentProc != NULL){ /* if there is a Current Process to return control to */
 			switchContext(proc); /* calling the function that returns control to the Current Process */
 		}
@@ -144,6 +145,7 @@ void IOInt(pcb_PTR proc){
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
 	moveState(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
+	proc->p_s.s_status = ((proc->p_s.s_status) | IECON | IMON); /* re-enabling interrupts for the Current Process */
 	if (currentProc != NULL){ /* if there is a Current Process to return control to */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
 	}
