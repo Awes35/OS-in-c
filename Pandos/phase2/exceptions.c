@@ -148,7 +148,7 @@ Using the physical address of the semaphore in the 'sem' pointer, which will the
 If the value of the semaphore indicates no blocking processes, then return to the Current Process (to be resumed). */
 void signalOp(int *sem, pcb_PTR proc){
 	(*sem)++; /* increment the semaphore's value by 1 */
-	if(*sem <= SEMA4THRESH){ /* if value of semaphore indicates a blocking processes */ 
+	if(*sem <= SEMA4THRESH){ /* if value of semaphore indicates a blocking process */ 
 		pcb_PTR temp = removeBlocked(&sem); /* make semaphore not blocking, ie: make it not blocking on the ASL */
 		insertProcQ(&ReadyQueue, temp); /* add process' PCB to the ReadyQueue */
 	}
@@ -171,7 +171,7 @@ void waitForIO(int lineNum, int deviceNum, int readBool, pcb_PTR proc){
 	/* initializing the index in deviceSemaphores associated with the device requesting I/O. Note that if the device is a terminal device,
 	the next line initializes index to the semaphore associated with a read operation for that device */
 	index = ((lineNum - OFFSET) * DEVPERINT) + deviceNum; 
-	if (lineNum == 7 && readBool != TRUE){ /* if the device is a terminal device and the device is waiting for a write operation */
+	if (lineNum == LINE7 && readBool != TRUE){ /* if the device is a terminal device and the device is waiting for a write operation */
 		index += DEVPERINT; /* adding 8 to index, since the semaphore associated with a read operation comes 8 indices before that associated with a write operation for a given device */
 	}
 
