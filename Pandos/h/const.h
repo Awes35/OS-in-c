@@ -19,6 +19,9 @@
 #define INTERVALTMR		0x10000020	
 #define TIMESCALEADDR	0x10000024
 #define	INTDEVICEADDR	0x10000040
+#define	DEVADDRBASE		0x10000054
+/*  #define	DEVADDROFFSET	0x80
+	#define	DEVADDROFFSET2	0x10
 
 /* utility constants */
 #define	TRUE			    1
