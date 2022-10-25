@@ -33,6 +33,7 @@ HIDDEN void getSupportData(pcb_PTR proc);
 /* declaring global variables */
 int sysNum; /* the number of the SYSCALL that we are addressing */
 state_PTR savedExceptState; /* a pointer to the saved exception state */
+cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
 /* Function that transfers data to the Current Process' pcb */
 void updateCurrPCB(pcb_PTR proc){
@@ -43,13 +44,10 @@ void updateCurrPCB(pcb_PTR proc){
 Process' pcb, updates the accumulated CPU time for the Current Process, and blocks the Current Process on the ASL. */
 void blockCurr(int *sem, pcb_PTR proc){
 	updateCurrPCB(proc); /* calling the function that copies the saved processor state into the Current Process' pcb */
-	cpu_t curr_tod; /* variable to hold the current TOD clock val */
-	STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
 	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	insertBlocked(sem, proc); /* blocking the Current Process on the ASL */
 	currentProc = NULL; /* setting currentProc to NULL because the old process is now blocked */ 
 }
-
 
 /* Function that handles SYS1 events. In other words, this internal function creates a new process. The function
 allocates a new pcb and, if allocPcb() returns NULL (i.e., there are no more free pcbs), an error code of -1
@@ -186,8 +184,6 @@ in the caller's v0 register. Afterward, the function copies the saved exception 
 Process' processor state and then calls the function to load the Current State's (updated) processor state into the CPU so it can continue
 executing. */
 void getCPUTime(pcb_PTR proc){
-	cpu_t curr_tod; /* variable to hold the current TOD clock val */
-	STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
 	savedExceptState->s_v0 = proc->p_time + (curr_tod - start_tod); /* placing the accumulated processor time used by the requesting process in v0 */
 	updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
 	switchContext(proc); /* returning control to the Current Process by loading its (updated) processor state */
@@ -243,6 +239,7 @@ void sysTrapH(){
 	/* initializing global variables */ 
 	sysNum = currentProc->p_s.s_a0; /* initializing the number of the SYSCALL that we are addressing */
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
+	STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
 
 	savedExceptState->s_pc = savedExceptState->s_pc + PCINCREMENT; /* incrementing the value of the PC in the saved exception state by 4 */
 
