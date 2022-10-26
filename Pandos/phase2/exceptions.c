@@ -21,7 +21,7 @@
 
 /* function declarations */
 HIDDEN void blockCurr(int *sem, pcb_PTR proc);
-HIDDEN void createProcess(state_PTR stateSYS, support_t *suppStruct);
+HIDDEN void createProcess(pcb_PTR proc, state_PTR stateSYS, support_t *suppStruct);
 HIDDEN void terminateProcess(pcb_PTR proc);
 HIDDEN void waitOp(int *sem, pcb_PTR proc);
 HIDDEN void signalOp(int *sem, pcb_PTR proc);
@@ -33,7 +33,6 @@ HIDDEN void getSupportData(pcb_PTR proc);
 /* declaring global variables */
 int sysNum; /* the number of the SYSCALL that we are addressing */
 state_PTR savedExceptState; /* a pointer to the saved exception state */
-cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
 /* Function that transfers data to the Current Process' pcb */
 void updateCurrPCB(pcb_PTR proc){
@@ -43,7 +42,8 @@ void updateCurrPCB(pcb_PTR proc){
 /* Function that handles the steps needed for blocking a process. The function copies the saved processor state into the Current
 Process' pcb, updates the accumulated CPU time for the Current Process, and blocks the Current Process on the ASL. */
 void blockCurr(int *sem, pcb_PTR proc){
-	/* initializing curr_tod */
+	/* declaring & initializing curr_tod */
+	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
 
 	updateCurrPCB(proc); /* calling the function that copies the saved processor state into the Current Process' pcb */
@@ -177,7 +177,7 @@ void waitForIO(int lineNum, int deviceNum, int readBool, pcb_PTR proc){
 	}
 
 	softBlockCnt++; /* incrementing the soft block count, since a new process has been placed in the "blocked" state */
-	
+	(deviceSemaphores[index])--; /* decrement the semaphore's value by 1 */
 	blockCurr(&deviceSemaphores[index], proc); /* block the Current Process on the ASL */
 	switchProcess(); /* calling the Scheduler to begin executing the next process */
 }
@@ -187,7 +187,8 @@ in the caller's v0 register. Afterward, the function copies the saved exception 
 Process' processor state and then calls the function to load the Current State's (updated) processor state into the CPU so it can continue
 executing. */
 void getCPUTime(pcb_PTR proc){
-	/* initializing curr_tod */
+	/* declaring & initializing curr_tod */
+	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
 
 	savedExceptState->s_v0 = proc->p_time + (curr_tod - start_tod); /* placing the accumulated processor time used by the requesting process in v0 */
@@ -242,7 +243,7 @@ exception), and checking to see what SYSCALL number was requested so it can invo
 SYSCALL. If an invalid SYSCALL number was provided (i.e., the SYSCALL number requested was nine or above), we invoke the internal
 function that performs a standard Pass Up or Die operation using the GENERALEXCEPT index value.  */
 void sysTrapH(){
-	/* initializing global variables, except for curr_tod, which will be initialized later */ 
+	/* initializing global variables */ 
 	sysNum = currentProc->p_s.s_a0; /* initializing the number of the SYSCALL that we are addressing */
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 

@@ -25,7 +25,7 @@
  HIDDEN pcb_PTR unblockSem(int *sem, pcb_PTR proc);
 
  /* Declaring global variables */
- cpu_t curr_tod; /* the current value on the Time of Day clock */
+ cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
  cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
  state_PTR savedExceptState; /* a pointer to the saved exception state */
 
@@ -68,12 +68,9 @@
 
  /* Internal helper function that handles Processor Local Timer (PLT) interrupts */
  void pltTimerInt(pcb_PTR proc){
-	/* initializing curr_tod */
-	STCK(curr_tod); /* initializing the current value on the Time of Day clock */
-
  	if (proc != NULL){
  		updateCurrPCB(savedExceptState, &(proc->p_s)); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
- 		proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+ 		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
  		insertProcQ(&ReadyQueue, proc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
 		proc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
  		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
@@ -94,7 +91,10 @@
 		removeBlocked(&deviceSemaphores[PCLOCKIDX]); /* unblock the first (i.e., head) pcb from the Pseudo-Clock semaphore's process queue */
 	}
 	deviceSemaphores[PCLOCKIDX] = INITIALPCSEM; /* resetting the Pseudo-clock semaphore to zero */
+	softBlockCnt--; /* decrementing the number of started, but not yet terminated, processes that are in a "blocked" state */
 	updateCurrPCB(savedExceptState, &(proc->p_s)); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+	setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 	if (proc != NULL){ /* if there is a Current Process to return control to */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
  	}
@@ -112,6 +112,7 @@ void IOInt(pcb_PTR proc){
 	int lineNum; /* the line number that the highest-priority interrupt occurred on */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
 	int index; /* the index in deviceSemaphores and in devreg of the device associated with the highest-priority interrupt */
+	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	devregarea_t *temp; /* device register area that we can use to determine the status code from the device register associated with the highest-priority interrupt */
 	int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 	pcb_PTR unblockedPcb; /* the pcb which originally initiated the I/O request */
@@ -130,18 +131,20 @@ void IOInt(pcb_PTR proc){
 		lineNum = LINE6; /* initializing lineNum to 6, since the highest-priority interrupt occurred on line 6 */
 	}
 
-	/* initializing remaining local variables, except for unblockedPcb, which will be initialized later on */
+	/* initializing remaining local variables, except for unblockedPcb and curr_tod, which will be initialized later on */
 	devNum = findDeviceNum(lineNum); /* initializing devNum by calling the internal function that returns the device number associated with the highest-priority interrupt */	
 	index = ((lineNum - OFFSET) * DEVPERINT) + devNum; /* initializing the index in deviceSemaphores of the device associated with the highest-priority interrupt */
 	temp = (devregarea_t *) DEVADDRBASE; /* initialization of temp */
 	statusCode = temp->devreg[index].t_recv_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
-	
+
 	temp->devreg[index].t_recv_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 	unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
 
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
 		updateCurrPCB(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
+			proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 			switchContext(proc); /* calling the function that returns control to the Current Process */
 		}
 		switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
@@ -154,6 +157,10 @@ void IOInt(pcb_PTR proc){
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
 	updateCurrPCB(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
 	if (proc != NULL){ /* if there is a Current Process to return control to */
+		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
+		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+		STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
+		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
@@ -170,6 +177,7 @@ void terminalInt(pcb_PTR proc){
 	/* delcaring local variables */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
 	int index; /* the index in devreg of the device associated with the highest-priority interrupt */
+	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	devregarea_t *temp; /* device register area that we can use to determine the status code from the device register associated with the highest-priority interrupt */
 	unsigned int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 	pcb_PTR unblockedPcb; /* the pcb which originally initiated the I/O request */
@@ -193,6 +201,8 @@ void terminalInt(pcb_PTR proc){
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
 		updateCurrPCB(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
+			proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 			switchContext(proc); /* calling the function that returns control to the Current Process */
 		}
 		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
@@ -205,6 +215,10 @@ void terminalInt(pcb_PTR proc){
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
 	updateCurrPCB(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
 	if (proc != NULL){ /* if there is a Current Process to return control to */
+		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
+		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+		STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
+		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
@@ -212,7 +226,8 @@ void terminalInt(pcb_PTR proc){
 
  /* Nucleus' device interrupt handler function (exception code 0) */
  void intTrapH(){
- 	/* initializing global variables, except for curr_tod, which will be initialized later */
+ 	/* initializing global variables */
+	STCK(interrupt_tod); /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
  	remaining_time = getTIMER(); /* initializing the remaining time left on the Current Process' quantum */
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 

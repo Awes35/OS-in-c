@@ -54,6 +54,7 @@ void moveState(state_PTR source, state_PTR dest){
 state so that it can begin (or perhaps resume) execution. */
 void switchContext(pcb_PTR curr_proc){
 	currentProc = curr_proc; /* setting the Current Process to curr_proc */
+	STCK(start_tod); /* updating start_tod with the value on the Time of Day Clock, as this is the time that the process will begin executing at */
 	LDST(&(currentProc->p_s)); /* loading the processor state for the processor state stored in pcb of the Current Process */
 }
 
@@ -68,7 +69,6 @@ And if the Process Count is greater than zero and the Soft-block Count is zero, 
 void switchProcess(){
 	currentProc = removeProcQ(&ReadyQueue); /* removing the pcb from the head of the ReadyQueue and storing its pointer in currentProc */
 	if (currentProc != NULL){ /* if the Ready Queue is not empty */
-		STCK(start_tod); /* updating start_tod with the value on the Time of Day Clock, as this is the time that the process will begin executing at */
 		setTIMER(INITIALPLT); /* loading five milliseconds on the processor's Local Timer (PLT) */
 		switchContext(currentProc);
 	}
