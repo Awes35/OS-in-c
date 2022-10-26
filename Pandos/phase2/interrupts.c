@@ -13,6 +13,7 @@
  #include "../h/pcb.h"
  #include "../h/scheduler.h"
  #include "../h/interrupts.h"
+ #include "../h/exceptions.h"
  #include "../phase2/initial.c"
 
  /* Function declarations */
@@ -67,10 +68,14 @@
 
  /* Internal helper function that handles Processor Local Timer (PLT) interrupts */
  void pltTimerInt(pcb_PTR proc){
+	/* initializing curr_tod */
+	STCK(curr_tod); /* initializing the current value on the Time of Day clock */
+
  	if (proc != NULL){
- 		moveState(savedExceptState, &(proc->p_s)); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+ 		updateCurrPCB(savedExceptState, &(proc->p_s)); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
  		proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
  		insertProcQ(&ReadyQueue, proc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
+		proc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
  		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
  	}
  	PANIC(); /* otherwise, Current Process is NULL, so the function invokes the PANIC() function to stop the system and print a warning message on terminal 0 */
@@ -89,8 +94,8 @@
 		removeBlocked(&deviceSemaphores[PCLOCKIDX]); /* unblock the first (i.e., head) pcb from the Pseudo-Clock semaphore's process queue */
 	}
 	deviceSemaphores[PCLOCKIDX] = INITIALPCSEM; /* resetting the Pseudo-clock semaphore to zero */
-	moveState(savedExceptState, &(proc->p_s)); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
-	if (currentProc != NULL){ /* if there is a Current Process to return control to */
+	updateCurrPCB(savedExceptState, &(proc->p_s)); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	if (proc != NULL){ /* if there is a Current Process to return control to */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
  	}
 	switchProcess(); /* if there is no Current Process to return control to, call the Scheduler function to begin executing a new process */
@@ -107,9 +112,8 @@ void IOInt(pcb_PTR proc){
 	int lineNum; /* the line number that the highest-priority interrupt occurred on */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
 	int index; /* the index in deviceSemaphores and in devreg of the device associated with the highest-priority interrupt */
-	/* memaddr devRegAddr; /* the starting address of devNum's device register */
 	devregarea_t *temp; /* device register area that we can use to determine the status code from the device register associated with the highest-priority interrupt */
-	unsigned int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
+	int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 	pcb_PTR unblockedPcb; /* the pcb which originally initiated the I/O request */
 
 	/* determining exactly which line number the interrupt occurred on so we can initialize lineNum */
@@ -129,16 +133,15 @@ void IOInt(pcb_PTR proc){
 	/* initializing remaining local variables, except for unblockedPcb, which will be initialized later on */
 	devNum = findDeviceNum(lineNum); /* initializing devNum by calling the internal function that returns the device number associated with the highest-priority interrupt */	
 	index = ((lineNum - OFFSET) * DEVPERINT) + devNum; /* initializing the index in deviceSemaphores of the device associated with the highest-priority interrupt */
-	/* devRegAddr = ((memaddr) DEVADDRBASE) + ((lineNum - OFFSET) * ((memaddr) DEVADDROFFSET)) + (devNum * ((memaddr) DEVADDROFFSET2)); /* initializing the starting address of devNum's device register */
 	temp = (devregarea_t *) DEVADDRBASE; /* initialization of temp */
-	statusCode = temp->devreg[index].d_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
+	statusCode = temp->devreg[index].t_recv_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 	
-	temp->devreg[index].d_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
+	temp->devreg[index].t_recv_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 	unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
 
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		moveState(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
-		if (currentProc != NULL){ /* if there is a Current Process to return control to */
+		updateCurrPCB(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
+		if (proc != NULL){ /* if there is a Current Process to return control to */
 			switchContext(proc); /* calling the function that returns control to the Current Process */
 		}
 		switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
@@ -149,8 +152,8 @@ void IOInt(pcb_PTR proc){
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	moveState(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
-	if (currentProc != NULL){ /* if there is a Current Process to return control to */
+	updateCurrPCB(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
+	if (proc != NULL){ /* if there is a Current Process to return control to */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
@@ -175,24 +178,24 @@ void terminalInt(pcb_PTR proc){
 	devNum = findDeviceNum(LINE7); /* initializing devNum by calling the internal function that returns the device number associated with the highest-priority interrupt */	
 	index = ((LINE7 - OFFSET) * DEVPERINT) + devNum; /* initializing the index of the device register of the device associated with the highest-priority interrupt */
 	temp = (devregarea_t *) DEVADDRBASE; /* initialization of temp */
-	if (temp->devreg[index].d_data0 & STATUSON != READY){ /* if the device's status code is not 1, meaning the device is not "Ready" */
+	if (temp->devreg[index].t_transm_status & STATUSON != READY){ /* if the device's status code is not 1, meaning the device is not "Ready" */
 		/* the interrupt associated with the terminal device is a write interrupt */
-		statusCode = temp->devreg[index].d_data0; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
-		temp->devreg[index].d_data0 = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
+		statusCode = temp->devreg[index].t_transm_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
+		temp->devreg[index].t_transm_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 		unblockedPcb = removeBlocked(&deviceSemaphores[index + DEVPERINT]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
 	}
 	else{ /* otherwise, the interrupt associated with the terminal device is a read interrupt */
-		statusCode = temp->devreg[index].d_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
-		temp->devreg[index].d_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
+		statusCode = temp->devreg[index].t_recv_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
+		temp->devreg[index].t_recv_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 		unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
 	}
 	
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		moveState(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
-		if (currentProc != NULL){ /* if there is a Current Process to return control to */
+		updateCurrPCB(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
+		if (proc != NULL){ /* if there is a Current Process to return control to */
 			switchContext(proc); /* calling the function that returns control to the Current Process */
 		}
-		switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
+		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 	}
 
 	/* unblockedPcb is not NULL */
@@ -200,8 +203,8 @@ void terminalInt(pcb_PTR proc){
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	moveState(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
-	if (currentProc != NULL){ /* if there is a Current Process to return control to */
+	updateCurrPCB(savedExceptState, &(proc->p_s)); /* update the Current Process' processor state before resuming process' execution */
+	if (proc != NULL){ /* if there is a Current Process to return control to */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
@@ -209,8 +212,7 @@ void terminalInt(pcb_PTR proc){
 
  /* Nucleus' device interrupt handler function (exception code 0) */
  void intTrapH(){
- 	/* initializing global variables */
- 	STCK(curr_tod); /* initializing the current value on the Time of Day clock */
+ 	/* initializing global variables, except for curr_tod, which will be initialized later */
  	remaining_time = getTIMER(); /* initializing the remaining time left on the Current Process' quantum */
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 
