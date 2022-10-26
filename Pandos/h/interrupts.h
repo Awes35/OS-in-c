@@ -11,6 +11,6 @@
 #include "../h/types.h"
 
 
-extern void deviceInterruptHandler();
+extern void intTrapH();
 
 #endif
