@@ -7,86 +7,87 @@
   *
   ****************************************************************************/
 
- #include "../h/asl.h"
- #include "../h/types.h"
- #include "../h/const.h"
- #include "../h/pcb.h"
- #include "../h/scheduler.h"
- #include "../h/interrupts.h"
- #include "../h/exceptions.h"
- #include "../phase2/initial.c"
+#include "../h/asl.h"
+#include "../h/types.h"
+#include "../h/const.h"
+#include "../h/pcb.h"
+#include "../h/scheduler.h"
+#include "../h/interrupts.h"
+#include "../h/exceptions.h"
+#include "../phase2/initial.c"
+#include "/usr/include/umps3/umps/libumps.h"
 
- /* Function declarations */
- HIDDEN void pltTimerInt(pcb_PTR proc);
- HIDDEN void intTimerInt(pcb_PTR proc);
- HIDDEN void terminalInt(pcb_PTR proc);
- HIDDEN void IOInt(pcb_PTR proc);
- HIDDEN int findDeviceNum(int lineNumber);
- HIDDEN pcb_PTR unblockSem(int *sem, pcb_PTR proc);
+/* Function declarations */
+HIDDEN void pltTimerInt(pcb_PTR proc);
+HIDDEN void intTimerInt(pcb_PTR proc);
+HIDDEN void terminalInt(pcb_PTR proc);
+HIDDEN void IOInt(pcb_PTR proc);
+HIDDEN int findDeviceNum(int lineNumber);
+HIDDEN pcb_PTR unblockSem(int *sem, pcb_PTR proc);
 
- /* Declaring global variables */
- cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
- cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
- state_PTR savedExceptState; /* a pointer to the saved exception state */
+/* Declaring global variables */
+cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
+cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
+state_PTR savedExceptState; /* a pointer to the saved exception state */
 
- /* Internal helper function responsible for determining what device number the highest-priority interrupt occurred on. The function
- returns that number to the caller. */
- int findDeviceNum(int lineNumber){
-	/* declaring local variables */
-	devregarea_t *temp; /* device register area that we can use to determine which device number is associated with the highest-priority interrupt */
-	unsigned int bitMap; /* the 32-bit contents of the Interrupt Devices Bit Map associated with the line number that was passed in as a parameter */
+/* Internal helper function responsible for determining what device number the highest-priority interrupt occurred on. The function
+returns that number to the caller. */
+int findDeviceNum(int lineNumber){
+/* declaring local variables */
+devregarea_t *temp; /* device register area that we can use to determine which device number is associated with the highest-priority interrupt */
+unsigned int bitMap; /* the 32-bit contents of the Interrupt Devices Bit Map associated with the line number that was passed in as a parameter */
 
-	/* initializing temp and bitMap in order to determine which device number is associated with the highest-priority interrupt */
-	temp = (devregarea_t *) INTDEVICEADDR; /* initialization of temp */
-	bitMap = temp->interrupt_dev[lineNumber - OFFSET]; /* initialization of bitMap */
+/* initializing temp and bitMap in order to determine which device number is associated with the highest-priority interrupt */
+temp = (devregarea_t *) INTDEVICEADDR; /* initialization of temp */
+bitMap = temp->interrupt_dev[lineNumber - OFFSET]; /* initialization of bitMap */
 
-	/* determining which device number is associated with the highest-priority interrupt based on the address of bitMap */
-	if (bitMap & DEV0INT != ALLOFF){ /* if there is a pending interrupt associated with device 0 */
-		return DEV0; /* returning 0 to the user, since the highest-priority interrupt is associated with device 0 */
-	}
-	if (bitMap & DEV1INT != ALLOFF){ /* if there is a pending interrupt associated with device 1 */
-		return DEV1; /* returning 1 to the user, since the highest-priority interrupt is associated with device 1 */
-	}
-	if (bitMap & DEV2INT != ALLOFF){ /* if there is a pending interrupt associated with device 2 */
-		return DEV2; /* returning 2 to the user, since the highest-priority interrupt is associated with device 2 */
-	}
-	if (bitMap & DEV3INT != ALLOFF){ /* if there is a pending interrupt associated with device 3 */
-		return DEV3; /* returning 3 to the user, since the highest-priority interrupt is associated with device 3 */
-	}
-	if (bitMap & DEV4INT != ALLOFF){ /* if there is a pending interrupt associated with device 4 */
-		return DEV4; /* returning 4 to the user, since the highest-priority interrupt is associated with device 4 */
-	}
-	if (bitMap & DEV5INT != ALLOFF){ /* if there is a pending interrupt associated with device 5 */
-		return DEV5; /* returning 5 to the user, since the highest-priority interrupt is associated with device 5 */
-	}
-	if (bitMap & DEV6INT != ALLOFF){ /* if there is a pending interrupt associated with device 6 */
-		return DEV6; /* returning 6 to the user, since the highest-priority interrupt is associated with device 6 */
-	}
-	/* otherwise, there is a pending interrupt associated with device 7, since there are only eight devices */
-	return DEV7; /* returning 7 to the user, since the highest-priority interrupt is associated with device 7 */
- }
+/* determining which device number is associated with the highest-priority interrupt based on the address of bitMap */
+if (bitMap & DEV0INT != ALLOFF){ /* if there is a pending interrupt associated with device 0 */
+	return DEV0; /* returning 0 to the user, since the highest-priority interrupt is associated with device 0 */
+}
+if (bitMap & DEV1INT != ALLOFF){ /* if there is a pending interrupt associated with device 1 */
+	return DEV1; /* returning 1 to the user, since the highest-priority interrupt is associated with device 1 */
+}
+if (bitMap & DEV2INT != ALLOFF){ /* if there is a pending interrupt associated with device 2 */
+	return DEV2; /* returning 2 to the user, since the highest-priority interrupt is associated with device 2 */
+}
+if (bitMap & DEV3INT != ALLOFF){ /* if there is a pending interrupt associated with device 3 */
+	return DEV3; /* returning 3 to the user, since the highest-priority interrupt is associated with device 3 */
+}
+if (bitMap & DEV4INT != ALLOFF){ /* if there is a pending interrupt associated with device 4 */
+	return DEV4; /* returning 4 to the user, since the highest-priority interrupt is associated with device 4 */
+}
+if (bitMap & DEV5INT != ALLOFF){ /* if there is a pending interrupt associated with device 5 */
+	return DEV5; /* returning 5 to the user, since the highest-priority interrupt is associated with device 5 */
+}
+if (bitMap & DEV6INT != ALLOFF){ /* if there is a pending interrupt associated with device 6 */
+	return DEV6; /* returning 6 to the user, since the highest-priority interrupt is associated with device 6 */
+}
+/* otherwise, there is a pending interrupt associated with device 7, since there are only eight devices */
+return DEV7; /* returning 7 to the user, since the highest-priority interrupt is associated with device 7 */
+}
 
- /* Internal helper function that handles Processor Local Timer (PLT) interrupts */
- void pltTimerInt(pcb_PTR proc){
- 	if (proc != NULL){
- 		updateCurrPCB(savedExceptState, &(proc->p_s)); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
- 		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
- 		insertProcQ(&ReadyQueue, proc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
-		proc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
- 		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
- 	}
- 	PANIC(); /* otherwise, Current Process is NULL, so the function invokes the PANIC() function to stop the system and print a warning message on terminal 0 */
- }
+/* Internal helper function that handles Processor Local Timer (PLT) interrupts */
+void pltTimerInt(pcb_PTR proc){
+if (proc != NULL){
+	updateCurrPCB(savedExceptState, &(proc->p_s)); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+	insertProcQ(&ReadyQueue, proc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
+	proc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
+	switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
+}
+PANIC(); /* otherwise, Current Process is NULL, so the function invokes the PANIC() function to stop the system and print a warning message on terminal 0 */
+}
 
- /* Internal helper function that handles interrupts generated by the System-wide Interval Timer. Note that for the purposes of this
- function, we will NOT charge any process with the accumulated CPU time needed to handle this interrupt, primarily because we should not
- charge the Current Process with such time, because it is possible for the an Interval Timer interrupt to occur even when there is no
- Current Process. It is also illogical to charge the Current Process with the CPU time needed to handle this type of interrupt because
- the Current Process is not actually using this CPU time to execute its own process; the time is being spent handling a system-wide 
- interrupt. So, we will refrain from charging any process with the time needed to handle this type of interrupt. */
- void intTimerInt(pcb_PTR proc){
- 	LDIT(INITIALINTTIMER); /* placing 100 milliseconds back on the Interval Timer for the next Pseudo-clock tick */
- 	/* unblocking all pcbs blocked on the Pseudo-Clock semaphore */
+/* Internal helper function that handles interrupts generated by the System-wide Interval Timer. Note that for the purposes of this
+function, we will NOT charge any process with the accumulated CPU time needed to handle this interrupt, primarily because we should not
+charge the Current Process with such time, because it is possible for the an Interval Timer interrupt to occur even when there is no
+Current Process. It is also illogical to charge the Current Process with the CPU time needed to handle this type of interrupt because
+the Current Process is not actually using this CPU time to execute its own process; the time is being spent handling a system-wide 
+interrupt. So, we will refrain from charging any process with the time needed to handle this type of interrupt. */
+void intTimerInt(pcb_PTR proc){
+	LDIT(INITIALINTTIMER); /* placing 100 milliseconds back on the Interval Timer for the next Pseudo-clock tick */
+	/* unblocking all pcbs blocked on the Pseudo-Clock semaphore */
 	while (headBlocked(&deviceSemaphores[PCLOCKIDX]) != NULL){ /* while the Pseudo-Clock semaphore has a blocked pcb */
 		removeBlocked(&deviceSemaphores[PCLOCKIDX]); /* unblock the first (i.e., head) pcb from the Pseudo-Clock semaphore's process queue */
 	}
@@ -97,7 +98,7 @@
 	setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 	if (proc != NULL){ /* if there is a Current Process to return control to */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
- 	}
+	}
 	switchProcess(); /* if there is no Current Process to return control to, call the Scheduler function to begin executing a new process */
 }
 

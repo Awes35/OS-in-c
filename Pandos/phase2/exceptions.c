@@ -18,6 +18,7 @@
 #include "../h/exceptions.h"
 #include "../h/interrupts.h"
 #include "../phase2/initial.c"
+#include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
 HIDDEN void blockCurr(int *sem, pcb_PTR proc);

@@ -26,6 +26,7 @@
 #include "../h/scheduler.h"
 #include "../h/exceptions.h"
 #include "../h/interrupts.h"
+#include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
 extern void test(); /* function declaration for test(), which will be defined in the test file for this module */

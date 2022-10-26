@@ -31,6 +31,7 @@
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
 #include "../phase2/initial.c"
+#include "/usr/include/umps3/umps/libumps.h"
 
 /* Function to copy the processor state pointed to by source into the processor state pointed to by dest. This 
 function will prove particularly useful when handling non-blocking SYSCALL exceptions that need to copy the
