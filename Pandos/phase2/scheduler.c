@@ -30,7 +30,7 @@
 #include "../h/pcb.h"
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
-#include "../phase2/initial.c"
+#include "../h/initial.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* Function to copy the processor state pointed to by source into the processor state pointed to by dest. This 
