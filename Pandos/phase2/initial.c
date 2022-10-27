@@ -82,7 +82,7 @@ int main(){
 	memaddr ramtop; /* the address of the last RAM frame */
 	devregarea_t *temp; /* device register area that we can we use to determine the last RAM frame */
 	
-	/* initializing global variables */
+	/* initializing global variables, except for start_tod, which will be considered once the first process is ready to begin executing */
 	ReadyQueue = mkEmptyProcQ(); /* initializng the ReadyQueue's tail pointer to be NULL */
 	currentProc = NULL; /* setting the pointer to the pcb that is in the "running" state to NULL */
 	procCnt = INITIALPROCCNT; /* setting the number of started, but not yet terminated, processes to 0 */
