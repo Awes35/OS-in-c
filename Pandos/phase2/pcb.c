@@ -74,10 +74,10 @@ pcb_PTR allocPcb(){
 	temp1->p_time = INITIALACCTIME; /* setting temp1's accumulated time field to zero */
 
 	/* initializing processor state fields */
-	temp1->p_s.s_entryHI = NULL;
-	temp1->p_s.s_cause = NULL;
-	temp1->p_s.s_status = NULL;
-	temp1->p_s.s_pc = NULL;
+	temp1->p_s.s_entryHI = (unsigned int) NULL;
+	temp1->p_s.s_cause = (unsigned int) NULL;
+	temp1->p_s.s_status = (unsigned int) NULL;
+	temp1->p_s.s_pc = (unsigned int) NULL;
 	int i;
 	for (i = 0; i < STATEREGNUM; i++){
 		temp1->p_s.s_reg[i] = 0;
