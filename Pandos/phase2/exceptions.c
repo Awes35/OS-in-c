@@ -2,9 +2,24 @@
  *
  * This module serves as the exception handler module for TLB-Refill events
  * and contains the implementation of the functions responsible for SYSCALL
- * exception handling. The module also addresses program traps and the Pass Up
- * or Die scenario. MENTION THE TIME SPENT HANDLING SYSCALLS (NON-BLOCKING 
- * SYSCALLS IN PARTICULAR, IS CHARGED TO CURRPROC)
+ * exception handling. More specifically, the module contains the function
+ * sysTrapH(), which is the entry point to this module. sysTrapH(), after initializing
+ * the global variables, ensures the requesting process was not in user mode when
+ * the SYSCALL was made, and then it passes control to either the appropriate internal
+ * SYSCALL handler function or it invokes (either directly or indirectly) the internal
+ * function for handling Pass Up or Die events (passUpOrDie()). 
+ * 
+ * Note that for the purposes of this phase of development, the time spent
+ * handling SYSCALL requests is charged to the requesting process (namely, the Current Process). 
+ * The CPU time used by the Current Process to handle the SYSCALL request is charged
+ * to the Current Process in this module, regardless of whether the Current Process
+ * continues executing after the SYSCALL request is handled, because once we return 
+ * control to the Current Process, the start_tod variable (which indicates the value that
+ * the executing (or soon-to-be executing) process started executing at) is reset.
+ * This timing policy is implemented simply because it seems that charging such CPU
+ * time to the requesting process is the most logical way to account for the CPU time
+ * used in this module, as the Current Process, after all, was the process that
+ * requested that part of its quantum (and CPU time) be spent handling the SYSCALL request.
  * 
  * Written by: Kollen Gruizenga and Jake Heyser
  *
@@ -34,20 +49,19 @@ HIDDEN void getSupportData(pcb_PTR proc);
 /* declaring global variables */
 int sysNum; /* the number of the SYSCALL that we are addressing */
 state_PTR savedExceptState; /* a pointer to the saved exception state */
+cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
-/* Function that transfers data to the Current Process' pcb */
-void updateCurrPCB(pcb_PTR proc){
+/* Function that copies the saved exception located at the start of the BIOS Data Page to the Current Process' pcb so that
+it contains the updated processor state after an exception (or interrupt) is handled */
+void updateCurrPcb(pcb_PTR proc){
 	moveState(savedExceptState, &(proc->p_s)); /* copying the saved processor state into the Current Process' pcb by calling moveState() */
 }
 
 /* Function that handles the steps needed for blocking a process. The function copies the saved processor state into the Current
 Process' pcb, updates the accumulated CPU time for the Current Process, and blocks the Current Process on the ASL. */
 void blockCurr(int *sem, pcb_PTR proc){
-	/* declaring & initializing curr_tod */
-	cpu_t curr_tod; /* variable to hold the current TOD clock value */
-	STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
-
-	updateCurrPCB(proc); /* calling the function that copies the saved processor state into the Current Process' pcb */
+	updateCurrPcb(proc); /* calling the function that copies the saved processor state into the Current Process' pcb */
+	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	insertBlocked(sem, proc); /* blocking the Current Process on the ASL */
 	proc = NULL; /* setting currentProc to NULL because the old process is now blocked */ 
@@ -81,8 +95,9 @@ void createProcess(pcb_PTR proc, state_PTR stateSYS, support_t *suppStruct){
 	else{ /* there are no more free pcbs */
 		savedExceptState->s_v0 = ERRORCONST; /* placing an error code of -1 in the caller's v0 */
 	}
-
-	updateCurrPCB(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	updateCurrPcb(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
+	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(proc); /* returning control to the Current Process by loading its (updated) processor state */
 }
 
@@ -139,10 +154,11 @@ void waitOp(int *sem, pcb_PTR proc){
 	}
 
 	/* else, return to current proc */
-	updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
+	updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
+	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
+	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(proc); /* returning control to the Current Process by loading its (updated) processor state */
 }
-
 
 /* Function that handles a SYS4 event.
 This function essentially requests the Nucleus to perform a V op on a semaphore.
@@ -156,10 +172,11 @@ void signalOp(int *sem, pcb_PTR proc){
 	}
 
 	/* returning to the Current Process */
-	updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
+	updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
+	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
+	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(proc); /* returning control to the Current Process by loading its (updated) processor state */
 }
-
 
 /* Internal function that handles SYS5 events. The function handles requests for I/O. The primary tasks accomplished in the
 function include locating the index of the semaphore associated with the device requesting I/O in deviceSemaphores[] and performing a 
@@ -188,12 +205,10 @@ in the caller's v0 register. Afterward, the function copies the saved exception 
 Process' processor state and then calls the function to load the Current State's (updated) processor state into the CPU so it can continue
 executing. */
 void getCPUTime(pcb_PTR proc){
-	/* declaring & initializing curr_tod */
-	cpu_t curr_tod; /* variable to hold the current TOD clock value */
-	STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
-
+	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 	savedExceptState->s_v0 = proc->p_time + (curr_tod - start_tod); /* placing the accumulated processor time used by the requesting process in v0 */
-	updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
+	updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
+	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(proc); /* returning control to the Current Process by loading its (updated) processor state */
 }
 
@@ -212,11 +227,14 @@ void waitForPClock(pcb_PTR proc){
 
 /* Function that handles SYS8 events. This returns a pointer to Current Process' support_t structure, to 
 be loaded into the calling process' v0 register, which may be NULL if the Current Process' support_t structure
-was not initialized when created. */
-/* This provides Support Level access to relevant PCB fields while hiding the Level 3 (and Level 2) PCB fields */
+was not initialized when created. Once it places the pointer to the Current Process' support_t structure in v0,
+it returns control back to the Current Process so that it can continue executing (after, of course, charging the
+Current Process with the CPU time needed to handle the SYSCALL request). */
 void getSupportData(pcb_PTR proc){
 	savedExceptState->s_v0 = (memaddr) (&(proc->p_supportStruct)); /* place Current Process' supportStruct in v0 */
-	updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
+	updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
+	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
+	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(proc); /* returning control to the Current Process (resume execution) */
 }
 
@@ -224,11 +242,13 @@ void getSupportData(pcb_PTR proc){
 /* Function that performs a standard Pass Up or Die operation using the provided index value. If the Current Process' p_supportStruct is
 NULL, then the exception is handled as a SYS2; the Current Process and all its progeny are terminated. (This is the "die" portion of "Pass
 Up or Die.") On the other hand, if the Current Process' p_supportStruct is not NULL, then the handling of the exception is "passed up." In
-this case, the saved exception state ffrom the BIOS Data Page is copied to the correct sup_exceptState field of the Current Process, and 
+this case, the saved exception state from the BIOS Data Page is copied to the correct sup_exceptState field of the Current Process, and 
 a LDCXT is performed using the fields from the proper sup_exceptContext field of the Current Process. */
 void passUpOrDie(pcb_PTR proc, int exceptionCode){
 	if (proc->p_supportStruct != NULL){
-		moveState(savedExceptState, &(proc->p_supportStruct->sup_exceptionState[exceptionCode])); /* copying the saved exception state from the BIOS Data Page to the correct sup_exceptState field of the Current Process */
+		moveState(savedExceptState, &(proc->p_supportStruct->sup_exceptionState[exceptionCode])); /* copying the saved exception state from the BIOS Data Page directly to the correct sup_exceptState field of the Current Process */
+		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
+		proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 		LDCXT(proc->p_supportStruct->sup_exceptContext[exceptionCode].c_stackPtr, proc->p_supportStruct->sup_exceptContext[exceptionCode].c_status,
 		proc->p_supportStruct->sup_exceptContext[exceptionCode].c_pc); /* performing a LDCXT using the fields from the correct sup_exceptContext field of the Current Process */
 	}
