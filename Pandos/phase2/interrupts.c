@@ -63,38 +63,38 @@ state_PTR savedExceptState; /* a pointer to the saved exception state */
 /* Internal helper function responsible for determining what device number the highest-priority interrupt occurred on. The function
 returns that number to the caller. */
 int findDeviceNum(int lineNumber){
-/* declaring local variables */
-devregarea_t *temp; /* device register area that we can use to determine which device number is associated with the highest-priority interrupt */
-unsigned int bitMap; /* the 32-bit contents of the Interrupt Devices Bit Map associated with the line number that was passed in as a parameter */
+	/* declaring local variables */
+	devregarea_t *temp; /* device register area that we can use to determine which device number is associated with the highest-priority interrupt */
+	unsigned int bitMap; /* the 32-bit contents of the Interrupt Devices Bit Map associated with the line number that was passed in as a parameter */
 
-/* initializing temp and bitMap in order to determine which device number is associated with the highest-priority interrupt */
-temp = (devregarea_t *) INTDEVICEADDR; /* initialization of temp */
-bitMap = temp->interrupt_dev[lineNumber - OFFSET]; /* initialization of bitMap */
+	/* initializing temp and bitMap in order to determine which device number is associated with the highest-priority interrupt */
+	temp = (devregarea_t *) INTDEVICEADDR; /* initialization of temp */
+	bitMap = temp->interrupt_dev[lineNumber - OFFSET]; /* initialization of bitMap */
 
-/* determining which device number is associated with the highest-priority interrupt based on the address of bitMap */
-if (bitMap & DEV0INT != ALLOFF){ /* if there is a pending interrupt associated with device 0 */
-	return DEV0; /* returning 0 to the user, since the highest-priority interrupt is associated with device 0 */
-}
-if (bitMap & DEV1INT != ALLOFF){ /* if there is a pending interrupt associated with device 1 */
-	return DEV1; /* returning 1 to the user, since the highest-priority interrupt is associated with device 1 */
-}
-if (bitMap & DEV2INT != ALLOFF){ /* if there is a pending interrupt associated with device 2 */
-	return DEV2; /* returning 2 to the user, since the highest-priority interrupt is associated with device 2 */
-}
-if (bitMap & DEV3INT != ALLOFF){ /* if there is a pending interrupt associated with device 3 */
-	return DEV3; /* returning 3 to the user, since the highest-priority interrupt is associated with device 3 */
-}
-if (bitMap & DEV4INT != ALLOFF){ /* if there is a pending interrupt associated with device 4 */
-	return DEV4; /* returning 4 to the user, since the highest-priority interrupt is associated with device 4 */
-}
-if (bitMap & DEV5INT != ALLOFF){ /* if there is a pending interrupt associated with device 5 */
-	return DEV5; /* returning 5 to the user, since the highest-priority interrupt is associated with device 5 */
-}
-if (bitMap & DEV6INT != ALLOFF){ /* if there is a pending interrupt associated with device 6 */
-	return DEV6; /* returning 6 to the user, since the highest-priority interrupt is associated with device 6 */
-}
-/* otherwise, there is a pending interrupt associated with device 7, since there are only eight devices */
-return DEV7; /* returning 7 to the user, since the highest-priority interrupt is associated with device 7 */
+	/* determining which device number is associated with the highest-priority interrupt based on the address of bitMap */
+	if (bitMap & DEV0INT != ALLOFF){ /* if there is a pending interrupt associated with device 0 */
+		return DEV0; /* returning 0 to the user, since the highest-priority interrupt is associated with device 0 */
+	}
+	if (bitMap & DEV1INT != ALLOFF){ /* if there is a pending interrupt associated with device 1 */
+		return DEV1; /* returning 1 to the user, since the highest-priority interrupt is associated with device 1 */
+	}
+	if (bitMap & DEV2INT != ALLOFF){ /* if there is a pending interrupt associated with device 2 */
+		return DEV2; /* returning 2 to the user, since the highest-priority interrupt is associated with device 2 */
+	}
+	if (bitMap & DEV3INT != ALLOFF){ /* if there is a pending interrupt associated with device 3 */
+		return DEV3; /* returning 3 to the user, since the highest-priority interrupt is associated with device 3 */
+	}
+	if (bitMap & DEV4INT != ALLOFF){ /* if there is a pending interrupt associated with device 4 */
+		return DEV4; /* returning 4 to the user, since the highest-priority interrupt is associated with device 4 */
+	}
+	if (bitMap & DEV5INT != ALLOFF){ /* if there is a pending interrupt associated with device 5 */
+		return DEV5; /* returning 5 to the user, since the highest-priority interrupt is associated with device 5 */
+	}
+	if (bitMap & DEV6INT != ALLOFF){ /* if there is a pending interrupt associated with device 6 */
+		return DEV6; /* returning 6 to the user, since the highest-priority interrupt is associated with device 6 */
+	}
+	/* otherwise, there is a pending interrupt associated with device 7, since there are only eight devices */
+	return DEV7; /* returning 7 to the user, since the highest-priority interrupt is associated with device 7 */
 }
 
 /* Internal helper function that handles Processor Local Timer (PLT) interrupts. More specifically, the function copies the processor state
