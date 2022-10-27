@@ -258,7 +258,7 @@ void sysTrapH(){
 	/* enumerating the possible SYSCALL numbers and passing control to the appropriate internal function to handle the SYSCALL */
 	switch (sysNum){
 		case SYS1NUM: /* if the SYSCALL number is 1 */
-			createProcess(currentProc, currentProc->p_s.s_a1, currentProc->p_s.s_a2); /* invoking the internal function that handles SYS1 events */
+			createProcess(currentProc, &(currentProc->p_s.s_a1), &(currentProc->p_s.s_a2)); /* invoking the internal function that handles SYS1 events */
 			/* a1 should contain the processor state associated with the SYSCALL */
 			/* a2 should contain the (optional) support struct, which may be NULL */
 
