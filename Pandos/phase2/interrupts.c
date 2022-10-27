@@ -44,7 +44,7 @@
 #include "../h/scheduler.h"
 #include "../h/interrupts.h"
 #include "../h/exceptions.h"
-#include "../phase2/initial.c"
+#include "../h/initial.h"
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* Function declarations */
