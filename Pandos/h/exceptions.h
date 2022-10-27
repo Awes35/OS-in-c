@@ -15,6 +15,6 @@ extern void uTLB_RefillHandler ();
 extern void sysTrapH ();
 extern void tlbTrapH ();
 extern void pgmTrapH ();
-extern void updateCurrPCB(pcb_PTR proc);
+extern void updateCurrPcb(pcb_PTR proc);
 
 #endif
