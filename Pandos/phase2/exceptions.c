@@ -266,11 +266,11 @@ void sysTrapH(){
 			terminateProcess(currentProc); /* invoking the internal function that handles SYS2 events */
 		
 		case SYS3NUM: /* if the SYSCALL number is 3 */
-			waitOp(currentProc->p_s.s_a1, currentProc); /* invoking the internal function that handles SYS3 events */
+			waitOp((int *) (currentProc->p_s.s_a1), currentProc); /* invoking the internal function that handles SYS3 events */
 			/* a1 should contain the addr of semaphore to be P'ed */
 		
 		case SYS4NUM: /* if the SYSCALL number is 4 */
-			signalOp(currentProc->p_s.s_a1, currentProc); /* invoking the internal function that handles SYS4 events */
+			signalOp((int *) (currentProc->p_s.s_a1), currentProc); /* invoking the internal function that handles SYS4 events */
 			/* a1 should contain the addr of semaphore to be V'ed */
 
 		case SYS5NUM: /* if the SYSCALL number is 5 */
