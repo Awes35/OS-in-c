@@ -16,6 +16,7 @@
 #include "../h/types.h"
 #include "../h/const.h"
 #include "../h/pcb.h"
+#include "../h/initial.h"
 
 /* Declaring global variables */
 HIDDEN semd_PTR semd_h; /* ptr to the head of the ASL (semd ACTIVE list) */
