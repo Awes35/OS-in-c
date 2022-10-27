@@ -34,9 +34,9 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* Function to copy the processor state pointed to by source into the processor state pointed to by dest. This 
-function will prove particularly useful when handling non-blocking SYSCALL exceptions that need to copy the
-saved exception state into the Current Process' processor state so that the Current Process can continue
-executing once the exception is handled. */
+function will prove particularly useful when handling non-blocking SYSCALL exceptions and interrupts that need to
+copy the saved exception state into the Current Process' processor state so that the Current Process can continue
+executing once the exception or interrupt is handled. */
 void moveState(state_PTR source, state_PTR dest){
 	dest->s_entryHI = source->s_entryHI; /* setting dest's entryHI field to that of source */
 	dest->s_cause = source->s_cause; /* setting dest's Cause register contents to those associated with source */
@@ -51,7 +51,8 @@ void moveState(state_PTR source, state_PTR dest){
 	}
 }
 
-/* Function that sets the Current Process to the parameter curr_proc and then performs a LDST on the Current Process' processor
+/* Function that sets the Current Process to the parameter curr_proc and then stores the current value on the Time of Day clock. This value
+represents the time that the process begins executing at, as the function then performs a LDST on the Current Process' processor
 state so that it can begin (or perhaps resume) execution. */
 void switchContext(pcb_PTR curr_proc){
 	currentProc = curr_proc; /* setting the Current Process to curr_proc */
