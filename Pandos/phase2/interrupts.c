@@ -118,16 +118,16 @@ void IOInt(pcb_PTR proc){
 	pcb_PTR unblockedPcb; /* the pcb which originally initiated the I/O request */
 
 	/* determining exactly which line number the interrupt occurred on so we can initialize lineNum */
-	if (savedExceptState->s_cause & LINE3INT != ALLOFF){ /* if there is an interrupt on line 3 */
+	if ((savedExceptState->s_cause) & LINE3INT != ALLOFF){ /* if there is an interrupt on line 3 */
 		lineNum = LINE3; /* initializing lineNum to 3, since the highest-priority interrupt occurred on line 3 */
 	}
-	else if (savedExceptState->s_cause & LINE4INT != ALLOFF){ /* if there is an interrupt on line 4 */
+	else if ((savedExceptState->s_cause) & LINE4INT != ALLOFF){ /* if there is an interrupt on line 4 */
 		lineNum = LINE4; /* initializing lineNum to 4, since the highest-priority interrupt occurred on line 4 */
 	}
-	else if (savedExceptState->s_cause & LINE5INT != ALLOFF){ /* if there is an interrupt on line 5 */
+	else if ((savedExceptState->s_cause) & LINE5INT != ALLOFF){ /* if there is an interrupt on line 5 */
 		lineNum = LINE5; /* initializing lineNum to 5, since the highest-priority interrupt occurred on line 5 */
 	}
-	else if (savedExceptState->s_cause & LINE6INT != ALLOFF){ /* if there is an interrupt on line 6*/
+	else if ((savedExceptState->s_cause) & LINE6INT != ALLOFF){ /* if there is an interrupt on line 6*/
 		lineNum = LINE6; /* initializing lineNum to 6, since the highest-priority interrupt occurred on line 6 */
 	}
 
@@ -186,7 +186,7 @@ void terminalInt(pcb_PTR proc){
 	devNum = findDeviceNum(LINE7); /* initializing devNum by calling the internal function that returns the device number associated with the highest-priority interrupt */	
 	index = ((LINE7 - OFFSET) * DEVPERINT) + devNum; /* initializing the index of the device register of the device associated with the highest-priority interrupt */
 	temp = (devregarea_t *) DEVADDRBASE; /* initialization of temp */
-	if (temp->devreg[index].t_transm_status & STATUSON != READY){ /* if the device's status code is not 1, meaning the device is not "Ready" */
+	if ((temp->devreg[index].t_transm_status) & STATUSON != READY){ /* if the device's status code is not 1, meaning the device is not "Ready" */
 		/* the interrupt associated with the terminal device is a write interrupt */
 		statusCode = temp->devreg[index].t_transm_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 		temp->devreg[index].t_transm_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
@@ -232,13 +232,13 @@ void terminalInt(pcb_PTR proc){
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 
  	/* calling the appropriate interrupt handler function based off the type of the highest-priority interrupt that occurred */
- 	if (savedExceptState->s_cause & LINE1INT != ALLOFF){ /* if there is a PLT interrupt (i.e., an interrupt occurred on line 1) */
+ 	if ((savedExceptState->s_cause) & LINE1INT != ALLOFF){ /* if there is a PLT interrupt (i.e., an interrupt occurred on line 1) */
  		pltTimerInt(currentProc); /* calling the internal function that handles PLT interrupts */
  	}
- 	if (savedExceptState->s_cause & LINE2INT != ALLOFF){ /* if there is a System-Wide Interval Timer/Pseudo-clock interrupt (i.e., an interrupt occurred on line 2) */
+ 	if ((savedExceptState->s_cause) & LINE2INT != ALLOFF){ /* if there is a System-Wide Interval Timer/Pseudo-clock interrupt (i.e., an interrupt occurred on line 2) */
  		intTimerInt(currentProc); /* calling the internal function that handles System-Wide Interval Timer/Pseudo-clock interrupts */
  	}
- 	if (savedExceptState->s_cause & LINE7INT != ALLOFF){ /* if there is an I/O interrupt on a terminal device (i.e., an interrupt occurred on line 7) */
+ 	if ((savedExceptState->s_cause) & LINE7INT != ALLOFF){ /* if there is an I/O interrupt on a terminal device (i.e., an interrupt occurred on line 7) */
 		terminalInt(currentProc); /* calling the internal function that handles I/O interrupts on terminal devices */
  	}
  	IOInt(currentProc); /* otherwise, an I/O interrupt occurred on a non-terminal device (i.e., an interrupt occurred on lines 3-6) */

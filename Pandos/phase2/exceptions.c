@@ -250,7 +250,7 @@ void sysTrapH(){
 
 	savedExceptState->s_pc = savedExceptState->s_pc + PCINCREMENT; /* incrementing the value of the PC in the saved exception state by 4 */
 
-	if (currentProc->p_s.s_status & USERPON != ALLOFF){ /* if the process was executing in user mode when the SYSCALL was requested */
+	if ((currentProc->p_s.s_status) & USERPON != ALLOFF){ /* if the process was executing in user mode when the SYSCALL was requested */
 		(((state_t *) BIOSDATAPAGE)->s_cause) = (((state_t *) BIOSDATAPAGE)->s_cause) & RESINSTRCODE; /* setting the Cause.ExcCode bits in the stored exception state to RI (10) */
 		pgmTrapH();
 	}
