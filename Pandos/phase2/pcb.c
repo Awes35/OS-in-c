@@ -10,6 +10,7 @@
 #include "../h/const.h"
 #include "../h/types.h"
 #include "../h/pcb.h"
+#include "../h/initial.h"
 
 /* Declaring global variables */
 HIDDEN pcb_PTR pcbFree_h; /* ptr to head of the free list */
