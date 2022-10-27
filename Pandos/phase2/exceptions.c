@@ -151,7 +151,7 @@ If the value of the semaphore indicates no blocking processes, then return to th
 void signalOp(int *sem, pcb_PTR proc){
 	(*sem)++; /* increment the semaphore's value by 1 */
 	if(*sem <= SEMA4THRESH){ /* if value of semaphore indicates a blocking process */ 
-		pcb_PTR temp = removeBlocked(&sem); /* make semaphore not blocking, ie: make it not blocking on the ASL */
+		pcb_PTR temp = removeBlocked(sem); /* make semaphore not blocking, ie: make it not blocking on the ASL */
 		insertProcQ(&ReadyQueue, temp); /* add process' PCB to the ReadyQueue */
 	}
 
@@ -215,7 +215,7 @@ be loaded into the calling process' v0 register, which may be NULL if the Curren
 was not initialized when created. */
 /* This provides Support Level access to relevant PCB fields while hiding the Level 3 (and Level 2) PCB fields */
 void getSupportData(pcb_PTR proc){
-	savedExceptState->s_v0 = (proc->p_supportStruct); /* place Current Process' supportStruct in v0 */
+	savedExceptState->s_v0 = (memaddr) (&(proc->p_supportStruct)); /* place Current Process' supportStruct in v0 */
 	updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
 	switchContext(proc); /* returning control to the Current Process (resume execution) */
 }
