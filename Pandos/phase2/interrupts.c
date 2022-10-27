@@ -23,7 +23,6 @@ HIDDEN void intTimerInt(pcb_PTR proc);
 HIDDEN void terminalInt(pcb_PTR proc);
 HIDDEN void IOInt(pcb_PTR proc);
 HIDDEN int findDeviceNum(int lineNumber);
-HIDDEN pcb_PTR unblockSem(int *sem, pcb_PTR proc);
 
 /* Declaring global variables */
 cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
@@ -152,7 +151,7 @@ void IOInt(pcb_PTR proc){
 	}
 	
 	/* unblockedPcb is not NULL */
-	*(unblockedPcb->p_semAdd)++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
+	(*(unblockedPcb->p_semAdd))++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
@@ -210,7 +209,7 @@ void terminalInt(pcb_PTR proc){
 	}
 
 	/* unblockedPcb is not NULL */
-	*(unblockedPcb->p_semAdd)++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
+	(*(unblockedPcb->p_semAdd))++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
