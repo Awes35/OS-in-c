@@ -257,7 +257,7 @@ void passUpOrDie(pcb_PTR proc, int exceptionCode){
 
 }
 
-/* Function that represents the entry point in this module when handling SYSCALL events. This function's tasks include, but are not
+/* Function that represents the entry point into this module when handling SYSCALL events. This function's tasks include, but are not
 limited to, incrementing the value of the PC in the stored exception state (to avoid an infinite loop of SYSCALLs), checking to see if an
 attempt was made to request a SYSCALL while the system was in user mode (if so, the function handles this case as it would a Program Trap
 exception), and checking to see what SYSCALL number was requested so it can invoke an internal helper function to handle that specific

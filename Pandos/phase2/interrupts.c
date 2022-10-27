@@ -1,11 +1,41 @@
 /**************************************************************************** 
-  *
-  * This module contains the definition for all interrupt-handling functions.
-  * Such functions are called by the Nucleus in initial.c.
-  * 
-  * Written by: Kollen Gruizenga and Jake Heyser
-  *
-  ****************************************************************************/
+ *
+ * This module serves as the interrupt handler module and contains the implementation
+ * of the functions responsible for interrupt exception handling that are called by
+ * the Nucleus. More specifically, the module contains the function intTrapH(),
+ * which is the entry point to this module. intTrapH(), after initializing the global
+ * variables, determines what line number the highest-priority pending interrupt is located
+ * on, and then it invokes the internal function that is responsible for handling the type
+ * of interrupt that occurred, as revealed by the line number of the highest-priority pending
+ * interrupt. Note that (if it has not been implied already) if more than one interrupt is
+ * pending, we handle each interrupt one-at-a-time, resolving the interrupts in the order
+ * of their priority.
+ *
+ * Note that for the purposes of this phase of development, the time spent
+ * handling the interrupt is charged to the process responsible for generating the interrupt.
+ * More specifically, if an I/O interrupt was the highest-priority pending interrupt, then 
+ * the time spent handling the interrupt is charged to the interrupting process, NOT to the 
+ * Current Process which simply happened to be executing when the interrupt was generated. This
+ * decision wade made because it seems that charging such CPU time to the process
+ * that generated the interrupt is the most logical way to account for the CPU time
+ * used in this module, as the Current Process, after all, really had nothing to do
+ * with the interrupt being generated. If a PLT interrupt occurred, the time between
+ * when the Current Process most recently began executing on the CPU and the time that the
+ * interrupt occurred is, naturally, charged to the Current Process, and the time spent 
+ * handling the PLT interrupt is also charged to the Current Process, since that process
+ * is responsible for the CPU time spent handling the interrupt. Likewise, if a System-
+ * wide Interval Timer interrupt occurred, we will charge the Current Process with the
+ * time between when the Current Process most recently began executing on the CPU and
+ * the time that the interrupt occurred. However, we will refrain from charging any process
+ * with the time spent handling the interrupt, because it doesn't make sense to charge the
+ * Current Process with this time, as it just so happened to be the process that was
+ * executing when the System-wide Interval Timer reached zero. But, in general, the
+ * time spent in this module will charged to the responsible process. 
+ * 
+ * 
+ * Written by: Kollen Gruizenga and Jake Heyser
+ *
+ ****************************************************************************/
 
 #include "../h/asl.h"
 #include "../h/types.h"
@@ -27,6 +57,7 @@ HIDDEN int findDeviceNum(int lineNumber);
 /* Declaring global variables */
 cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
 cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
+cpu_t curr_tod; /* the value on the Time of Day clock once the interrupt has been fully handled */
 state_PTR savedExceptState; /* a pointer to the saved exception state */
 
 /* Internal helper function responsible for determining what device number the highest-priority interrupt occurred on. The function
@@ -66,11 +97,17 @@ if (bitMap & DEV6INT != ALLOFF){ /* if there is a pending interrupt associated w
 return DEV7; /* returning 7 to the user, since the highest-priority interrupt is associated with device 7 */
 }
 
-/* Internal helper function that handles Processor Local Timer (PLT) interrupts */
+/* Internal helper function that handles Processor Local Timer (PLT) interrupts. More specifically, the function copies the processor state
+at the time of the exception (which is located at the start of the BIOS Data Page) into the Current Process' pcb, places the Current Process
+on the Ready Queue, updates the CPU time of the Current Process so that it includes the time between when it last started executing and 
+when the function finished handling the interrupt, because, due to our timing policy described in the module-level documentation, all of
+this time will be charged to the Current Process. Once all of this has been accomplished, the function calls the Scheduler so that another process
+can begin executing. */
 void pltTimerInt(pcb_PTR proc){
-if (proc != NULL){
-	updateCurrPCB(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
-	proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+if (proc != NULL){ /* if there was a running process when the interrupt was generated*/
+	updateCurrPcb(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
+	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 	insertProcQ(&ReadyQueue, proc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
 	proc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
 	switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
@@ -78,21 +115,24 @@ if (proc != NULL){
 PANIC(); /* otherwise, Current Process is NULL, so the function invokes the PANIC() function to stop the system and print a warning message on terminal 0 */
 }
 
-/* Internal helper function that handles interrupts generated by the System-wide Interval Timer. Note that for the purposes of this
-function, we will NOT charge any process with the accumulated CPU time needed to handle this interrupt, primarily because we should not
-charge the Current Process with such time, because it is possible for the an Interval Timer interrupt to occur even when there is no
-Current Process. It is also illogical to charge the Current Process with the CPU time needed to handle this type of interrupt because
-the Current Process is not actually using this CPU time to execute its own process; the time is being spent handling a system-wide 
-interrupt. So, we will refrain from charging any process with the time needed to handle this type of interrupt. */
+/* Internal helper function that handles interrupts generated by the System-wide Interval Timer. More specifically, the function
+acknowledges the interrupt by loading the Interval Timer with a new value (100 milliseconds), unblocks ALL pcbs blocked on the 
+Pseudo-clock semaphore, resets the Pseudo-clock semaphore to zero, and returns control to the Current Process so that it can continue
+executing (with the same amount of time left on the PLT as there was when the interrupt first occurred). Accordingly, the function
+also decrements the Soft-block Count, since a started (but not finished) process has now been unblocked, and it updates the accumulated
+CPU time of the Curernt Process so that includes the time between when it last started executing and when the interrupt first occurred.
+As stated in the module-level documentation, we will refrain from charging the Current Process (or any process at all) with the time
+spent handling this interrupt, since the Current Process is not actually using this CPU time to execute its own process. */
 void intTimerInt(pcb_PTR proc){
 	LDIT(INITIALINTTIMER); /* placing 100 milliseconds back on the Interval Timer for the next Pseudo-clock tick */
 	/* unblocking all pcbs blocked on the Pseudo-Clock semaphore */
 	while (headBlocked(&deviceSemaphores[PCLOCKIDX]) != NULL){ /* while the Pseudo-Clock semaphore has a blocked pcb */
 		removeBlocked(&deviceSemaphores[PCLOCKIDX]); /* unblock the first (i.e., head) pcb from the Pseudo-Clock semaphore's process queue */
+		/* DECREMENT SOFT BLOCK COUNT HERE INSTEAD?????????? */
 	}
 	deviceSemaphores[PCLOCKIDX] = INITIALPCSEM; /* resetting the Pseudo-clock semaphore to zero */
 	softBlockCnt--; /* decrementing the number of started, but not yet terminated, processes that are in a "blocked" state */
-	updateCurrPCB(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	updateCurrPcb(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
 	proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 	setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 	if (proc != NULL){ /* if there is a Current Process to return control to */
@@ -102,17 +142,18 @@ void intTimerInt(pcb_PTR proc){
 }
 
 /* Internal helper function that handles I/O interrupts on non-terminal devices. In other words, this function handles interrupts that
-occurred on lines 3-6, as indicated in the Cause register. Note that for the purposes of this function, we will NOT charge any process
-with the accumulated CPU time needed to handle this interrupt, primarily because the Current Process is not actually using this CPU
-time to execute its own process; the time is being spent handling a interrupt generated by another device. We will also not charge the 
-interrupting device (and its associated process) with the time spent handling the I/O interrupt. So, we will refrain from charging any
-process with the time needed to handle this type of interrupt. */
+occurred on lines 3-6, as indicated in the Cause register. From a slightly more narrow level, this function calculates the line number
+and device number that the interrupt occurred on, saves off the status code from the device's device register, acknowledges the outstanding
+interrupt by writing the acknowledge command code in the interrupting device's device register, and peforms a V operation on the Nucleus
+maintained semaphore associated with this device. Then, it places the stored off status code in the newly unblocked pcb's v0 register,
+inserts the newly unblobked pcb on the Ready Queue, and then updates the CPU time of the Current Process so that it includes the time that
+it spent executing up until when the interrupt first occurred, and then it charges the time spent handling the interrupt to the 
+process responsible for generating the I/O interrupt (if it is not NULL), as described in the module-level documentation for this module. */
 void IOInt(pcb_PTR proc){
 	/* delcaring local variables */
 	int lineNum; /* the line number that the highest-priority interrupt occurred on */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
 	int index; /* the index in deviceSemaphores and in devreg of the device associated with the highest-priority interrupt */
-	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	devregarea_t *temp; /* device register area that we can use to determine the status code from the device register associated with the highest-priority interrupt */
 	int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 	pcb_PTR unblockedPcb; /* the pcb which originally initiated the I/O request */
@@ -141,7 +182,7 @@ void IOInt(pcb_PTR proc){
 	unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
 
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
+		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
 			proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
@@ -155,11 +196,11 @@ void IOInt(pcb_PTR proc){
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
+	updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 	if (proc != NULL){ /* if there is a Current Process to return control to */
 		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-		STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
+		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
 	}
@@ -168,16 +209,17 @@ void IOInt(pcb_PTR proc){
 
 /* Internal helper function that handles I/O interrupts on terminal devices. In other words, this function handles interrupts that
 occurred on line 7, as indicated in the Cause register. Note that interrupts that involve writing take priority over interrupts that
-involve reading. Additionally, for the purposes of this function, we will NOT charge any process with the accumulated CPU time needed
-to handle this interrupt, primarily because the Current Process is not actually using this CPU time to execute its own process;
-the time is being spent handling a interrupt generated by another device. We will also not charge the interrupting device (and its
-associated process) with the time spent handling the I/O interrupt. So, we will refrain from charging any process with the time needed
-to handle this type of interrupt.*/
+involve reading. From a slightly more narrow level, this function calculates the device number that the interrupt occurred on, saves off
+the status code from the device's device register, acknowledges the outstanding interrupt by writing the acknowledge command code in
+the interrupting device's device register, and peforms a V operation on the Nucleus maintained semaphore associated with this device.
+Then, it places the stored off status code in the newly unblocked pcb's v0 register, inserts the newly unblobked pcb on the Ready Queue,
+and then updates the CPU time of the Current Process so that it includes the time that it spent executing up until when the interrupt first
+occurred, and then it charges the time spent handling the interrupt to the process responsible for generating the I/O interrupt (if it
+is not NULL), as described in the module-level documentation for this module. */
 void terminalInt(pcb_PTR proc){
 	/* delcaring local variables */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
 	int index; /* the index in devreg of the device associated with the highest-priority interrupt */
-	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	devregarea_t *temp; /* device register area that we can use to determine the status code from the device register associated with the highest-priority interrupt */
 	unsigned int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 	pcb_PTR unblockedPcb; /* the pcb which originally initiated the I/O request */
@@ -199,7 +241,7 @@ void terminalInt(pcb_PTR proc){
 	}
 	
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
+		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
 			proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
@@ -213,25 +255,27 @@ void terminalInt(pcb_PTR proc){
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	updateCurrPCB(proc); /* update the Current Process' processor state before resuming process' execution */
+	updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 	if (proc != NULL){ /* if there is a Current Process to return control to */
 		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-		STCK(curr_tod); /* initializing curr_tod with the current value on the Time of Day clock */
+		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 }
 
- /* Nucleus' device interrupt handler function (exception code 0) */
- void intTrapH(){
+/* Function that represents the entry point into this module when handling interrupts. This function's tasks include initializing the
+global variables in this module, and identifying the type of interrupt that has the highest priority, so that it can then invoke
+the internal function that handles that specific type of interrupt. */
+void intTrapH(){
  	/* initializing global variables */
-	STCK(interrupt_tod); /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
- 	remaining_time = getTIMER(); /* initializing the remaining time left on the Current Process' quantum */
+	STCK(interrupt_tod); /* storing the value on the Time of Day clock when the Interrupt Handler module is first entered into interrupt_tod */
+ 	remaining_time = getTIMER(); /* storing the remaining time left on the Current Process' quantum into remaining_time */
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 
- 	/* calling the appropriate interrupt handler function based off the type of the highest-priority interrupt that occurred */
+ 	/* calling the appropriate interrupt handler function based off the type of the interrupt that has the highest priority */
  	if ((savedExceptState->s_cause) & LINE1INT != ALLOFF){ /* if there is a PLT interrupt (i.e., an interrupt occurred on line 1) */
  		pltTimerInt(currentProc); /* calling the internal function that handles PLT interrupts */
  	}
