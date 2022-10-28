@@ -85,9 +85,9 @@ void createProcess(pcb_PTR proc, state_PTR stateSYS, support_t *suppStruct){
 		(newPcb->p_s) = *stateSYS; /* initializing newPcb's processor state to that which currently lies in a1 */
 		newPcb->p_time = INITIALACCTIME; /* initializing newPcb's p_time field to 0, since it has not yet accumualted any CPU time */
 		newPcb->p_semAdd = NULL; /* initializing the pointer to newPcb's semaphore, which is set to NULL because newPcb is not in the "blocked" state */
-		/* insertChild(proc, newPcb); */
-		/* initializing newPcb's process tree fields by making it a child of the Current Process */
-		insertProcQ(&ReadyQueue, newPcb); /* inserting newPcb onto the Ready Queue */
+		insertChild(proc, newPcb); /* initializing newPcb's process tree fields by making it a child of the Current Process */
+		/* insertProcQ(&ReadyQueue, newPcb); */
+		/* inserting newPcb onto the Ready Queue */
 		savedExceptState->s_v0 = SUCCESSCONST; /* placing the value 0 in the caller's v0 because the allocation was completed successfully */
 		procCnt++; /* incrementing the number of started, but not yet terminated, processes by one */
 	}
