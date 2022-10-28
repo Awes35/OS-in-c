@@ -80,7 +80,7 @@ void switchProcess(){
 		HALT(); /* invoking the HALT() function to halt the system and print a regular shutdown message on terminal 0 */
 	}
 
-	if (procCnt > 0 && softBlockCnt > 0){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
+	if ((procCnt > 0) & (softBlockCnt > 0)){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
 		currentProc->p_s.s_status = ((currentProc->p_s.s_status) | IECON | IMON); /* enabling interrupts for the Current Process so we can call the WAIT() function */
 		setTIMER(NEVER); /* loading the PLT with a very large value so that the first interrupt that occurs after entering a WAIT state is not for the PLT */
 		WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
