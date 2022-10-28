@@ -11,7 +11,6 @@
 
 #include "../h/types.h"
 
-extern void uTLB_RefillHandler ();
 extern void sysTrapH ();
 extern void tlbTrapH ();
 extern void pgmTrapH ();
