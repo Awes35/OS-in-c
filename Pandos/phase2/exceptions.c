@@ -82,7 +82,8 @@ void createProcess(pcb_PTR proc, state_PTR stateSYS, support_t *suppStruct){
 	if (newPcb != NULL){ /* if the newly allocated pcb is not NULL, meaing there are enough resources to create a new process */
 		/* initializing the fields of newPcb */
 		newPcb->p_supportStruct = suppStruct; /* initializing newPcb's supportStruct field based on the parameter currently in register a2 */
-	    (newPcb->p_s) = *stateSYS; /* initializing newPcb's processor state to that which currently lies in a1 */
+	    /* (newPcb->p_s) = *stateSYS; TEMP */
+		/* initializing newPcb's processor state to that which currently lies in a1 */
 		/* newPcb->p_time = INITIALACCTIME; TEMP*/
 		/* initializing newPcb's p_time field to 0, since it has not yet accumualted any CPU time */
 		/* newPcb->p_semAdd = NULL; TEMP*/
