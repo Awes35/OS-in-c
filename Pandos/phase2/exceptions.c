@@ -48,7 +48,6 @@ HIDDEN void getSupportData(pcb_PTR proc);
 
 /* declaring global variables */
 int sysNum; /* the number of the SYSCALL that we are addressing */
-state_PTR savedExceptState; /* a pointer to the saved exception state */
 cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
 /* Function that copies the saved exception located at the start of the BIOS Data Page to the Current Process' pcb so that
@@ -325,11 +324,4 @@ void pgmTrapH(){
 	passUpOrDie(currentProc, GENERALEXCEPT); /* performing a standard Pass Up or Die operation using the GENERALEXCEPT index value */
 }
 
-/* Function that handles TLB-Refill events. We will replace/overwrite the contents of this function once we begin implementing
-Phase 3. */
-void uTLB_RefillHandler(){
-	setENTRYHI(KUSEG);
-	setENTRYLO(KSEG0);
-	TLBWR();
-	LDST((state_PTR) BIOSDATAPAGE);
-}
+
