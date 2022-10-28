@@ -57,7 +57,6 @@ HIDDEN int findDeviceNum(int lineNumber);
 /* Declaring global variables */
 cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
 cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
-cpu_t curr_tod; /* the value on the Time of Day clock once the interrupt has been fully handled */
 state_PTR savedExceptState; /* a pointer to the saved exception state */
 
 /* Internal helper function responsible for determining what device number the highest-priority interrupt occurred on. The function
@@ -104,7 +103,9 @@ when the function finished handling the interrupt, because, due to our timing po
 this time will be charged to the Current Process. Once all of this has been accomplished, the function calls the Scheduler so that another process
 can begin executing. */
 void pltTimerInt(pcb_PTR proc){
-	if (proc != NULL){ /* if there was a running process when the interrupt was generated*/
+	cpu_t curr_tod; /* variable to hold the current TOD clock value */
+
+	if (proc != NULL){ /* if there was a running process when the interrupt was generated */
 		updateCurrPcb(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
@@ -150,7 +151,8 @@ inserts the newly unblobked pcb on the Ready Queue, and then updates the CPU tim
 it spent executing up until when the interrupt first occurred, and then it charges the time spent handling the interrupt to the 
 process responsible for generating the I/O interrupt (if it is not NULL), as described in the module-level documentation for this module. */
 void IOInt(pcb_PTR proc){
-	/* delcaring local variables */
+	/* declaring local variables */
+	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	int lineNum; /* the line number that the highest-priority interrupt occurred on */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
 	int index; /* the index in deviceSemaphores and in devreg of the device associated with the highest-priority interrupt */
@@ -217,7 +219,8 @@ and then updates the CPU time of the Current Process so that it includes the tim
 occurred, and then it charges the time spent handling the interrupt to the process responsible for generating the I/O interrupt (if it
 is not NULL), as described in the module-level documentation for this module. */
 void terminalInt(pcb_PTR proc){
-	/* delcaring local variables */
+	/* declaring local variables */
+	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
 	int index; /* the index in devreg of the device associated with the highest-priority interrupt */
 	devregarea_t *temp; /* device register area that we can use to determine the status code from the device register associated with the highest-priority interrupt */
