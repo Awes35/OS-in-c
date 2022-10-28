@@ -42,6 +42,7 @@ int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspo
 									at the last index of the array (PCLOCKIDX). Note that this array will be implemented so that terminal device semaphores are last and terminal device semaphores
 									associated with a read operation in the array come before those associated with a write operation. */
 cpu_t start_tod; /* the value on the time of day clock that the Current Process begins executing at */
+state_PTR savedExceptState; /* a pointer to the saved exception state */
 
 /* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
 the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
@@ -82,7 +83,7 @@ int main(){
 	memaddr ramtop; /* the address of the last RAM frame */
 	devregarea_t *temp; /* device register area that we can we use to determine the last RAM frame */
 	
-	/* initializing global variables, except for start_tod, which will be considered once the first process is ready to begin executing */
+	/* initializing global variables, except for start_tod, curr_tod, and savedExceptState, which will be initialized later. */
 	ReadyQueue = mkEmptyProcQ(); /* initializng the ReadyQueue's tail pointer to be NULL */
 	currentProc = NULL; /* setting the pointer to the pcb that is in the "running" state to NULL */
 	procCnt = INITIALPROCCNT; /* setting the number of started, but not yet terminated, processes to 0 */
