@@ -94,7 +94,8 @@ void createProcess(pcb_PTR proc, state_PTR stateSYS, support_t *suppStruct){
 	else{ /* there are no more free pcbs */
 		savedExceptState->s_v0 = ERRORCONST; /* placing an error code of -1 in the caller's v0 */
 	}
-	updateCurrPcb(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	/* updateCurrPcb(proc); */
+	/* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
 	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(proc); /* returning control to the Current Process by loading its (updated) processor state */
