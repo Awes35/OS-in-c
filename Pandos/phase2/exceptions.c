@@ -83,13 +83,28 @@ void createProcess(pcb_PTR proc, state_PTR stateSYS, support_t *suppStruct){
 		/* initializing the fields of newPcb */
 		newPcb->p_supportStruct = suppStruct; /* initializing newPcb's supportStruct field based on the parameter currently in register a2 */
 	    (newPcb->p_s) = *stateSYS; /* initializing newPcb's processor state to that which currently lies in a1 */
-		newPcb->p_time = INITIALACCTIME; /* initializing newPcb's p_time field to 0, since it has not yet accumualted any CPU time */
-		newPcb->p_semAdd = NULL; /* initializing the pointer to newPcb's semaphore, which is set to NULL because newPcb is not in the "blocked" state */
+		/* newPcb->p_time = INITIALACCTIME; TEMP*/
+		/* initializing newPcb's p_time field to 0, since it has not yet accumualted any CPU time */
+		/* newPcb->p_semAdd = NULL; TEMP*/
+		/* initializing the pointer to newPcb's semaphore, which is set to NULL because newPcb is not in the "blocked" state */
 		/* insertChild(proc, newPcb); TEMP*/
 		/* initializing newPcb's process tree fields by making it a child of the Current Process */
 		/* insertProcQ(&ReadyQueue, newPcb); TEMP*/
 		/* inserting newPcb onto the Ready Queue */
+		savedExceptState->s_v0 = SUCCESSCONST; /* placing the value 0 in the caller's v0 because the allocation was completed successfully */
+		procCnt++; /* incrementing the number of started, but not yet terminated, processes by one */
 	}
+
+	else{ /* there are no more free pcbs */
+		savedExceptState->s_v0 = ERRORCONST; /* placing an error code of -1 in the caller's v0 */
+	}
+	/* updateCurrPcb(proc); TEMP*/
+	/* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
+	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
+	/* switchContext(proc); TEMP*/
+	/* returning control to the Current Process by loading its (updated) processor state */
+	
 }
 
 /* Function that handles a SYS2 events and the "Die" portion of "Pass Up or Die." In other words, this internal function terminates the
