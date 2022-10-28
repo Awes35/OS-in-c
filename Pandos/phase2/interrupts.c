@@ -57,7 +57,7 @@ HIDDEN int findDeviceNum(int lineNumber);
 /* Declaring global variables */
 cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
 cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
-state_PTR savedExceptState; /* a pointer to the saved exception state */
+
 
 /* Internal helper function responsible for determining what device number the highest-priority interrupt occurred on. The function
 returns that number to the caller. */
