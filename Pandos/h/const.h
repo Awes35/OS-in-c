@@ -137,8 +137,6 @@ the Pseudo-clock */
 #define ERRORCONST		-1			/* constant denoting an error occurred in the caller's request */
 #define SUCCESSCONST	0			/* constant denoting that the caller's request completed successfully */
 
-/* Value to increment the PC by */
-#define	PCINCREMENT		4
 
 /* Constant to help determine the index in deviceSemaphores and in the Interrupt Devices Bitmap that a particular device is located at. 
 This constant is subtracted from the line number, since interrupt lines 3-7 are used for peripheral devices  */
