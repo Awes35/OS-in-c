@@ -239,14 +239,14 @@ void terminalInt(pcb_PTR proc){
 		statusCode = temp->devreg[index].t_transm_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 		temp->devreg[index].t_transm_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 		unblockedPcb = removeBlocked(&deviceSemaphores[index + DEVPERINT]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
+		deviceSemaphores[index + DEVPERINT]++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	}
 	else{ /* otherwise, the interrupt associated with the terminal device is a read interrupt */
 		statusCode = temp->devreg[index].t_recv_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 		temp->devreg[index].t_recv_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 		unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
+		deviceSemaphores[index]++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	}
-	
-	deviceSemaphores[index]++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
