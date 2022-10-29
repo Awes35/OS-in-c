@@ -104,7 +104,7 @@ the Pseudo-clock */
 /* Address for initializing Process 0's Pass Up Vector's fields for the address of handling general exceptions and TLB-Refill events */
 #define PROC0STACKPTR	0x20001000
 
-/* Value that the system-wide Interval Timer is initialized to (in milliseconds) */
+/* Value that the system-wide Interval Timer is initialized to 100ms (100,000 microseconds) */
 #define INITIALINTTIMER	100000
 
 /* Value to set the accumulated time field for a process that is instantiated */
@@ -124,7 +124,7 @@ the Pseudo-clock */
 #define IMOFF			0xFFFF00FF /* constant for disabling the Interrupt Mask bits */
 #define	IECOFF			0xFFFFFFFE	/* constant for disabling the global interrupt bit (i.e., IEc (bit 0) = 0) */
 
-/* Value that the processor's Local Timer (PLT) is intialized to (in milliseconds) */
+/* Value that the processor's Local Timer (PLT) is intialized to 5 milliseconds (5,000 microseconds) */
 #define INITIALPLT		5000
 
 /* Cause register constants for generalExceptionHandler */
