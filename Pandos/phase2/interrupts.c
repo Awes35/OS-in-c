@@ -125,18 +125,21 @@ CPU time of the Curernt Process so that includes the time between when it last s
 As stated in the module-level documentation, we will refrain from charging the Current Process (or any process at all) with the time
 spent handling this interrupt, since the Current Process is not actually using this CPU time to execute its own process. */
 void intTimerInt(pcb_PTR proc){
+	/* declaring local variables */
+	pcb_PTR temp; /* a pointer to a pcb in the Pseudo-Clock semaphore's process queue that we wish to unblock and insert into the Ready Queue */
+	
 	LDIT(INITIALINTTIMER); /* placing 100 milliseconds back on the Interval Timer for the next Pseudo-clock tick */
 	/* unblocking all pcbs blocked on the Pseudo-Clock semaphore */
 	while (headBlocked(&deviceSemaphores[PCLOCKIDX]) != NULL){ /* while the Pseudo-Clock semaphore has a blocked pcb */
-		removeBlocked(&deviceSemaphores[PCLOCKIDX]); /* unblock the first (i.e., head) pcb from the Pseudo-Clock semaphore's process queue */
-		/* DECREMENT SOFT BLOCK COUNT HERE INSTEAD?????????? */
+		temp = removeBlocked(&deviceSemaphores[PCLOCKIDX]); /* unblock the first (i.e., head) pcb from the Pseudo-Clock semaphore's process queue */
+		insertProcQ(&ReadyQueue, temp); /* placing the unblocked pcb back on the Ready Queue */
+		softBlockCnt--; /* decrementing the number of started, but not yet terminated, processes that are in a "blocked" state */
 	}
 	deviceSemaphores[PCLOCKIDX] = INITIALPCSEM; /* resetting the Pseudo-clock semaphore to zero */
-	softBlockCnt--; /* decrementing the number of started, but not yet terminated, processes that are in a "blocked" state */
-	updateCurrPcb(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
-	proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 	setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 	if (proc != NULL){ /* if there is a Current Process to return control to */
+		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
+		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		switchContext(proc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /* if there is no Current Process to return control to, call the Scheduler function to begin executing a new process */
@@ -184,8 +187,8 @@ void IOInt(pcb_PTR proc){
 	unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
 
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
+			updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 			proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 			switchContext(proc); /* calling the function that returns control to the Current Process */
@@ -198,8 +201,8 @@ void IOInt(pcb_PTR proc){
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 	if (proc != NULL){ /* if there is a Current Process to return control to */
+		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
@@ -244,8 +247,8 @@ void terminalInt(pcb_PTR proc){
 	}
 	
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
+			updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 			proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 			switchContext(proc); /* calling the function that returns control to the Current Process */
@@ -258,8 +261,8 @@ void terminalInt(pcb_PTR proc){
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 	if (proc != NULL){ /* if there is a Current Process to return control to */
+		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
 		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
