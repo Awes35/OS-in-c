@@ -105,7 +105,7 @@ the Pseudo-clock */
 #define PROC0STACKPTR	0x20001000
 
 /* Value that the system-wide Interval Timer is initialized to (in milliseconds) */
-#define INITIALINTTIMER	100
+#define INITIALINTTIMER	100000
 
 /* Value to set the accumulated time field for a process that is instantiated */
 #define INITIALACCTIME	0
@@ -125,7 +125,7 @@ the Pseudo-clock */
 #define	IECOFF			0xFFFFFFFE	/* constant for disabling the global interrupt bit (i.e., IEc (bit 0) = 0) */
 
 /* Value that the processor's Local Timer (PLT) is intialized to (in milliseconds) */
-#define INITIALPLT		5
+#define INITIALPLT		5000
 
 /* Cause register constants for generalExceptionHandler */
 #define GETEXCEPCODE	0x0000007C	/* constant for setting all bits to 0 in the Cause register except for the ExcCode field */
