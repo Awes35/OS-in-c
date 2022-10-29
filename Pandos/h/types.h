@@ -87,8 +87,8 @@ typedef struct pcb_t {
 	int				*p_semAdd;	/* pointer to sema4 on which process blocked */
 
 	/* support layer information */
-	support_t	*p_supportStruct;
-} pcb_t, *pcb_PTR;				/* ptr to support struct */
+	support_t	*p_supportStruct; /* ptr to support struct */
+} pcb_t, *pcb_PTR;				
 
 /* Semaphore descriptor type */
 typedef struct semd_t {
