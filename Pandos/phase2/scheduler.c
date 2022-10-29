@@ -76,16 +76,24 @@ void switchProcess(){
 	}
 
 	/* We know the ReadyQueue is empty. */
-	if (procCnt == 0){ /* if the number of started, but not yet terminated, processes is zero */
-		HALT(); /* invoking the HALT() function to halt the system and print a regular shutdown message on terminal 0 */
-	}
+	if (emptyProcQ(ReadyQueue)){
+		if (procCnt == 0){ /* if the number of started, but not yet terminated, processes is zero */
+			HALT(); /* invoking the HALT() function to halt the system and print a regular shutdown message on terminal 0 */
+		}
 
-	if ((procCnt > 0) && (softBlockCnt > 0)){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
-		currentProc->p_s.s_status = ((currentProc->p_s.s_status) | IECON | IMON); /* enabling interrupts for the Current Process so we can call the WAIT() function */
-		setTIMER(NEVER); /* loading the PLT with a very large value so that the first interrupt that occurs after entering a WAIT state is not for the PLT */
-		WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
-	}
+		if ((procCnt > 0) && (softBlockCnt > 0)){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
+			/* currentProc should be NULL.. set proc0 Status */
+			int stat = (ALLOFF | IMON | PLTON | IECON);
+			setSTATUS(stat);
+			
+			/* currentProc->p_s.s_status = ((currentProc->p_s.s_status) | IECON | IMON); */
+			/* enabling interrupts for the Current Process so we can call the WAIT() function */
+			
+			setTIMER(NEVER); /* loading the PLT with a very large value so that the first interrupt that occurs after entering a WAIT state is not for the PLT */
+			WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
+		}
 
-	/* A deadlock situation is occurring (i.e., procCnt > 0 && softBlockCnt == 0) */
-	PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
+		/* A deadlock situation is occurring (i.e., procCnt > 0 && softBlockCnt == 0) */
+		PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
+	}
 }
