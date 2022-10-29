@@ -63,9 +63,9 @@
 #define ACK				    1
 
 /* Memory related constants */
-#define KSEG0           0x00000000
-#define KSEG1           0x20000000
-#define KSEG2           0x40000000
+#define KSEG0           0x00000000 /* the installed EPROM - BIOS memory region */
+#define KSEG1           0x20000000 /* the start of kernel n OS */
+#define KSEG2           0x40000000 
 #define KUSEG           0x80000000
 #define RAMSTART        0x20000000
 #define BIOSDATAPAGE    0x0FFFF000
@@ -120,7 +120,7 @@ the Pseudo-clock */
 #define IECON			0x00000001	/* constant for enabling the global interrupt bit (i.e., IEc (bit 0) = 1) */
 #define PLTON			0x08000000	/* constant for enabling PLT (i.e., TE (bit 27) = 1) */
 #define KERNON			0x00000000	/* constant for setting kernel-mode on after LDST (i.e., KUp (bit 3) = 0) */
-#define IMON			0x00000000	/* constant for setting the Interrupt Mask bits to on so interrupts are fully enabled */
+#define IMON			0x0000FF00	/* constant for setting the Interrupt Mask bits to on so interrupts are fully enabled */
 #define IMOFF			0xFFFF00FF /* constant for disabling the Interrupt Mask bits */
 #define	IECOFF			0xFFFFFFFE	/* constant for disabling the global interrupt bit (i.e., IEc (bit 0) = 0) */
 
