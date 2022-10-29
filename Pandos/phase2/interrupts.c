@@ -67,7 +67,7 @@ int findDeviceNum(int lineNumber){
 	unsigned int bitMap; /* the 32-bit contents of the Interrupt Devices Bit Map associated with the line number that was passed in as a parameter */
 
 	/* initializing temp and bitMap in order to determine which device number is associated with the highest-priority interrupt */
-	temp = (devregarea_t *) INTDEVICEADDR; /* initialization of temp */
+	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
 	bitMap = temp->interrupt_dev[lineNumber - OFFSET]; /* initialization of bitMap */
 
 	/* determining which device number is associated with the highest-priority interrupt based on the address of bitMap */
@@ -180,12 +180,13 @@ void IOInt(pcb_PTR proc){
 	/* initializing remaining local variables, except for unblockedPcb and curr_tod, which will be initialized later on */
 	devNum = findDeviceNum(lineNum); /* initializing devNum by calling the internal function that returns the device number associated with the highest-priority interrupt */	
 	index = ((lineNum - OFFSET) * DEVPERINT) + devNum; /* initializing the index in deviceSemaphores of the device associated with the highest-priority interrupt */
-	temp = (devregarea_t *) DEVADDRBASE; /* initialization of temp */
+	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
 	statusCode = temp->devreg[index].t_recv_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 
 	temp->devreg[index].t_recv_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 	unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
-
+	deviceSemaphores[index]++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
+	
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
 			updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
@@ -197,7 +198,6 @@ void IOInt(pcb_PTR proc){
 	}
 	
 	/* unblockedPcb is not NULL */
-	(*(unblockedPcb->p_semAdd))++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
@@ -233,7 +233,7 @@ void terminalInt(pcb_PTR proc){
 	/* initializing remaining local variables, except for unblockedPcb, which will be initialized later on */
 	devNum = findDeviceNum(LINE7); /* initializing devNum by calling the internal function that returns the device number associated with the highest-priority interrupt */	
 	index = ((LINE7 - OFFSET) * DEVPERINT) + devNum; /* initializing the index of the device register of the device associated with the highest-priority interrupt */
-	temp = (devregarea_t *) DEVADDRBASE; /* initialization of temp */
+	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
 	if (((temp->devreg[index].t_transm_status) & STATUSON) != READY){ /* if the device's status code is not 1, meaning the device is not "Ready" */
 		/* the interrupt associated with the terminal device is a write interrupt */
 		statusCode = temp->devreg[index].t_transm_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
@@ -246,6 +246,8 @@ void terminalInt(pcb_PTR proc){
 		unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
 	}
 	
+	deviceSemaphores[index]++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
+	
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
 		if (proc != NULL){ /* if there is a Current Process to return control to */
 			updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
@@ -257,7 +259,6 @@ void terminalInt(pcb_PTR proc){
 	}
 
 	/* unblockedPcb is not NULL */
-	(*(unblockedPcb->p_semAdd))++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
