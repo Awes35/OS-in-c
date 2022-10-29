@@ -125,17 +125,6 @@ int main(){
 		p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
 		p->p_s.s_status = ALLOFF | IEPON | KERNON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
 
-		/* initializng the all of the process tree fields to NULL */
-		p->p_prnt = NULL; /* setting the pointer to p's parent to NULL */
-		p->p_child = NULL; /* setting the pointer to p's child to NULL */
-		p->p_next_sib = NULL; /* setting the pointer to p's next sibling to NULL */
-		p->p_prev_sib = NULL; /* setting the pointer to p's previous sibling to NULL */
-
-		/* initializing the remaining pcb fields */
-		p->p_time = INITIALACCTIME; /* setting p's accumulated time field to zero */
-		p->p_semAdd = NULL; /* setting p's blocking address to NULL */
-		p->p_supportStruct = NULL; /* setting p's Support Structure pointer to NULL */
-
 		/* placing p into the Ready Queue and incrementing the Process Count */
 		insertProcQ(&ReadyQueue, p); /* inserting p into the Ready Queue */
 		procCnt++; /* incrementing the Process Count */
