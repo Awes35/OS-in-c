@@ -122,7 +122,6 @@ the Pseudo-clock */
 #define KERNON			0x00000000	/* constant for setting kernel-mode on after LDST (i.e., KUp (bit 3) = 0) */
 #define IMON			0x0000FF00	/* constant for setting the Interrupt Mask bits to on so interrupts are fully enabled */
 #define IMOFF			0xFFFF00FF /* constant for disabling the Interrupt Mask bits */
-#define	IECOFF			0xFFFFFFFE	/* constant for disabling the global interrupt bit (i.e., IEc (bit 0) = 0) */
 
 /* Value that the processor's Local Timer (PLT) is intialized to 5 milliseconds (5,000 microseconds) */
 #define INITIALPLT		5000
@@ -212,7 +211,7 @@ This constant is subtracted from the line number, since interrupt lines 3-7 are 
 #define	INITIALPCSEM	0
 
 /* Constant defining a large value to load the PLT with in switchProcess() when the Process Count and Soft Block Count are both greater than zero */
-#define NEVER			100000
+#define NEVER			0xFFFFFFFF
 
 /* Constant that represents when the first four bits in a terminal device's device register's status field are turned on */
 #define	STATUSON		0x0F
