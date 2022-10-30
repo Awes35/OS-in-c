@@ -152,7 +152,6 @@ void uTLB_RefillHandler () {
 /*                 p1 -- the root process                            */
 /*                                                                   */
 void test() {	
-    print("Reached test()");
     
 	SYSCALL(VERHOGEN, (int)&testsem, 0, 0);					/* V(testsem)   */
 
