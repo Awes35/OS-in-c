@@ -85,7 +85,7 @@ void createProcess(pcb_PTR proc, state_PTR stateSYS, support_t *suppStruct){
 		newPcb->p_semAdd = NULL; /* initializing the pointer to newPcb's semaphore, which is set to NULL because newPcb is not in the "blocked" state */
 		insertChild(proc, newPcb); /* initializing newPcb's process tree fields by making it a child of the Current Process */
 		insertProcQ(&ReadyQueue, newPcb); /* inserting newPcb onto the Ready Queue */
-		proc->p_s.s_v0->s_v0 = SUCCESSCONST; /* placing the value 0 in the caller's v0 because the allocation was completed successfully */
+		proc->p_s.s_v0 = SUCCESSCONST; /* placing the value 0 in the caller's v0 because the allocation was completed successfully */
 		procCnt++; /* incrementing the number of started, but not yet terminated, processes by one */
 	}
 
@@ -225,7 +225,7 @@ was not initialized during process creation. Once it places the pointer to the C
 it returns control back to the Current Process so that it can continue executing (after charging the
 Current Process with the CPU time needed to handle the SYSCALL request). */
 void getSupportData(pcb_PTR proc){
-	proc->p_s.s_v0 = (proc->p_supportStruct); /* place Current Process' supportStruct in v0 */
+	proc->p_s.s_v0 = (int)(proc->p_supportStruct); /* place Current Process' supportStruct in v0 */
 	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 	proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(proc); /* returning control to the Current Process (resume execution) */
@@ -259,10 +259,10 @@ function that performs a standard Pass Up or Die operation using the GENERALEXCE
 void sysTrapH(){
 	/* initializing global variables */ 
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
-	sysNum = savedExceptState->p_s.s_a0; /* initializing the number of the SYSCALL that we are addressing */
+	sysNum = savedExceptState->s_a0; /* initializing the number of the SYSCALL that we are addressing */
 
 	/* Perform checks to make sure we want to proceed with handling the SYSCALL (as opposed to pgmTrapH) */
-	if (((savedExceptState->p_s.s_status) & USERPON) != ALLOFF){ /* if the process was executing in user mode when the SYSCALL was requested */
+	if (((savedExceptState->s_status) & USERPON) != ALLOFF){ /* if the process was executing in user mode when the SYSCALL was requested */
 		(((state_t *) BIOSDATAPAGE)->s_cause) = (((state_t *) BIOSDATAPAGE)->s_cause) & RESINSTRCODE; /* setting the Cause.ExcCode bits in the stored exception state to RI (10) */
 		pgmTrapH();
 	}
@@ -273,7 +273,7 @@ void sysTrapH(){
 
 	/* Now proceed knowing we will handle a SYSCALL 1-8 */
 	updateCurrPcb(currentProc); /* copying the saved processor state into the Current Process' pcb  */
-	currentProc->s_pc = currentProc->s_pc + WORDLEN; /* incrementing the value of the PC for the Current Process by 4 */
+	currentProc->p_s.s_pc = currentProc->p_s.s_pc + WORDLEN; /* incrementing the value of the PC for the Current Process by 4 */
 
 	/* enumerating the sysNum values (1-8) and passing control to the respective function to handle it */
 	switch (sysNum){ 
