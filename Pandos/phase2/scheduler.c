@@ -94,6 +94,9 @@ void switchProcess(){
 		}
 
 		/* A deadlock situation is occurring (i.e., procCnt > 0 && softBlockCnt == 0) */
-		PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
+		/* ALL POSSIBLE SCENARIOS: procCnt<0 .. softBlockCnt==0 .. softBlockCnt<0 */
+		if ((procCnt > 0) && (softBlockCnt == 0)){
+			PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
+		}
 	}
 }
