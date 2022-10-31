@@ -129,14 +129,16 @@ void terminateProcess(pcb_PTR proc){
 		if (!(procSem >= &deviceSemaphores[FIRSTDEVINDEX] && procSem <= &deviceSemaphores[LASTDEVINDEX])){ /* if proc is not blocked on a device semaphore */
 			(*(procSem))++; /* incrementing the val of sema4*/
 		}
-		softBlockCnt--; /* decrementing the number of started, but not yet terminated, processes that are in the "blocked" state */
+		else{
+			softBlockCnt--; /* decrementing the number of started, but not yet terminated, processes that are in the "blocked" state */
+		}
 	} 
 	else{ /* proc is on the Ready Queue */
 		outProcQ(&ReadyQueue, proc); /* removing proc from the Ready Queue */
 	}
 	freePcb(proc); /* returning proc onto the pcbFree list (and, therefore, destroying it) */
 	procCnt--; /* decrementing the number of started, but not yet terminated, processes */
-	currentProc = NULL; /* setting the Current Process to NULL, since it has been destroyed */
+	proc = NULL; /* setting the Current Process to NULL, since it has been destroyed */
 	switchProcess(); /* calling the Scheduler to begin executing the next process */
 }
 
