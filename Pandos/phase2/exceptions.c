@@ -139,7 +139,7 @@ void terminateProcess(pcb_PTR proc){
 	freePcb(proc); /* returning proc onto the pcbFree list (and, therefore, destroying it) */
 	procCnt--; /* decrementing the number of started, but not yet terminated, processes */
 	proc = NULL; /* setting the Current Process to NULL, since it has been destroyed */
-	switchProcess(); /* calling the Scheduler to begin executing the next process */
+	
 }
 
 /* Function that handles a SYS3 event. This is a (sometimes) blocking syscall.
@@ -249,7 +249,7 @@ void passUpOrDie(pcb_PTR proc, int exceptionCode){
 	}
 	/* the Current Process' p_support_struct is NULL, so we handle it as a SYS2: the Current Process and all its progeny are terminated */
 	terminateProcess(proc); /* calling the termination function that "kills" the Current Process and all of its children */
-
+	switchProcess(); /* calling the Scheduler to begin executing the next process */
 }
 
 /* Function that represents the entry point into this module when handling SYSCALL events. This function's tasks include, but are not
@@ -286,6 +286,7 @@ void sysTrapH(){
 
 		case SYS2NUM: /* if the SYSCALL number is 2 */
 			terminateProcess(currentProc); /* invoking the internal function that handles SYS2 events */
+			switchProcess(); /* calling the Scheduler to begin executing the next process */
 		
 		case SYS3NUM: /* if the SYSCALL number is 3 */
 			waitOp((int *) (currentProc->p_s.s_a1), currentProc); /* invoking the internal function that handles SYS3 events */
