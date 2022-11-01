@@ -48,10 +48,10 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* Function declarations */
-HIDDEN void pltTimerInt(pcb_PTR proc);
-HIDDEN void intTimerInt(pcb_PTR proc);
-HIDDEN void terminalInt(pcb_PTR proc);
-HIDDEN void IOInt(pcb_PTR proc);
+HIDDEN void pltTimerInt();
+HIDDEN void intTimerInt();
+HIDDEN void terminalInt();
+HIDDEN void IOInt();
 HIDDEN int findDeviceNum(int lineNumber);
 
 /* Declaring global variables */
@@ -102,15 +102,15 @@ on the Ready Queue, updates the CPU time of the Current Process so that it inclu
 when the function finished handling the interrupt, because, due to our timing policy described in the module-level documentation, all of
 this time will be charged to the Current Process. Once all of this has been accomplished, the function calls the Scheduler so that another process
 can begin executing. */
-void pltTimerInt(pcb_PTR proc){
+void pltTimerInt(){
 	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
-	if (proc != NULL){ /* if there was a running process when the interrupt was generated */
-		updateCurrPcb(proc); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
+	if (currentProc != NULL){ /* if there was a running process when the interrupt was generated */
+		updateCurrPcb(); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
-		proc->p_time = proc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-		insertProcQ(&ReadyQueue, proc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
-		proc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
+		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+		insertProcQ(&ReadyQueue, currentProc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
+		currentProc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
 		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
 	}
 	PANIC(); /* otherwise, Current Process is NULL, so the function invokes the PANIC() function to stop the system and print a warning message on terminal 0 */
@@ -124,7 +124,7 @@ also decrements the Soft-block Count, since a started (but not finished) process
 CPU time of the Curernt Process so that includes the time between when it last started executing and when the interrupt first occurred.
 As stated in the module-level documentation, we will refrain from charging the Current Process (or any process at all) with the time
 spent handling this interrupt, since the Current Process is not actually using this CPU time to execute its own process. */
-void intTimerInt(pcb_PTR proc){
+void intTimerInt(){
 	/* declaring local variables */
 	pcb_PTR temp; /* a pointer to a pcb in the Pseudo-Clock semaphore's process queue that we wish to unblock and insert into the Ready Queue */
 	
@@ -136,11 +136,11 @@ void intTimerInt(pcb_PTR proc){
 		softBlockCnt--; /* decrementing the number of started, but not yet terminated, processes that are in a "blocked" state */
 	}
 	deviceSemaphores[PCLOCKIDX] = INITIALPCSEM; /* resetting the Pseudo-clock semaphore to zero */
-	setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-	if (proc != NULL){ /* if there is a Current Process to return control to */
-		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
-		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-		switchContext(proc); /* calling the function that returns control to the Current Process */
+	if (currentProc != NULL){ /* if there is a Current Process to return control to */
+		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
+		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
+		currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+		switchContext(currentProc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /* if there is no Current Process to return control to, call the Scheduler function to begin executing a new process */
 }
@@ -153,7 +153,7 @@ maintained semaphore associated with this device. Then, it places the stored off
 inserts the newly unblobked pcb on the Ready Queue, and then updates the CPU time of the Current Process so that it includes the time that
 it spent executing up until when the interrupt first occurred, and then it charges the time spent handling the interrupt to the 
 process responsible for generating the I/O interrupt (if it is not NULL), as described in the module-level documentation for this module. */
-void IOInt(pcb_PTR proc){
+void IOInt(){
 	/* declaring local variables */
 	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	int lineNum; /* the line number that the highest-priority interrupt occurred on */
@@ -188,11 +188,11 @@ void IOInt(pcb_PTR proc){
 	deviceSemaphores[index]++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		if (proc != NULL){ /* if there is a Current Process to return control to */
-			updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
-			proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+		if (currentProc != NULL){ /* if there is a Current Process to return control to */
+			updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
+			currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-			switchContext(proc); /* calling the function that returns control to the Current Process */
+			switchContext(currentProc); /* calling the function that returns control to the Current Process */
 		}
 		switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 	}
@@ -201,13 +201,13 @@ void IOInt(pcb_PTR proc){
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	if (proc != NULL){ /* if there is a Current Process to return control to */
-		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
+	if (currentProc != NULL){ /* if there is a Current Process to return control to */
+		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
 		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+		currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
-		switchContext(proc); /* calling the function that returns control to the Current Process */
+		switchContext(currentProc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 }
@@ -221,7 +221,7 @@ Then, it places the stored off status code in the newly unblocked pcb's v0 regis
 and then updates the CPU time of the Current Process so that it includes the time that it spent executing up until when the interrupt first
 occurred, and then it charges the time spent handling the interrupt to the process responsible for generating the I/O interrupt (if it
 is not NULL), as described in the module-level documentation for this module. */
-void terminalInt(pcb_PTR proc){
+void terminalInt(){
 	/* declaring local variables */
 	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
@@ -249,11 +249,11 @@ void terminalInt(pcb_PTR proc){
 	}
 	
 	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		if (proc != NULL){ /* if there is a Current Process to return control to */
-			updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
-			proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+		if (currentProc != NULL){ /* if there is a Current Process to return control to */
+			updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
+			currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-			switchContext(proc); /* calling the function that returns control to the Current Process */
+			switchContext(currentProc); /* calling the function that returns control to the Current Process */
 		}
 		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 	}
@@ -262,13 +262,13 @@ void terminalInt(pcb_PTR proc){
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	if (proc != NULL){ /* if there is a Current Process to return control to */
-		updateCurrPcb(proc); /* update the Current Process' processor state before resuming process' execution */
+	if (currentProc != NULL){ /* if there is a Current Process to return control to */
+		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
 		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-		proc->p_time = proc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
+		currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
-		switchContext(proc); /* calling the function that returns control to the Current Process */
+		switchContext(currentProc); /* calling the function that returns control to the Current Process */
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 }
@@ -284,13 +284,13 @@ void intTrapH(){
 
  	/* calling the appropriate interrupt handler function based off the type of the interrupt that has the highest priority */
  	if (((savedExceptState->s_cause) & LINE1INT) != ALLOFF){ /* if there is a PLT interrupt (i.e., an interrupt occurred on line 1) */
- 		pltTimerInt(currentProc); /* calling the internal function that handles PLT interrupts */
+ 		pltTimerInt(); /* calling the internal function that handles PLT interrupts */
  	}
  	if (((savedExceptState->s_cause) & LINE2INT) != ALLOFF){ /* if there is a System-Wide Interval Timer/Pseudo-clock interrupt (i.e., an interrupt occurred on line 2) */
- 		intTimerInt(currentProc); /* calling the internal function that handles System-Wide Interval Timer/Pseudo-clock interrupts */
+ 		intTimerInt(); /* calling the internal function that handles System-Wide Interval Timer/Pseudo-clock interrupts */
  	}
  	if (((savedExceptState->s_cause) & LINE7INT) != ALLOFF){ /* if there is an I/O interrupt on a terminal device (i.e., an interrupt occurred on line 7) */
-		terminalInt(currentProc); /* calling the internal function that handles I/O interrupts on terminal devices */
+		terminalInt(); /* calling the internal function that handles I/O interrupts on terminal devices */
  	}
- 	IOInt(currentProc); /* otherwise, an I/O interrupt occurred on a non-terminal device (i.e., an interrupt occurred on lines 3-6) */
+ 	IOInt(); /* otherwise, an I/O interrupt occurred on a non-terminal device (i.e., an interrupt occurred on lines 3-6) */
  }
