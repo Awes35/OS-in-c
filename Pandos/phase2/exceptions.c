@@ -114,7 +114,7 @@ void terminateProcess(pcb_PTR proc){
 	int *procSem; /* a pointer to the semaphore associated with the Current Process */
 
 	/* initializing local variables */
-	procSem = currentProc->p_semAdd; /* initializing currProcSem to the Current Process' pointer to its semaphore */
+	procSem = proc->p_semAdd; /* initializing procSem to the process' pointer to its semaphore */
 
 	/* terminating all progeny of the Current Process by utilizing head recursion */
 	while (!(emptyChild(proc))){ /* while the process that will be terminated still has children */
