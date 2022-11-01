@@ -14,6 +14,6 @@
 extern void sysTrapH ();
 extern void tlbTrapH ();
 extern void pgmTrapH ();
-extern void updateCurrPcb(pcb_PTR proc);
+extern void updateCurrPcb();
 
 #endif
