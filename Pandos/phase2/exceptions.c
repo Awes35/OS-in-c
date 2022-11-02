@@ -141,7 +141,7 @@ void terminateProcess(pcb_PTR proc){
 	}
 	freePcb(proc); /* returning proc onto the pcbFree list (and, therefore, destroying it) */
 	procCnt--; /* decrementing the number of started, but not yet terminated, processes */
-	/* proc = NULL;*/ /* setting the process pointer to NULL, since it has been destroyed */
+	proc = NULL; /* setting the process pointer to NULL, since it has been destroyed */
 }
 
 /* Function that handles a SYS3 event. This is a (sometimes) blocking syscall.
@@ -288,7 +288,7 @@ void sysTrapH(){
 
 		case SYS2NUM: /* if the SYSCALL number is 2 */
 			terminateProcess(currentProc); /* invoking the internal function that handles SYS2 events */
-			/* currentProc = NULL;*/ /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
+			currentProc = NULL; /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
 			switchProcess(); /* calling the Scheduler to begin executing the next process */
 		
 		case SYS3NUM: /* if the SYSCALL number is 3 */
