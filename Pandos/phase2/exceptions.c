@@ -251,6 +251,7 @@ void passUpOrDie(int exceptionCode){
 	}
 	/* the Current Process' p_support_struct is NULL, so we handle it as a SYS2: the Current Process and all its progeny are terminated */
 	terminateProcess(currentProc); /* calling the termination function that "kills" the Current Process and all of its children */
+	currentProc = NULL; /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
 	switchProcess(); /* calling the Scheduler to begin executing the next process */
 }
 
