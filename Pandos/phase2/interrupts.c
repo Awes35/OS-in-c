@@ -106,6 +106,7 @@ void pltTimerInt(){
 	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
 	if (currentProc != NULL){ /* if there was a running process when the interrupt was generated */
+		setTIMER(NEVER); /* loading the PLT with a very large value as we have acknowledged it (don't call PLT again) */
 		updateCurrPcb(); /* moving the updated saved exception state from the BIOS Data Page into the Current Process' processor state */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
