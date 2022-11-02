@@ -141,7 +141,8 @@ void terminateProcess(pcb_PTR proc){
 	}
 	freePcb(proc); /* returning proc onto the pcbFree list (and, therefore, destroying it) */
 	procCnt--; /* decrementing the number of started, but not yet terminated, processes */
-	proc = NULL; /* setting the process pointer to NULL, since it has been destroyed */
+	/* proc = NULL; */
+	/* setting the process pointer to NULL, since it has been destroyed */
 }
 
 /* Function that handles a SYS3 event. This is a (sometimes) blocking syscall.
