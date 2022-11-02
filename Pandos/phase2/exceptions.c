@@ -249,10 +249,12 @@ void passUpOrDie(int exceptionCode){
 		LDCXT(currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_stackPtr, currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_status,
 		currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_pc); /* performing a LDCXT using the fields from the correct sup_exceptContext field of the Current Process */
 	}
-	/* the Current Process' p_support_struct is NULL, so we handle it as a SYS2: the Current Process and all its progeny are terminated */
-	terminateProcess(currentProc); /* calling the termination function that "kills" the Current Process and all of its children */
-	/*currentProc = NULL;*/ /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
-	switchProcess(); /* calling the Scheduler to begin executing the next process */
+	else{
+		/* the Current Process' p_support_struct is NULL, so we handle it as a SYS2: the Current Process and all its progeny are terminated */
+		terminateProcess(currentProc); /* calling the termination function that "kills" the Current Process and all of its children */
+		/*currentProc = NULL;*/ /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
+		switchProcess(); /* calling the Scheduler to begin executing the next process */
+	}
 }
 
 /* Function that represents the entry point into this module when handling SYSCALL events. This function's tasks include, but are not
