@@ -242,9 +242,8 @@ Up or Die.") On the other hand, if the Current Process' p_supportStruct is not N
 this case, the saved exception state from the BIOS Data Page is copied to the correct sup_exceptState field of the Current Process, and 
 a LDCXT is performed using the fields from the proper sup_exceptContext field of the Current Process. */
 void passUpOrDie(int exceptionCode){ 
-	moveState(savedExceptState, &(currentProc->p_supportStruct->sup_exceptionState[exceptionCode])); /* copying the saved exception state from the BIOS Data Page directly to the correct sup_exceptState field of the Current Process */
-	currentProc->p_s.s_pc = currentProc->p_s.s_pc + WORDLEN; /* incrementing the value of the PC for the Current Process by 4 */
 	if (currentProc->p_supportStruct != NULL){
+		moveState(savedExceptState, &(currentProc->p_supportStruct->sup_exceptionState[exceptionCode])); /* copying the saved exception state from the BIOS Data Page directly to the correct sup_exceptState field of the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 		LDCXT(currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_stackPtr, currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_status,
@@ -252,7 +251,7 @@ void passUpOrDie(int exceptionCode){
 	}
 	/* the Current Process' p_support_struct is NULL, so we handle it as a SYS2: the Current Process and all its progeny are terminated */
 	terminateProcess(currentProc); /* calling the termination function that "kills" the Current Process and all of its children */
-	currentProc = NULL; /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
+	/*currentProc = NULL;*/ /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
 	switchProcess(); /* calling the Scheduler to begin executing the next process */
 }
 
@@ -270,13 +269,14 @@ void sysTrapH(){
 	/* Perform checks to make sure we want to proceed with handling the SYSCALL (as opposed to pgmTrapH) */
 	if (((savedExceptState->s_status) & USERPON) != ALLOFF){ /* if the process was executing in user mode when the SYSCALL was requested */
 		(((state_t *) BIOSDATAPAGE)->s_cause) = (((state_t *) BIOSDATAPAGE)->s_cause) & RESINSTRCODE; /* setting the Cause.ExcCode bits in the stored exception state to RI (10) */
-		pgmTrapH();
+		savedExceptState->s_pc = savedExceptState->s_pc + WORDLEN;
+		pgmTrapH(); /* break out to pgmTrapH */
 	}
-
-	if (sysNum > 8){ /* check if the SYSCALL number was 9 or above (we'll punt) */
-		pgmTrapH();
+	else if (sysNum > 8){ /* check if the SYSCALL number was 9 or above (we'll punt) */
+		savedExceptState->s_pc = savedExceptState->s_pc + WORDLEN;
+		pgmTrapH(); /* break out to pgmTrapH */
 	}
-
+	
 	/* Now proceed knowing we will handle a SYSCALL 1-8 */
 	updateCurrPcb(currentProc); /* copying the saved processor state into the Current Process' pcb  */
 	currentProc->p_s.s_pc = currentProc->p_s.s_pc + WORDLEN; /* incrementing the value of the PC for the Current Process by 4 */
@@ -290,7 +290,7 @@ void sysTrapH(){
 
 		case SYS2NUM: /* if the SYSCALL number is 2 */
 			terminateProcess(currentProc); /* invoking the internal function that handles SYS2 events */
-			currentProc = NULL; /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
+			/*currentProc = NULL;*/ /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
 			switchProcess(); /* calling the Scheduler to begin executing the next process */
 		
 		case SYS3NUM: /* if the SYSCALL number is 3 */
