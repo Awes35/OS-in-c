@@ -242,9 +242,9 @@ Up or Die.") On the other hand, if the Current Process' p_supportStruct is not N
 this case, the saved exception state from the BIOS Data Page is copied to the correct sup_exceptState field of the Current Process, and 
 a LDCXT is performed using the fields from the proper sup_exceptContext field of the Current Process. */
 void passUpOrDie(int exceptionCode){ 
+	moveState(savedExceptState, &(currentProc->p_supportStruct->sup_exceptionState[exceptionCode])); /* copying the saved exception state from the BIOS Data Page directly to the correct sup_exceptState field of the Current Process */
+	currentProc->p_s.s_pc = currentProc->p_s.s_pc + WORDLEN; /* incrementing the value of the PC for the Current Process by 4 */
 	if (currentProc->p_supportStruct != NULL){
-		moveState(savedExceptState, &(currentProc->p_supportStruct->sup_exceptionState[exceptionCode])); /* copying the saved exception state from the BIOS Data Page directly to the correct sup_exceptState field of the Current Process */
-		currentProc->p_s.s_pc = currentProc->p_s.s_pc + WORDLEN; /* incrementing the value of the PC for the Current Process by 4 */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 		LDCXT(currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_stackPtr, currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_status,
