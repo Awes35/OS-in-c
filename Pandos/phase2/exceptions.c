@@ -65,7 +65,7 @@ void blockCurr(int *sem){
 	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 	currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	insertBlocked(sem, currentProc); /* blocking the Current Process on the ASL */
-	currentProc = NULL; /* setting currentProc to NULL because the old process is now blocked */ 
+	/* currentProc = NULL; */ /* setting currentProc to NULL because the old process is now blocked */ 
 }
 
 /* Function that handles SYS1 events. In other words, this internal function creates a new process. The function
