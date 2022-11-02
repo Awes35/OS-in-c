@@ -209,7 +209,7 @@ This constant is subtracted from the line number, since interrupt lines 3-7 are 
 #define	INITIALPCSEM	0
 
 /* Constant defining a large value to load the PLT with in switchProcess() when the Process Count and Soft Block Count are both greater than zero */
-#define NEVER			0xFFFFFFFF
+#define NEVER			0x7FFFFFFF
 
 /* Constant that represents when the first four bits in a terminal device's device register's status field are turned on */
 #define	STATUSON		0x0F
