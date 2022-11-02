@@ -43,6 +43,7 @@ int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspo
 									associated with a read operation in the array come before those associated with a write operation. */
 cpu_t start_tod; /* the value on the time of day clock that the Current Process begins executing at */
 state_PTR savedExceptState; /* a pointer to the saved exception state */
+int exceptCodeGLOB; /* TEMP to track excCode in UMPS tracing */
 
 /* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
 the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
@@ -56,6 +57,8 @@ void generalExceptionHandler(){
 	/* initializing local variables */
 	oldState = (state_t *) BIOSDATAPAGE; /* getting the saved exception state at the start of the BIOS Data Page */
 	exceptionReason = ((oldState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
+
+	exceptCodeGLOB = exceptionReason; /* TEMP to track excCode in UMPS tracing */
 
 	if (exceptionReason == INTCONST){ /* if the exception code is 0 */
 		intTrapH(); /* calling the Nucleus' device interrupt handler function */
