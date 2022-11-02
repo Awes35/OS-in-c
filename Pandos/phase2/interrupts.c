@@ -111,7 +111,8 @@ void pltTimerInt(){
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		insertProcQ(&ReadyQueue, currentProc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
-		currentProc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
+		/*currentProc = NULL;*/
+		 /* setting Current Process to NULL, since there is no process currently executing */
 		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
 	}
 	PANIC(); /* otherwise, Current Process is NULL, so the function invokes the PANIC() function to stop the system and print a warning message on terminal 0 */
