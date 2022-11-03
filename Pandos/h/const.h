@@ -114,7 +114,7 @@ the Pseudo-clock */
 #define PCLOCKIDX       (MAXDEVICECNT - 1)
 
 /* Processor State--Status register constants */
-#define ALLOFF			0x0     	/* every bit in the Status register is set to 0; this will prove helpful for bitwise-OR operations */
+#define ALLOFF			0x00000000     	/* every bit in the Status register is set to 0; this will prove helpful for bitwise-OR operations */
 #define USERPON			0x00000008	/* constant for setting the user-mode on after LDST (i.e., KUp (bit 3) = 1) */
 #define IEPON			0x00000004	/* constant for enabling interrupts after LDST (i.e., IEp (bit 2) = 1) */
 #define IECON			0x00000001	/* constant for enabling the global interrupt bit (i.e., IEc (bit 0) = 1) */
@@ -209,7 +209,7 @@ This constant is subtracted from the line number, since interrupt lines 3-7 are 
 #define	INITIALPCSEM	0
 
 /* Constant defining a large value to load the PLT with in switchProcess() when the Process Count and Soft Block Count are both greater than zero */
-#define NEVER			0x7FFFFFFF
+#define NEVER			0xFFFFFFFF
 
 /* Constant that represents when the first four bits in a terminal device's device register's status field are turned on */
 #define	STATUSON		0x0F
