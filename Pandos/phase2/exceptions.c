@@ -141,7 +141,7 @@ void terminateProcess(pcb_PTR proc){
 	}
 	freePcb(proc); /* returning proc onto the pcbFree list (and, therefore, destroying it) */
 	procCnt--; /* decrementing the number of started, but not yet terminated, processes */
-	/* proc = NULL; */
+	proc = NULL; 
 	/* setting the process pointer to NULL, since it has been destroyed */
 }
 
@@ -247,8 +247,8 @@ void passUpOrDie(int exceptionCode){
 		moveState(savedExceptState, &(currentProc->p_supportStruct->sup_exceptionState[exceptionCode])); /* copying the saved exception state from the BIOS Data Page directly to the correct sup_exceptState field of the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
-		LDCXT(currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_stackPtr, currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_status,
-		currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_pc); /* performing a LDCXT using the fields from the correct sup_exceptContext field of the Current Process */
+		LDCXT((unsigned int)currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_stackPtr, (unsigned int)currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_status,
+		(unsigned int)currentProc->p_supportStruct->sup_exceptContext[exceptionCode].c_pc); /* performing a LDCXT using the fields from the correct sup_exceptContext field of the Current Process */
 	}
 	else{
 		/* the Current Process' p_support_struct is NULL, so we handle it as a SYS2: the Current Process and all its progeny are terminated */
