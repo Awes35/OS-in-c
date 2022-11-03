@@ -293,7 +293,7 @@ void sysTrapH(){
 
 		case SYS2NUM: /* if the SYSCALL number is 2 */
 			terminateProcess(currentProc); /* invoking the internal function that handles SYS2 events */
-			currentProc = NULL;*/ /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
+			currentProc = NULL; /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
 			switchProcess(); /* calling the Scheduler to begin executing the next process */
 		
 		case SYS3NUM: /* if the SYSCALL number is 3 */
