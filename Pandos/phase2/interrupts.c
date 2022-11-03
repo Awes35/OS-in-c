@@ -56,7 +56,7 @@ HIDDEN int findDeviceNum(int lineNumber);
 
 /* Declaring global variables */
 cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
-cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
+/* cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
 
 
 /* Internal helper function responsible for determining what device number the highest-priority interrupt occurred on. The function
@@ -111,7 +111,8 @@ void pltTimerInt(){
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		insertProcQ(&ReadyQueue, currentProc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
-		currentProc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
+		/*currentProc = NULL;*/
+		 /* setting Current Process to NULL, since there is no process currently executing */
 		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
 	}
 	PANIC(); /* otherwise, Current Process is NULL, so the function invokes the PANIC() function to stop the system and print a warning message on terminal 0 */
@@ -138,10 +139,11 @@ void intTimerInt(){
 	}
 	deviceSemaphores[PCLOCKIDX] = INITIALPCSEM; /* resetting the Pseudo-clock semaphore to zero */
 	if (currentProc != NULL){ /* if there is a Current Process to return control to */
-		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
+		/*setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
 		currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-		switchContext(currentProc); /* calling the function that returns control to the Current Process */
+		/*switchContext(currentProc); /* calling the function that returns control to the Current Process */
+		insertProcQ(&ReadyQueue, currentProc);
 	}
 	switchProcess(); /* if there is no Current Process to return control to, call the Scheduler function to begin executing a new process */
 }
@@ -192,8 +194,9 @@ void IOInt(){
 		if (currentProc != NULL){ /* if there is a Current Process to return control to */
 			updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
 			currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-			switchContext(currentProc); /* calling the function that returns control to the Current Process */
+			/*setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
+			/*switchContext(currentProc); /* calling the function that returns control to the Current Process */
+			insertProcQ(&ReadyQueue, currentProc);
 		}
 		switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 	}
@@ -204,11 +207,12 @@ void IOInt(){
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
 	if (currentProc != NULL){ /* if there is a Current Process to return control to */
 		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
-		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
+		/*setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 		currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
-		switchContext(currentProc); /* calling the function that returns control to the Current Process */
+		/*switchContext(currentProc); /* calling the function that returns control to the Current Process */
+		insertProcQ(&ReadyQueue, currentProc);
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 }
@@ -253,8 +257,9 @@ void terminalInt(){
 		if (currentProc != NULL){ /* if there is a Current Process to return control to */
 			updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
 			currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-			switchContext(currentProc); /* calling the function that returns control to the Current Process */
+			/*setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
+			/*switchContext(currentProc); /* calling the function that returns control to the Current Process */
+			insertProcQ(&ReadyQueue, currentProc);
 		}
 		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 	}
@@ -265,11 +270,12 @@ void terminalInt(){
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
 	if (currentProc != NULL){ /* if there is a Current Process to return control to */
 		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
-		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
+		/*setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 		currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
-		switchContext(currentProc); /* calling the function that returns control to the Current Process */
+		/*switchContext(currentProc); /* calling the function that returns control to the Current Process */
+		insertProcQ(&ReadyQueue, currentProc);
 	}
 	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 }
@@ -280,7 +286,7 @@ the internal function that handles that specific type of interrupt. */
 void intTrapH(){
  	/* initializing global variables */
 	STCK(interrupt_tod); /* storing the value on the Time of Day clock when the Interrupt Handler module is first entered into interrupt_tod */
- 	remaining_time = getTIMER(); /* storing the remaining time left on the Current Process' quantum into remaining_time */
+ 	/*remaining_time = getTIMER(); /* storing the remaining time left on the Current Process' quantum into remaining_time */
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 
  	/* calling the appropriate interrupt handler function based off the type of the interrupt that has the highest priority */
