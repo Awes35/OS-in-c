@@ -83,8 +83,8 @@ void switchProcess(){
 
 		if ((procCnt > 0) && (softBlockCnt > 0)){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
 			/* currentProc should be NULL.. set proc0 Status */
-			int stat = (ALLOFF | IMON | PLTON | IECON);
-			setSTATUS(stat);
+			/* int stat = (ALLOFF | IMON | PLTON | IECON); */
+			setSTATUS((ALLOFF | IMON | PLTON | IECON));
 			
 			/* currentProc->p_s.s_status = ((currentProc->p_s.s_status) | IECON | IMON); */
 			/* enabling interrupts for the Current Process so we can call the WAIT() function */
