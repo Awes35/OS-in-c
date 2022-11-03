@@ -280,7 +280,7 @@ the internal function that handles that specific type of interrupt. */
 void intTrapH(){
  	/* initializing global variables */
 	STCK(interrupt_tod); /* storing the value on the Time of Day clock when the Interrupt Handler module is first entered into interrupt_tod */
- 	/*remaining_time = getTIMER(); /* storing the remaining time left on the Current Process' quantum into remaining_time */
+ 	remaining_time = getTIMER(); /* storing the remaining time left on the Current Process' quantum into remaining_time */
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 
  	/* calling the appropriate interrupt handler function based off the type of the interrupt that has the highest priority */
