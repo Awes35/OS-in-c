@@ -272,11 +272,9 @@ void sysTrapH(){
 	/* Perform checks to make sure we want to proceed with handling the SYSCALL (as opposed to pgmTrapH) */
 	if (((savedExceptState->s_status) & USERPON) != ALLOFF){ /* if the process was executing in user mode when the SYSCALL was requested */
 		(((state_t *) BIOSDATAPAGE)->s_cause) = (((state_t *) BIOSDATAPAGE)->s_cause) & RESINSTRCODE; /* setting the Cause.ExcCode bits in the stored exception state to RI (10) */
-		savedExceptState->s_pc = savedExceptState->s_pc + WORDLEN;
 		pgmTrapH(); /* break out to pgmTrapH */
 	}
 	else if (sysNum > 8){ /* check if the SYSCALL number was 9 or above (we'll punt) */
-		savedExceptState->s_pc = savedExceptState->s_pc + WORDLEN;
 		pgmTrapH(); /* break out to pgmTrapH */
 	}
 	
