@@ -131,7 +131,7 @@ int main(){
 
 		/* placing p into the Ready Queue and incrementing the Process Count */
 		insertProcQ(&ReadyQueue, p); /* inserting p into the Ready Queue */
-		readyQueueSize = 0;
+		readyQueueSize = 1;
 		procCnt++; /* incrementing the Process Count */
 
 		/* calling the Scheduler function to begin executing a new process */
