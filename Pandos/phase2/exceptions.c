@@ -93,6 +93,7 @@ void createProcess(state_PTR stateSYS, support_t *suppStruct){
 		newPcb->p_semAdd = NULL; /* initializing the pointer to newPcb's semaphore, which is set to NULL because newPcb is not in the "blocked" state */
 		insertChild(currentProc, newPcb); /* initializing newPcb's process tree fields by making it a child of the Current Process */
 		insertProcQ(&ReadyQueue, newPcb); /* inserting newPcb onto the Ready Queue */
+		readyQueueSize++;
 		currentProc->p_s.s_v0 = SUCCESSCONST; /* placing the value 0 in the caller's v0 because the allocation was completed successfully */
 		procCnt++; /* incrementing the number of started, but not yet terminated, processes by one */
 	}
@@ -143,6 +144,7 @@ void terminateProcess(pcb_PTR proc){
 	} 
 	else{ /* proc is on the Ready Queue */
 		outProcQ(&ReadyQueue, proc); /* removing proc from the Ready Queue */
+		readyQueueSize--;
 	}
 	freePcb(proc); /* returning proc onto the pcbFree list (and, therefore, destroying it) */
 	procCnt--; /* decrementing the number of started, but not yet terminated, processes */
@@ -175,6 +177,7 @@ void signalOp(int *sem){
 	if(*sem <= SEMA4THRESH){ /* if value of semaphore indicates a blocking process */ 
 		pcb_PTR temp = removeBlocked(sem); /* make semaphore not blocking, ie: make it not blocking on the ASL */
 		insertProcQ(&ReadyQueue, temp); /* add process' PCB to the ReadyQueue */
+		readyQueueSize++;
 	}
 
 	/* returning to the Current Process */
