@@ -45,6 +45,8 @@ cpu_t start_tod; /* the value on the time of day clock that the Current Process 
 state_PTR savedExceptState; /* a pointer to the saved exception state */
 int exceptCodeGLOB; /* TEMP to track excCode in UMPS tracing */
 int readyQueueSize; /* TEMP to track size of Ready Queue */
+int temp1;
+int temp2;
 
 /* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
 the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
@@ -132,6 +134,8 @@ int main(){
 		/* placing p into the Ready Queue and incrementing the Process Count */
 		insertProcQ(&ReadyQueue, p); /* inserting p into the Ready Queue */
 		readyQueueSize = 1;
+		temp1 = 5;
+		temp2 = 5;
 		procCnt++; /* incrementing the Process Count */
 
 		/* calling the Scheduler function to begin executing a new process */
