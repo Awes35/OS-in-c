@@ -110,10 +110,15 @@ int creation = 0; 				/* return code for SYSCALL invocation */
 memaddr *p5MemLocation = 0;		/* To cause a p5 trap */
 
 void	p2(),p3(),p4(),p5(),p5a(),p5b(),p6(),p7(),p7a(),p5prog(),p5mm();
-void	p5sys(),p8root(),child1(),child2(),p8leaf();
+void	p5sys(),p8root(),child1(),child2(),p8leaf(), debugFun(int x, int y);
 
 extern void p5gen ();
 extern void p5mm ();
+
+void debugFun(int x, int y){
+	temp1 = x;
+	temp2 = y;
+}
 
 
 /* a procedure to print on terminal 0 */
@@ -524,8 +529,11 @@ void p5() {
 void p5a() {
 	/* generage a TLB exception after a TLB-Refill event */
 
+	debugFun(10, 10);
 	p5MemLocation = (memaddr *) 0x80000000;
+	debugFun(20, 20);
 	*p5MemLocation = 42;
+	debugFun(30, 30);
 }
 
 /* second part of p5 - should be entered in user mode first time through */
