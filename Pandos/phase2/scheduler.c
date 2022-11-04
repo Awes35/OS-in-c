@@ -55,9 +55,9 @@ void moveState(state_PTR source, state_PTR dest){
 represents the time that the process begins executing at, as the function then performs a LDST on the Current Process' processor
 state so that it can begin (or perhaps resume) execution. */
 void switchContext(pcb_PTR curr_proc){
-	currentProc = curr_proc; /* setting the Current Process to curr_proc */
+	/*currentProc = curr_proc;*/ /* setting the Current Process to curr_proc */
 	STCK(start_tod); /* updating start_tod with the value on the Time of Day Clock, as this is the time that the process will begin executing at */
-	LDST(&(currentProc->p_s)); /* loading the processor state for the processor state stored in pcb of the Current Process */
+	LDST(&(curr_proc->p_s)); /* loading the processor state for the processor state stored in pcb of the Current Process */
 }
 
 
