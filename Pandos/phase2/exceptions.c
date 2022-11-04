@@ -269,6 +269,8 @@ void sysTrapH(){
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 	sysNum = savedExceptState->s_a0; /* initializing the number of the SYSCALL that we are addressing */
 
+	savedExceptState->s_pc = savedExceptState->s_pc + WORDLEN;
+
 	/* Perform checks to make sure we want to proceed with handling the SYSCALL (as opposed to pgmTrapH) */
 	if (((savedExceptState->s_status) & USERPON) != ALLOFF){ /* if the process was executing in user mode when the SYSCALL was requested */
 		(((state_t *) BIOSDATAPAGE)->s_cause) = (((state_t *) BIOSDATAPAGE)->s_cause) & RESINSTRCODE; /* setting the Cause.ExcCode bits in the stored exception state to RI (10) */
@@ -280,7 +282,7 @@ void sysTrapH(){
 	
 	/* Now proceed knowing we will handle a SYSCALL 1-8 */
 	updateCurrPcb(currentProc); /* copying the saved processor state into the Current Process' pcb  */
-	currentProc->p_s.s_pc = currentProc->p_s.s_pc + WORDLEN; /* incrementing the value of the PC for the Current Process by 4 */
+	/*currentProc->p_s.s_pc = currentProc->p_s.s_pc + WORDLEN;*/ /* incrementing the value of the PC for the Current Process by 4 */
 
 	/* enumerating the sysNum values (1-8) and passing control to the respective function to handle it */
 	switch (sysNum){ 
