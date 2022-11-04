@@ -83,7 +83,7 @@ int main(){
 	/* declaring local variables */
 	pcb_PTR p; /* a pointer to the process that we will instantiate in this function */
 	passupvector_t *procVec; /* a pointer to the Process 0 Pass Up Vector that we will initialize in this function */
-	memaddr ramtop; /* the address of the last RAM frame */
+	int ramtop; /* the address of the last RAM frame */
 	devregarea_t *temp; /* device register area that we can we use to determine the last RAM frame */
 	
 	/* initializing global variables, except for start_tod, curr_tod, and savedExceptState, which will be initialized later. */
@@ -106,9 +106,9 @@ int main(){
 	/* initializing the Processor 0 Pass Up Vector */
 	procVec = (passupvector_t *) PASSUPVECTOR; /* initializing procVec to be a pointer to the address of the Process 0 Pass Up Vector */
 	procVec->tlb_refll_handler = (memaddr) uTLB_RefillHandler; /* initializing the address for handling TLB-Refill events */
-	procVec->tlb_refll_stackPtr = (memaddr) PROC0STACKPTR; /* initializing the stack pointer for handling Nucleus TLB-Refill events */
+	procVec->tlb_refll_stackPtr = PROC0STACKPTR; /* initializing the stack pointer for handling Nucleus TLB-Refill events */
 	procVec->exception_handler = (memaddr) generalExceptionHandler; /* initializing the address for handling general exceptions */
-	procVec->exception_stackPtr = (memaddr) PROC0STACKPTR; /* initializing the stack pointer for handling general exceptions */
+	procVec->exception_stackPtr = PROC0STACKPTR; /* initializing the stack pointer for handling general exceptions */
 
 	/* loading the system-wide interval timer with 100 (INITIALINTTIMER) milliseconds, before a Pseudo-Clock tick occurs. */
 	LDIT(INITIALINTTIMER); /* invoking the macro function that handles setting the system-wide interval timer with a given value */
@@ -120,13 +120,13 @@ int main(){
 	
 		/* initializing temp in order to then set p's stack pointer to the address of the top of RAM */
 		temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
-		ramtop = temp->rambase + temp->ramsize; /* initializing ramptop to the address of the top of RAM */
+		ramtop = temp->rambase + temp->ramsize; /* initializing ramtop to the address of the top of RAM */
 
 		/* initializing the Processor State that is a part of p */
-		p->p_s.s_sp = (memaddr) ramtop; /* setting p's stack pointer to the address of the last RAM frame */
+		p->p_s.s_sp = ramtop; /* setting p's stack pointer to the address of the last RAM frame */
 		p->p_s.s_pc = (memaddr) test; /* assigning the PC to the address of test */
 		p->p_s.s_t9 = (memaddr) test; /* assigning the address of test to register t9 */
-		p->p_s.s_status = ALLOFF | IEPON | KERNON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
+		p->p_s.s_status = ALLOFF | IEPON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
 
 		/* placing p into the Ready Queue and incrementing the Process Count */
 		insertProcQ(&ReadyQueue, p); /* inserting p into the Ready Queue */
