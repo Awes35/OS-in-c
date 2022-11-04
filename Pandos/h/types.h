@@ -65,7 +65,7 @@ typedef struct context_t {
 /* Support structure type */
 typedef struct support_t {
 	int				sup_asid;				/* process Id (asid) */
-	state_t			sup_exceptionState[2];	/* stored except states */
+	state_t			sup_exceptState[2];	/* stored except states */
 	context_t		sup_exceptContext[2];	/* pass up contexts */
 } support_t;
 
