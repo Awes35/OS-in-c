@@ -23,5 +23,7 @@ extern int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that c
 
 extern state_PTR savedExceptState; /* a pointer to the saved exception state */
 extern int readyQueueSize;
+extern int temp1;
+extern int temp2;
 
 #endif
