@@ -111,6 +111,7 @@ void pltTimerInt(){
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
 		insertProcQ(&ReadyQueue, currentProc); /* placing the Current Process back on the Ready Queue because it has not completed its CPU Burst */
+		readyQueueSize++;
 		currentProc = NULL; /* setting Current Process to NULL, since there is no process currently executing */
 		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue */
 	}
@@ -134,6 +135,7 @@ void intTimerInt(){
 	while (headBlocked(&deviceSemaphores[PCLOCKIDX]) != NULL){ /* while the Pseudo-Clock semaphore has a blocked pcb */
 		temp = removeBlocked(&deviceSemaphores[PCLOCKIDX]); /* unblock the first (i.e., head) pcb from the Pseudo-Clock semaphore's process queue */
 		insertProcQ(&ReadyQueue, temp); /* placing the unblocked pcb back on the Ready Queue */
+		readyQueueSize++;
 		softBlockCnt--; /* decrementing the number of started, but not yet terminated, processes that are in a "blocked" state */
 	}
 	deviceSemaphores[PCLOCKIDX] = INITIALPCSEM; /* resetting the Pseudo-clock semaphore to zero */
@@ -201,6 +203,7 @@ void IOInt(){
 	/* unblockedPcb is not NULL */
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
+	readyQueueSize++;
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
 	if (currentProc != NULL){ /* if there is a Current Process to return control to */
 		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
@@ -262,6 +265,7 @@ void terminalInt(){
 	/* unblockedPcb is not NULL */
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
+	readyQueueSize++;
 	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
 	if (currentProc != NULL){ /* if there is a Current Process to return control to */
 		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
