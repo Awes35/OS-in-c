@@ -22,5 +22,6 @@ extern int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that c
 									associated with a read operation in the array come before those associated with a write operation. */
 
 extern state_PTR savedExceptState; /* a pointer to the saved exception state */
+extern int readyQueueSize;
 
 #endif
