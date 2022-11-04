@@ -71,6 +71,7 @@ And if the Process Count is greater than zero and the Soft-block Count is zero, 
 void switchProcess(){
 	currentProc = removeProcQ(&ReadyQueue); /* removing the pcb from the head of the ReadyQueue and storing its pointer in currentProc */
 	if (currentProc != NULL){ /* if the Ready Queue is not empty */
+		readyQueueSize--;
 		setTIMER(INITIALPLT); /* loading five milliseconds on the processor's Local Timer (PLT) */
 		switchContext(currentProc);
 	}
