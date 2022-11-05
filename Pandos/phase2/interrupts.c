@@ -150,20 +150,20 @@ void intTimerInt(){
 	switchProcess(); /* if there is no Current Process to return control to, call the Scheduler function to begin executing a new process */
 }
 
-/* Internal helper function that handles I/O interrupts on non-terminal devices. In other words, this function handles interrupts that
-occurred on lines 3-6, as indicated in the Cause register. From a slightly more narrow level, this function calculates the line number
-and device number that the interrupt occurred on, saves off the status code from the device's device register, acknowledges the outstanding
-interrupt by writing the acknowledge command code in the interrupting device's device register, and peforms a V operation on the Nucleus
-maintained semaphore associated with this device. Then, it places the stored off status code in the newly unblocked pcb's v0 register,
-inserts the newly unblobked pcb on the Ready Queue, and then updates the CPU time of the Current Process so that it includes the time that
-it spent executing up until when the interrupt first occurred, and then it charges the time spent handling the interrupt to the 
+/* Internal helper function that handles I/O interrupts on both terminal and non-terminal devices. In other words, this function handles interrupts that
+occurred on lines 3-7, as indicated in the Cause register. Note that on terminal devices, I/O interrupts that involve writing take priority over interrupts that
+involve reading. From a slightly more narrow level, this function calculates the line number and device number that the highest-priority interrupt occurred on,
+saves off the status code from the device's device register, acknowledges the outstanding interrupt by writing the acknowledge command code in the interrupting
+device's device register, and peforms a V operation on the Nucleus maintained semaphore associated with this device. Then, it places the stored off status code
+in the newly unblocked pcb's v0 register, inserts the newly unblobked pcb on the Ready Queue, and then updates the CPU time of the Current Process so that it
+includes the time that it spent executing up until when the interrupt first occurred, and then it charges the time spent handling the interrupt to the 
 process responsible for generating the I/O interrupt (if it is not NULL), as described in the module-level documentation for this module. */
 void IOInt(){
 	/* declaring local variables */
 	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 	int lineNum; /* the line number that the highest-priority interrupt occurred on */
 	int devNum; /* the device number that the highest-priority interrupt occurred on */
-	int index; /* the index in deviceSemaphores and in devreg of the device associated with the highest-priority interrupt */
+	int index; /* the index in devreg of the device associated with the highest-priority interrupt */
 	devregarea_t *temp; /* device register area that we can use to determine the status code from the device register associated with the highest-priority interrupt */
 	int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 	pcb_PTR unblockedPcb; /* the pcb which originally initiated the I/O request */
@@ -178,76 +178,26 @@ void IOInt(){
 	else if (((savedExceptState->s_cause) & LINE5INT) != ALLOFF){ /* if there is an interrupt on line 5 */
 		lineNum = LINE5; /* initializing lineNum to 5, since the highest-priority interrupt occurred on line 5 */
 	}
-	else if (((savedExceptState->s_cause) & LINE6INT) != ALLOFF){ /* if there is an interrupt on line 6*/
+	else if (((savedExceptState->s_cause) & LINE6INT) != ALLOFF){ /* if there is an interrupt on line 6 */
 		lineNum = LINE6; /* initializing lineNum to 6, since the highest-priority interrupt occurred on line 6 */
+	}
+	else{ /* otherwise, there is an interrupt on line 7 */
+		lineNum = LINE7; /* initializing lineNum to 7, since the highest-priority interrupt occurred on line 7 */
 	}
 
 	/* initializing remaining local variables, except for unblockedPcb and curr_tod, which will be initialized later on */
 	devNum = findDeviceNum(lineNum); /* initializing devNum by calling the internal function that returns the device number associated with the highest-priority interrupt */	
 	index = ((lineNum - OFFSET) * DEVPERINT) + devNum; /* initializing the index in deviceSemaphores of the device associated with the highest-priority interrupt */
 	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
-	statusCode = temp->devreg[index].t_recv_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
-
-	temp->devreg[index].t_recv_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
-	unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
-	deviceSemaphores[index]++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	
-	if (unblockedPcb == NULL){ /* if the supposedly unblocked pcb is NULL, we want to return control to the Current Process */
-		if (currentProc != NULL){ /* if there is a Current Process to return control to */
-			updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
-			currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-			switchContext(currentProc); /* calling the function that returns control to the Current Process */
-		}
-		switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
-	}
-	
-	/* unblockedPcb is not NULL */
-	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
-	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
-	readyQueueSize++;
-	softBlockCnt--; /* decrementing the value of softBlockCnt, since we have unblocked a previosuly-started process that was waiting for I/O */
-	if (currentProc != NULL){ /* if there is a Current Process to return control to */
-		updateCurrPcb(); /* update the Current Process' processor state before resuming process' execution */
-		setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
-		currentProc->p_time = currentProc->p_time + (interrupt_tod - start_tod); /* updating the accumulated processor time used by the Current Process */
-		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
-		unblockedPcb->p_time = unblockedPcb->p_time + (curr_tod - interrupt_tod); /* charging the process associated with the I/O interrupt with the CPU time needed to handle the interrupt */
-		switchContext(currentProc); /* calling the function that returns control to the Current Process */
-	}
-	switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
-}
-
-/* Internal helper function that handles I/O interrupts on terminal devices. In other words, this function handles interrupts that
-occurred on line 7, as indicated in the Cause register. Note that interrupts that involve writing take priority over interrupts that
-involve reading. From a slightly more narrow level, this function calculates the device number that the interrupt occurred on, saves off
-the status code from the device's device register, acknowledges the outstanding interrupt by writing the acknowledge command code in
-the interrupting device's device register, and peforms a V operation on the Nucleus maintained semaphore associated with this device.
-Then, it places the stored off status code in the newly unblocked pcb's v0 register, inserts the newly unblobked pcb on the Ready Queue,
-and then updates the CPU time of the Current Process so that it includes the time that it spent executing up until when the interrupt first
-occurred, and then it charges the time spent handling the interrupt to the process responsible for generating the I/O interrupt (if it
-is not NULL), as described in the module-level documentation for this module. */
-void terminalInt(){
-	/* declaring local variables */
-	cpu_t curr_tod; /* variable to hold the current TOD clock value */
-	int devNum; /* the device number that the highest-priority interrupt occurred on */
-	int index; /* the index in devreg of the device associated with the highest-priority interrupt */
-	devregarea_t *temp; /* device register area that we can use to determine the status code from the device register associated with the highest-priority interrupt */
-	unsigned int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
-	pcb_PTR unblockedPcb; /* the pcb which originally initiated the I/O request */
-
-	/* initializing remaining local variables, except for unblockedPcb, which will be initialized later on */
-	devNum = findDeviceNum(LINE7); /* initializing devNum by calling the internal function that returns the device number associated with the highest-priority interrupt */	
-	index = ((LINE7 - OFFSET) * DEVPERINT) + devNum; /* initializing the index of the device register of the device associated with the highest-priority interrupt */
-	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
-	if (((temp->devreg[index].t_transm_status) & STATUSON) != READY){ /* if the device's status code is not 1, meaning the device is not "Ready" */
-		/* the interrupt associated with the terminal device is a write interrupt */
+	if ((lineNum == LINE7) && (((temp->devreg[index].t_transm_status) & STATUSON) != READY)){ /* if the highest-priority interrupt occurred on line 7 and if the device's status code is not 1, meaning the device is not "Ready" */
+		/* the interrupt is associated with a terminal device and is a write interrupt */
 		statusCode = temp->devreg[index].t_transm_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 		temp->devreg[index].t_transm_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 		unblockedPcb = removeBlocked(&deviceSemaphores[index + DEVPERINT]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
 		deviceSemaphores[index + DEVPERINT]++; /* incrementing the value of the semaphore associated with the interrupt as part of the V operation */
 	}
-	else{ /* otherwise, the interrupt associated with the terminal device is a read interrupt */
+	else{ /* otherwise, the highest-priority interrupt either did not occur on a terminal device or it was a read interrupt on a terminal device */
 		statusCode = temp->devreg[index].t_recv_status; /* initializing the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 		temp->devreg[index].t_recv_command = ACK; /* acknowledging the outstanding interrupt by writing the acknowledge command code in the interrupting device's device register */
 		unblockedPcb = removeBlocked(&deviceSemaphores[index]); /* initializing unblockedPcb by unblocking the semaphore associated with the interrupt and returning the corresponding pcb */
@@ -261,9 +211,9 @@ void terminalInt(){
 			setTIMER(remaining_time); /* setting the PLT to the remaining time left on the Current Process' quantum when the interrupt handler was first entered*/
 			switchContext(currentProc); /* calling the function that returns control to the Current Process */
 		}
-		switchProcess(); /* calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
+		switchProcess(); /*calling the Scheduler to begin execution of the next process on the Ready Queue (if there is no Current Process to return control to) */
 	}
-
+	
 	/* unblockedPcb is not NULL */
 	unblockedPcb->p_s.s_v0 = statusCode; /* placing the stored off status code in the newly unblocked pcb's v0 register */
 	insertProcQ(&ReadyQueue, unblockedPcb); /* inserting the newly unblocked pcb on the Ready Queue to transition it from a "blocked" state to a "ready" state */
@@ -296,8 +246,5 @@ void intTrapH(){
  	if (((savedExceptState->s_cause) & LINE2INT) != ALLOFF){ /* if there is a System-Wide Interval Timer/Pseudo-clock interrupt (i.e., an interrupt occurred on line 2) */
  		intTimerInt(); /* calling the internal function that handles System-Wide Interval Timer/Pseudo-clock interrupts */
  	}
- 	if (((savedExceptState->s_cause) & LINE7INT) != ALLOFF){ /* if there is an I/O interrupt on a terminal device (i.e., an interrupt occurred on line 7) */
-		terminalInt(); /* calling the internal function that handles I/O interrupts on terminal devices */
- 	}
- 	IOInt(); /* otherwise, an I/O interrupt occurred on a non-terminal device (i.e., an interrupt occurred on lines 3-6) */
+ 	IOInt(); /* otherwise, an I/O interrupt occurred (i.e., an interrupt occurred on lines 3-7) */
  }
