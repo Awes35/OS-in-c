@@ -128,7 +128,7 @@ void terminateProcess(pcb_PTR proc){
 	}
 	else if (procSem != NULL){ /* if proc is blocked (and is on the ASL) */
 		outBlocked(proc); /* removing proc from the ASL */
-		if (!(procSem >= &deviceSemaphores[FIRSTDEVINDEX] && procSem <= &deviceSemaphores[LASTDEVINDEX])){ /* if proc is not blocked on a device semaphore */
+		if (!(procSem >= &deviceSemaphores[FIRSTDEVINDEX] && procSem <= &deviceSemaphores[PCLOCKIDX])){ /* if proc is not blocked on a device semaphore */
 			(*(procSem))++; /* incrementing the val of sema4*/
 		}
 		else{
