@@ -1,13 +1,13 @@
 /**************************************************************************** 
  *
- * This module serves as the exception handler module for TLB-Refill events
- * and contains the implementation of the functions responsible for SYSCALL
+ * This module serves as the exception handler module for program trap and TLB trap
+ * events and contains the implementation of the functions responsible for SYSCALL
  * exception handling. More specifically, the module contains the function
- * sysTrapH(), which is the entry point to this module. sysTrapH(), after initializing
- * the global variables, ensures the requesting process was not in user mode when
- * the SYSCALL was made, and then it passes control to either the appropriate internal
- * SYSCALL handler function or it invokes (either directly or indirectly) the internal
- * function for handling Pass Up or Die events (passUpOrDie()). 
+ * sysTrapH(), which is the entry point to this module. sysTrapH() first ensures
+ * the requesting process was not in user mode when the SYSCALL was made, and then
+ * it passes control to either the appropriate internal SYSCALL handler function
+ * or it invokes (either directly or indirectly) the internal function for handling
+ * Pass Up or Die events (passUpOrDie()). 
  * 
  * Note that for the purposes of this phase of development, the time spent
  * handling SYSCALL requests is charged to the requesting process (namely, the Current Process). 
@@ -46,17 +46,14 @@ HIDDEN void getCPUTime();
 HIDDEN void waitForPClock();
 HIDDEN void getSupportData();
 
-/* declaring global variables */
+/* declaring variables that are global to this module */
 int sysNum; /* the number of the SYSCALL that we are addressing */
 cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
 /* Function that copies the saved exception located at the start of the BIOS Data Page to the Current Process' pcb so that
 it contains the updated processor state after an exception (or interrupt) is handled */
 void updateCurrPcb(){
-	if (currentProc != NULL){
-		moveState(savedExceptState, &(currentProc->p_s)); /* copying the saved processor state into the Current Process' pcb by calling moveState() */
-	}
-	
+	moveState(savedExceptState, &(currentProc->p_s)); /* invoking the function that copies the saved processor state into the Current Process' pcb by calling moveState() */	
 }
 
 /* Function that handles the steps needed for blocking a process. The function updates the accumulated CPU time 
@@ -71,7 +68,7 @@ void blockCurr(int *sem){
 /* Function that handles SYS1 events. In other words, this internal function creates a new process. The function
 allocates a new pcb and, if allocPcb() returns NULL (i.e., there are no more free pcbs), an error code of -1
 is placed/returned in the caller's v0. Otherwise, the function initializes the fields of the new pcb appropriately
-before placing/returning the value 0 in the caller's v0. Finally, the function calls the function to load the Current State's
+before placing/returning the value 0 in the caller's v0. Finally, it calls the function to load the Current State's
 (updated) processor state into the CPU so it can continue executing. */
 void createProcess(state_PTR stateSYS, support_t *suppStruct){
 	/* declaring local variables */
@@ -83,12 +80,7 @@ void createProcess(state_PTR stateSYS, support_t *suppStruct){
 	if (newPcb != NULL){ /* if the newly allocated pcb is not NULL, meaing there are enough resources to create a new process */
 		/* initializing the fields of newPcb */
 		moveState(stateSYS, &(newPcb->p_s)); /* initializing newPcb's processor state to that which currently lies in a1 */
-		if (suppStruct != NULL){
-			newPcb->p_supportStruct = suppStruct; /* initializing newPcb's supportStruct field based on the parameter currently in register a2 */
-		}
-		else{
-			newPcb->p_supportStruct = NULL;
-		}
+		newPcb->p_supportStruct = suppStruct; /* initializing newPcb's supportStruct field based on the parameter currently in register a2 */
 		newPcb->p_time = INITIALACCTIME; /* initializing newPcb's p_time field to 0, since it has not yet accumualted any CPU time */
 		newPcb->p_semAdd = NULL; /* initializing the pointer to newPcb's semaphore, which is set to NULL because newPcb is not in the "blocked" state */
 		insertChild(currentProc, newPcb); /* initializing newPcb's process tree fields by making it a child of the Current Process */
@@ -108,13 +100,14 @@ void createProcess(state_PTR stateSYS, support_t *suppStruct){
 	
 }
 
-/* Function that handles a SYS2 events and the "Die" portion of "Pass Up or Die." In other words, this internal function terminates the
+/* Function that handles SYS2 events and the "Die" portion of "Pass Up or Die." In other words, this internal function terminates the
 executing process and causes it to cease to exist. In addition, all progeny of this process are terminated as well. To accomplish
-this latter task, we will utilize head recursion, removing the children of the parameter proc one at a time, starting proc's first
+this latter task, we will utilize head recursion, removing the children of the parameter proc one at a time, starting with proc's first
 child and ending with proc's last child. The function also determines if proc is blocked on the ASL, in the Ready Queue or is
 CurrentProc. Once it does so, it removes proc from the ASL/ReadyQueue or detaches it from its parent (in the case that proc = CurrentProc).
-Finally, the function calls freePcb(proc) to officially destroy the process before decrementing the Process Count and calling the 
-Scheduler so another process can begin executing. */
+Finally, the function calls freePcb(proc) to officially destroy the process before decrementing the Process Count. The Scheduler is then invoked
+in the entry point for this module, sysTrapH() in order to refrain from calling the Scheduler in this function many times in the event
+that proc has at least one child. */
 void terminateProcess(pcb_PTR proc){ 
 	/* declaring local variables */
 	int *procSem; /* a pointer to the semaphore associated with the Current Process */
@@ -230,19 +223,17 @@ void waitForPClock(){
 	switchProcess(); /* calling the Scheduler to begin executing the next process */
 }
 
-
 /* Function that handles SYS8 events. This returns a pointer to Current Process' support_t structure by loading it 
 into the calling process' v0 register. This may be NULL if the Current Process' support_t structure
 was not initialized during process creation. Once it places the pointer to the Current Process' support_t structure in v0,
 it returns control back to the Current Process so that it can continue executing (after charging the
 Current Process with the CPU time needed to handle the SYSCALL request). */
 void getSupportData(){
-	currentProc->p_s.s_v0 = (int)(currentProc->p_supportStruct); /* place Current Process' supportStruct in v0 */
+	currentProc->p_s.s_v0 = currentProc->p_supportStruct; /* place Current Process' supportStruct in v0 */
 	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 	currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(currentProc); /* returning control to the Current Process (resume execution) */
 }
-
 
 /* Function that performs a standard Pass Up or Die operation using the provided index value. If the Current Process' p_supportStruct is
 NULL, then the exception is handled as a SYS2; the Current Process and all its progeny are terminated. (This is the "die" portion of "Pass
@@ -250,7 +241,7 @@ Up or Die.") On the other hand, if the Current Process' p_supportStruct is not N
 this case, the saved exception state from the BIOS Data Page is copied to the correct sup_exceptState field of the Current Process, and 
 a LDCXT is performed using the fields from the proper sup_exceptContext field of the Current Process. */
 void passUpOrDie(int exceptionCode){ 
-	if ((currentProc->p_supportStruct != NULL) && (currentProc->p_supportStruct != 0)){
+	if (currentProc->p_supportStruct != NULL){
 		moveState(savedExceptState, &(currentProc->p_supportStruct->sup_exceptState[exceptionCode])); /* copying the saved exception state from the BIOS Data Page directly to the correct sup_exceptState field of the Current Process */
 		STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 		currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
@@ -260,7 +251,7 @@ void passUpOrDie(int exceptionCode){
 	else{
 		/* the Current Process' p_support_struct is NULL, so we handle it as a SYS2: the Current Process and all its progeny are terminated */
 		terminateProcess(currentProc); /* calling the termination function that "kills" the Current Process and all of its children */
-		/* currentProc = NULL;*/ /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
+		currentProc = NULL; /* setting the Current Process pointer to NULL */
 		switchProcess(); /* calling the Scheduler to begin executing the next process */
 	}
 }
@@ -272,7 +263,7 @@ exception), and checking to see what SYSCALL number was requested so it can invo
 SYSCALL. If an invalid SYSCALL number was provided (i.e., the SYSCALL number requested was nine or above), we invoke the internal
 function that performs a standard Pass Up or Die operation using the GENERALEXCEPT index value.  */
 void sysTrapH(){
-	/* initializing global variables */ 
+	/* initializing variables that are global to this module */ 
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 	sysNum = savedExceptState->s_a0; /* initializing the number of the SYSCALL that we are addressing */
 
@@ -280,17 +271,17 @@ void sysTrapH(){
 
 	/* Perform checks to make sure we want to proceed with handling the SYSCALL (as opposed to pgmTrapH) */
 	if (((savedExceptState->s_status) & USERPON) != ALLOFF){ /* if the process was executing in user mode when the SYSCALL was requested */
-		(((state_t *) BIOSDATAPAGE)->s_cause) = (((state_t *) BIOSDATAPAGE)->s_cause) & RESINSTRCODE; /* setting the Cause.ExcCode bits in the stored exception state to RI (10) */
-		pgmTrapH(); /* break out to pgmTrapH */
+		savedExceptState->s_cause = (savedExceptState->s_cause) & RESINSTRCODE; /* setting the Cause.ExcCode bits in the stored exception state to RI (10) */
+		pgmTrapH(); /* invoking the internal function that handles program trap events */
 	}
-	else if (sysNum > 8){ /* check if the SYSCALL number was 9 or above (we'll punt) */
-		pgmTrapH(); /* break out to pgmTrapH */
+	
+	if (sysNum > 8){ /* if the SYSCALL number is 9 or above */
+		pgmTrapH(); /* invoking the internal function that handles program trap events */
 	}
 	
 	/* Now proceed knowing we will handle a SYSCALL 1-8 */
 	updateCurrPcb(currentProc); /* copying the saved processor state into the Current Process' pcb  */
-	/*currentProc->p_s.s_pc = currentProc->p_s.s_pc + WORDLEN;*/ /* incrementing the value of the PC for the Current Process by 4 */
-
+	
 	/* enumerating the sysNum values (1-8) and passing control to the respective function to handle it */
 	switch (sysNum){ 
 		case SYS1NUM: /* if the SYSCALL number is 1 */
@@ -300,7 +291,7 @@ void sysTrapH(){
 
 		case SYS2NUM: /* if the SYSCALL number is 2 */
 			terminateProcess(currentProc); /* invoking the internal function that handles SYS2 events */
-			/*currentProc = NULL;*/ /* make sure to set the Current Process pointer to NULL, in case the local proc ptr didn't update currentProc ptr */
+			currentProc = NULL; /* setting the Current Process pointer to NULL */
 			switchProcess(); /* calling the Scheduler to begin executing the next process */
 		
 		case SYS3NUM: /* if the SYSCALL number is 3 */
@@ -324,9 +315,7 @@ void sysTrapH(){
 			waitForPClock(); /* invoking the internal function that handles SYS 7 events */
 		
 		case SYS8NUM: /* if the SYSCALL number is 8 */
-			getSupportData(); /* invoking the internal function that handles SYS 8 events */
-
-			
+			getSupportData(); /* invoking the internal function that handles SYS 8 events */	
 	}
 }
 
@@ -341,5 +330,3 @@ operation using the GENERALEXCEPT index value. */
 void pgmTrapH(){
 	passUpOrDie(GENERALEXCEPT); /* performing a standard Pass Up or Die operation using the GENERALEXCEPT index value */
 }
-
-
