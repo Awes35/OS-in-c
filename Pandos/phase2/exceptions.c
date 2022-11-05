@@ -229,7 +229,7 @@ was not initialized during process creation. Once it places the pointer to the C
 it returns control back to the Current Process so that it can continue executing (after charging the
 Current Process with the CPU time needed to handle the SYSCALL request). */
 void getSupportData(){
-	currentProc->p_s.s_v0 = currentProc->p_supportStruct; /* place Current Process' supportStruct in v0 */
+	currentProc->p_s.s_v0 = (int)(currentProc->p_supportStruct); /* place Current Process' supportStruct in v0 */
 	STCK(curr_tod); /* storing the current value on the Time of Day clock into curr_tod */
 	currentProc->p_time = currentProc->p_time + (curr_tod - start_tod); /* updating the accumulated CPU time for the Current Process */
 	switchContext(currentProc); /* returning control to the Current Process (resume execution) */
