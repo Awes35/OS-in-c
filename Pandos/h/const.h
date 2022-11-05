@@ -107,8 +107,12 @@ the Pseudo-clock */
 /* Value that the system-wide Interval Timer is initialized to 100ms (100,000 microseconds) */
 #define INITIALINTTIMER	100000
 
-/* Value to set the accumulated time field for a process that is instantiated */
-#define INITIALACCTIME	0
+/* Constants representing the initial values of softBlockCount, Process Count (i.e., procCnt), the semaphores in the deviceSemaphores array and
+the accumulated CPU time field for a process that is instantiated */
+#define	INITIALPROCCNT		0			/* the initial value of procCnt */
+#define	INITIALSFTBLKCNT	0			/* the initial value of softBlockCnt */
+#define	INITIALDEVSEMA4		0			/* the initial value of the device semaphores */
+#define INITIALACCTIME	  0     /* Value to set the accumulated time field for a process that is instantiated */
 
 /* Value to */
 #define PCLOCKIDX       (MAXDEVICECNT - 1)
@@ -119,9 +123,7 @@ the Pseudo-clock */
 #define IEPON			0x00000004	/* constant for enabling interrupts after LDST (i.e., IEp (bit 2) = 1) */
 #define IECON			0x00000001	/* constant for enabling the global interrupt bit (i.e., IEc (bit 0) = 1) */
 #define PLTON			0x08000000	/* constant for enabling PLT (i.e., TE (bit 27) = 1) */
-#define KERNON			0x00000000	/* constant for setting kernel-mode on after LDST (i.e., KUp (bit 3) = 0) */
 #define IMON			0x0000FF00	/* constant for setting the Interrupt Mask bits to on so interrupts are fully enabled */
-#define IMOFF			0xFFFF00FF /* constant for disabling the Interrupt Mask bits */
 
 /* Value that the processor's Local Timer (PLT) is intialized to 5 milliseconds (5,000 microseconds) */
 #define INITIALPLT		5000
@@ -136,7 +138,6 @@ the Pseudo-clock */
 /* Constants for returning values in v0 to the caller */
 #define ERRORCONST		-1			/* constant denoting an error occurred in the caller's request */
 #define SUCCESSCONST	0			/* constant denoting that the caller's request completed successfully */
-
 
 /* Constant to help determine the index in deviceSemaphores and in the Interrupt Devices Bitmap that a particular device is located at. 
 This constant is subtracted from the line number, since interrupt lines 3-7 are used for peripheral devices  */
@@ -183,14 +184,8 @@ This constant is subtracted from the line number, since interrupt lines 3-7 are 
 #define	DEV6			6				/* constant representing device 6 */
 #define	DEV7			7				/* constant representing device 7 */
 
-/* Constants signifying the first and last indices of the deviceSemaphores array */
-#define	FIRSTDEVINDEX	0				/* the first index in deviceSemaphores */
-#define	LASTDEVINDEX	48				/* the last index in deviceSemaphores */
-
-/* Constants representing the initial values of softBlockCount, Process Count (i.e., procCnt) and the semaphores in the deviceSemaphores array */
-#define	INITIALPROCCNT		0			/* the initial value of procCnt */
-#define	INITIALSFTBLKCNT	0			/* the initial value of softBlockCnt */
-#define	INITIALDEVSEMA4		0			/* the initial value of the device semaphores */
+/* Constants signifying the first index of the deviceSemaphores array (We can get the last index of the array by saying MAXDEVICECNT - 1.) */
+#define	FIRSTDEVINDEX	0			
 
 /* Constants representing the Syscall Numbers in Pandos */
 #define	SYS1NUM			1		
