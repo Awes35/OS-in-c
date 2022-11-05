@@ -3,13 +3,13 @@
  * This module serves as the interrupt handler module and contains the implementation
  * of the functions responsible for interrupt exception handling that are called by
  * the Nucleus. More specifically, the module contains the function intTrapH(),
- * which is the entry point to this module. intTrapH(), after initializing the global
- * variables, determines what line number the highest-priority pending interrupt is located
- * on, and then it invokes the internal function that is responsible for handling the type
- * of interrupt that occurred, as revealed by the line number of the highest-priority pending
- * interrupt. Note that (if it has not been implied already) if more than one interrupt is
- * pending, we handle each interrupt one-at-a-time, resolving the interrupts in the order
- * of their priority.
+ * which is the entry point to this module. intTrapH(), after initializing the variables
+ * that are global to this module, determines what line number the highest-priority
+ * pending interrupt is located on, and then it invokes the internal function that is
+ * responsible for handling the type of interrupt that occurred, as revealed by the
+ * line number of the highest-priority pending interrupt. Note that (if it has not been
+ * implied already) if more than one interrupt is pending, we handle each interrupt
+ * one-at-a-time, resolving the interrupts in the order of their priority.
  *
  * Note that for the purposes of this phase of development, the time spent
  * handling the interrupt is charged to the process responsible for generating the interrupt.
@@ -54,10 +54,9 @@ HIDDEN void terminalInt();
 HIDDEN void IOInt();
 HIDDEN int findDeviceNum(int lineNumber);
 
-/* Declaring global variables */
+/* Declaring variables that are global to this module */
 cpu_t interrupt_tod; /* the value on the Time of Day clock when the Interrupt Handler module is first entered */
-cpu_t remaining_time; /* the amount of time left on the Current Process' quantum */
-
+cpu_t remaining_time; /* the amount of time left on the Current Process' quantum when the interrupt was generated */
 
 /* Internal helper function responsible for determining what device number the highest-priority interrupt occurred on. The function
 returns that number to the caller. */
@@ -92,6 +91,7 @@ int findDeviceNum(int lineNumber){
 	if ((bitMap & DEV6INT) != ALLOFF){ /* if there is a pending interrupt associated with device 6 */
 		return DEV6; /* returning 6 to the user, since the highest-priority interrupt is associated with device 6 */
 	}
+	
 	/* otherwise, there is a pending interrupt associated with device 7, since there are only eight devices */
 	return DEV7; /* returning 7 to the user, since the highest-priority interrupt is associated with device 7 */
 }
@@ -103,6 +103,7 @@ when the function finished handling the interrupt, because, due to our timing po
 this time will be charged to the Current Process. Once all of this has been accomplished, the function calls the Scheduler so that another process
 can begin executing. */
 void pltTimerInt(){
+	/* delcaring local variables */
 	cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
 	if (currentProc != NULL){ /* if there was a running process when the interrupt was generated */
@@ -131,6 +132,7 @@ void intTimerInt(){
 	pcb_PTR temp; /* a pointer to a pcb in the Pseudo-Clock semaphore's process queue that we wish to unblock and insert into the Ready Queue */
 	
 	LDIT(INITIALINTTIMER); /* placing 100 milliseconds back on the Interval Timer for the next Pseudo-clock tick */
+	
 	/* unblocking all pcbs blocked on the Pseudo-Clock semaphore */
 	while (headBlocked(&deviceSemaphores[PCLOCKIDX]) != NULL){ /* while the Pseudo-Clock semaphore has a blocked pcb */
 		temp = removeBlocked(&deviceSemaphores[PCLOCKIDX]); /* unblock the first (i.e., head) pcb from the Pseudo-Clock semaphore's process queue */
