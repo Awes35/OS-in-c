@@ -45,8 +45,8 @@ cpu_t start_tod; /* the value on the time of day clock that the Current Process 
 state_PTR savedExceptState; /* a pointer to the saved exception state */
 int exceptCodeGLOB; /* TEMP to track excCode in UMPS tracing */
 int readyQueueSize; /* TEMP to track size of Ready Queue */
-int temp1;
-int temp2;
+int temp1; /* TEMP to track the value of parameter 1 that is passed into the debug function in p2test.c */
+int temp2; /* TEMP to track the value of parameter 2 that is passed into the debug function in p2test.c */
 
 /* Internal function that is responsible for handling general exceptions. For interrupts, processing is passed along to 
 the device interrupt handler. For TLB exceptions, processing is passed along to the TLB exception handler, and for
@@ -86,7 +86,7 @@ int main(){
 	/* declaring local variables */
 	pcb_PTR p; /* a pointer to the process that we will instantiate in this function */
 	passupvector_t *procVec; /* a pointer to the Process 0 Pass Up Vector that we will initialize in this function */
-	int ramtop; /* the address of the last RAM frame */
+	memaddr ramtop; /* the address of the last RAM frame */
 	devregarea_t *temp; /* device register area that we can we use to determine the last RAM frame */
 	
 	/* initializing global variables, except for start_tod, curr_tod, and savedExceptState, which will be initialized later. */
