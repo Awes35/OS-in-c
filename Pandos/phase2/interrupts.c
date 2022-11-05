@@ -50,7 +50,6 @@
 /* Function declarations */
 HIDDEN void pltTimerInt();
 HIDDEN void intTimerInt();
-HIDDEN void terminalInt();
 HIDDEN void IOInt();
 HIDDEN int findDeviceNum(int lineNumber);
 
