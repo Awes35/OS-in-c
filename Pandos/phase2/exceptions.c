@@ -1,8 +1,8 @@
 /**************************************************************************** 
  *
- * This module serves as the exception handler module to define functions that are called
- * by the General Exception Handler. Namely, this module defines handling for program trap events-- pgmTrapH(), 
- * for TLB trap events-- tlbTrapH(), and for SYSCALL exception handling-- sysTrapH().. in addition to all of the 
+ * This module serves as the exception handler module to define exception-handling functions that are called
+ * by the General Exception Handler. Namely, this module defines a function for handling program trap events-- pgmTrapH(), 
+ * for TLB trap events-- tlbTrapH(), and for SYSCALL exception events-- sysTrapH().. in addition to all of the 
  * specific helper functions for various SYSCALL numbers. 
  * 
  * While the General Exception Handler can directly call pgmTrapH(), tlbTrapH(), and sysTrapH(), 
