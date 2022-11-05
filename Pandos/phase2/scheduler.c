@@ -55,11 +55,10 @@ void moveState(state_PTR source, state_PTR dest){
 represents the time that the process begins executing at, as the function then performs a LDST on the Current Process' processor
 state so that it can begin (or perhaps resume) execution. */
 void switchContext(pcb_PTR curr_proc){
-	/*currentProc = curr_proc;*/ /* setting the Current Process to curr_proc */
+	currentProc = curr_proc; /* setting the Current Process to curr_proc */
 	STCK(start_tod); /* updating start_tod with the value on the Time of Day Clock, as this is the time that the process will begin executing at */
 	LDST(&(curr_proc->p_s)); /* loading the processor state for the processor state stored in pcb of the Current Process */
 }
-
 
 /* Function that includes the implementation of the scheduling algorithm that we will use in this operating system. The function
 implements a simple preemptive round-robin scheduling algorithm with a time slice of five milliseconds. The function  begins by
@@ -73,31 +72,20 @@ void switchProcess(){
 	if (currentProc != NULL){ /* if the Ready Queue is not empty */
 		readyQueueSize--;
 		setTIMER(INITIALPLT); /* loading five milliseconds on the processor's Local Timer (PLT) */
-		switchContext(currentProc);
+		switchContext(currentProc); /* invoking the internal function that will perform the LDST on the Current Process' processor state */
 	}
 
 	/* We know the ReadyQueue is empty. */
-	if (emptyProcQ(ReadyQueue)){
-		if (procCnt == 0){ /* if the number of started, but not yet terminated, processes is zero */
-			HALT(); /* invoking the HALT() function to halt the system and print a regular shutdown message on terminal 0 */
-		}
-
-		if ((procCnt > 0) && (softBlockCnt > 0)){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
-			/* currentProc should be NULL.. set proc0 Status */
-			/* int stat = (ALLOFF | IMON | PLTON | IECON); */
-			setSTATUS((ALLOFF | IMON | IECON));
-			
-			/* currentProc->p_s.s_status = ((currentProc->p_s.s_status) | IECON | IMON); */
-			/* enabling interrupts for the Current Process so we can call the WAIT() function */
-			
-			setTIMER(NEVER); /* loading the PLT with a very large value so that the first interrupt that occurs after entering a WAIT state is not for the PLT */
-			WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
-		}
-
-		/* A deadlock situation is occurring (i.e., procCnt > 0 && softBlockCnt == 0) */
-		/* ALL POSSIBLE SCENARIOS: procCnt<0 .. softBlockCnt==0 .. softBlockCnt<0 */
-		if ((procCnt > 0) && (softBlockCnt == 0)){
-			PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
-		}
+	if (procCnt == INITIALPROCCNT){ /* if the number of started, but not yet terminated, processes is zero */
+		HALT(); /* invoking the HALT() function to halt the system and print a regular shutdown message on terminal 0 */
 	}
+	
+	if ((procCnt > INITIALPROCCNT) && (softBlockCnt > INITIALSFTBLKCNT)){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
+		setSTATUS((ALLOFF | IMON | IECON)); /* enabling interrupts for the Status register so we can execute the WAIT instruction */
+		setTIMER(NEVER); /* loading the PLT with a very large value so that the first interrupt that occurs after entering a WAIT state is not for the PLT */
+		WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
+	}
+
+	/* A deadlock situation is occurring (i.e., procCnt > 0 && softBlockCnt == 0) */
+	PANIC(); /* invoking the PANIC() function to stop the system and print a warning message on terminal 0 */
 }
