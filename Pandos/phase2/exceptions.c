@@ -1,13 +1,16 @@
 /**************************************************************************** 
  *
- * This module serves as the exception handler module for program trap and TLB trap
- * events and contains the implementation of the functions responsible for SYSCALL
- * exception handling. More specifically, the module contains the function
- * sysTrapH(), which is the entry point to this module. sysTrapH() first ensures
- * the requesting process was not in user mode when the SYSCALL was made, and then
- * it passes control to either the appropriate internal SYSCALL handler function
- * or it invokes (either directly or indirectly) the internal function for handling
- * Pass Up or Die events (passUpOrDie()). 
+ * This module serves as the exception handler module to define functions that are called
+ * by the General Exception Handler. Namely, this module defines handling for program trap events-- pgmTrapH(), 
+ * for TLB trap events-- tlbTrapH(), and for SYSCALL exception handling-- sysTrapH().. in addition to all of the 
+ * specific helper functions for various SYSCALL numbers. 
+ * 
+ * While the General Exception Handler can directly call pgmTrapH(), tlbTrapH(), and sysTrapH(), 
+ * most of the functions within this module pertain to SYSCALL exceptions, and thus the
+ * sysTrapH() function is the most developed entry point to this module. It first performs a few
+ * checks, such as ensuring the requesting process was not in user mode when the SYSCALL was made
+ * and confirming the requested SYSCALL will be handled. It then
+ * passes control to the appropriate internal SYSCALL handler function.
  * 
  * Note that for the purposes of this phase of development, the time spent
  * handling SYSCALL requests is charged to the requesting process (namely, the Current Process). 
@@ -265,7 +268,7 @@ function that performs a standard Pass Up or Die operation using the GENERALEXCE
 void sysTrapH(){
 	/* initializing variables that are global to this module */ 
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
-	sysNum = savedExceptState->s_a0; /* initializing the number of the SYSCALL that we are addressing */
+	sysNum = savedExceptState->s_a0; /* initializing the SYSCALL number variable to the correct number for the exception */
 
 	savedExceptState->s_pc = savedExceptState->s_pc + WORDLEN;
 
@@ -284,37 +287,37 @@ void sysTrapH(){
 	
 	/* enumerating the sysNum values (1-8) and passing control to the respective function to handle it */
 	switch (sysNum){ 
-		case SYS1NUM: /* if the SYSCALL number is 1 */
-			createProcess((state_PTR) (currentProc->p_s.s_a1), (support_t *) (currentProc->p_s.s_a2)); /* invoking the internal function that handles SYS1 events */
+		case SYS1NUM: /* if the sysNum indicates a SYS1 event */
 			/* a1 should contain the processor state associated with the SYSCALL */
 			/* a2 should contain the (optional) support struct, which may be NULL */
+			createProcess((state_PTR) (currentProc->p_s.s_a1), (support_t *) (currentProc->p_s.s_a2)); /* invoking the internal function that handles SYS1 events */
 
-		case SYS2NUM: /* if the SYSCALL number is 2 */
+		case SYS2NUM: /* if the sysNum indicates a SYS2 event */
 			terminateProcess(currentProc); /* invoking the internal function that handles SYS2 events */
 			currentProc = NULL; /* setting the Current Process pointer to NULL */
 			switchProcess(); /* calling the Scheduler to begin executing the next process */
 		
-		case SYS3NUM: /* if the SYSCALL number is 3 */
-			waitOp((int *) (currentProc->p_s.s_a1)); /* invoking the internal function that handles SYS3 events */
+		case SYS3NUM: /* if the sysNum indicates a SYS3 event */
 			/* a1 should contain the addr of semaphore to be P'ed */
+			waitOp((int *) (currentProc->p_s.s_a1)); /* invoking the internal function that handles SYS3 events */
 		
-		case SYS4NUM: /* if the SYSCALL number is 4 */
-			signalOp((int *) (currentProc->p_s.s_a1)); /* invoking the internal function that handles SYS4 events */
+		case SYS4NUM: /* if the sysNum indicates a SYS4 event */
 			/* a1 should contain the addr of semaphore to be V'ed */
+			signalOp((int *) (currentProc->p_s.s_a1)); /* invoking the internal function that handles SYS4 events */
 
-		case SYS5NUM: /* if the SYSCALL number is 5 */
-			waitForIO(currentProc->p_s.s_a1, currentProc->p_s.s_a2, currentProc->p_s.s_a3); /* invoking the internal function that handles SYS5 events */
+		case SYS5NUM: /* if the sysNum indicates a SYS5 event */
 			/* a1 should contain the interrupt line number of the interrupt at the time of the SYSCALL */ 
 			/* a2 should contain the device number associated with the specified interrupt line */
 			/* a3 should contain TRUE or FALSE, indicating if waiting for a terminal read operation */
+			waitForIO(currentProc->p_s.s_a1, currentProc->p_s.s_a2, currentProc->p_s.s_a3); /* invoking the internal function that handles SYS5 events */
 
-		case SYS6NUM: /* if the SYSCALL number is 6 */
+		case SYS6NUM: /* if the sysNum indicates a SYS6 event */
 			getCPUTime(); /* invoking the internal function that handles SYS6 events */
 		
-		case SYS7NUM: /* if the SYSCALL number is 7 */
+		case SYS7NUM: /* if the sysNum indicates a SYS7 event */
 			waitForPClock(); /* invoking the internal function that handles SYS 7 events */
 		
-		case SYS8NUM: /* if the SYSCALL number is 8 */
+		case SYS8NUM: /* if the sysNum indicates a SYS8 event */
 			getSupportData(); /* invoking the internal function that handles SYS 8 events */	
 	}
 }
