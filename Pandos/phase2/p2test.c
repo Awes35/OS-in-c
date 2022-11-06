@@ -523,11 +523,8 @@ void p5() {
 void p5a() {
 	/* generage a TLB exception after a TLB-Refill event */
 
-	debugFun(10, 10);
 	p5MemLocation = (memaddr *) 0x80000000;
-	debugFun(20, 20);
 	*p5MemLocation = 42;
-	debugFun(30, 30);
 }
 
 /* second part of p5 - should be entered in user mode first time through */
