@@ -2,8 +2,9 @@
  *
  * This module serves as the exception handler module to define exception-handling functions that are called
  * by the General Exception Handler. Namely, this module defines a function for handling program trap events-- pgmTrapH(), 
- * for TLB trap events-- tlbTrapH(), and for SYSCALL exception events-- sysTrapH().. in addition to all of the 
- * specific helper functions for various SYSCALL numbers. 
+ * for TLB trap events-- tlbTrapH(), and for SYSCALL exception events-- sysTrapH()...in addition to all of the 
+ * specific helper functions for various SYSCALL numbers. This module is also responsible for handling
+ * Pass Up or Die events.
  * 
  * While the General Exception Handler can directly call pgmTrapH(), tlbTrapH(), and sysTrapH(), 
  * most of the functions within this module pertain to SYSCALL exceptions, and thus the
@@ -88,7 +89,6 @@ void createProcess(state_PTR stateSYS, support_t *suppStruct){
 		newPcb->p_semAdd = NULL; /* initializing the pointer to newPcb's semaphore, which is set to NULL because newPcb is not in the "blocked" state */
 		insertChild(currentProc, newPcb); /* initializing newPcb's process tree fields by making it a child of the Current Process */
 		insertProcQ(&ReadyQueue, newPcb); /* inserting newPcb onto the Ready Queue */
-		readyQueueSize++;
 		currentProc->p_s.s_v0 = SUCCESSCONST; /* placing the value 0 in the caller's v0 because the allocation was completed successfully */
 		procCnt++; /* incrementing the number of started, but not yet terminated, processes by one */
 	}
@@ -140,7 +140,6 @@ void terminateProcess(pcb_PTR proc){
 	} 
 	else{ /* proc is on the Ready Queue */
 		outProcQ(&ReadyQueue, proc); /* removing proc from the Ready Queue */
-		readyQueueSize--;
 	}
 	freePcb(proc); /* returning proc onto the pcbFree list (and, therefore, destroying it) */
 	procCnt--; /* decrementing the number of started, but not yet terminated, processes */
@@ -173,7 +172,6 @@ void signalOp(int *sem){
 	if(*sem <= SEMA4THRESH){ /* if value of semaphore indicates a blocking process */ 
 		pcb_PTR temp = removeBlocked(sem); /* make semaphore not blocking, ie: make it not blocking on the ASL */
 		insertProcQ(&ReadyQueue, temp); /* add process' PCB to the ReadyQueue */
-		readyQueueSize++;
 	}
 
 	/* returning to the Current Process */
@@ -278,11 +276,10 @@ void sysTrapH(){
 		pgmTrapH(); /* invoking the internal function that handles program trap events */
 	}
 	
-	if (sysNum > 8){ /* if the SYSCALL number is 9 or above */
-		pgmTrapH(); /* invoking the internal function that handles program trap events */
-	}
+	/* if (sysNum > 8){ */
+		/* pgmTrapH(); /* invoking the internal function that handles program trap events */
+	/* } */
 	
-	/* Now proceed knowing we will handle a SYSCALL 1-8 */
 	updateCurrPcb(currentProc); /* copying the saved processor state into the Current Process' pcb  */
 	
 	/* enumerating the sysNum values (1-8) and passing control to the respective function to handle it */
@@ -318,7 +315,10 @@ void sysTrapH(){
 			waitForPClock(); /* invoking the internal function that handles SYS 7 events */
 		
 		case SYS8NUM: /* if the sysNum indicates a SYS8 event */
-			getSupportData(); /* invoking the internal function that handles SYS 8 events */	
+			getSupportData(); /* invoking the internal function that handles SYS 8 events */
+			
+		default: /* if the SYSCALL number is 9 or above */
+			pgmTrapH(); /* invoking the internal function that handles program trap events */
 	}
 }
 
