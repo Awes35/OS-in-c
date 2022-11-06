@@ -277,7 +277,7 @@ void sysTrapH(){
 	}
 	
 	/* if (sysNum > 8){ */
-		/* pgmTrapH(); /* invoking the internal function that handles program trap events */
+		/* pgmTrapH(); */ /* invoking the internal function that handles program trap events */
 	/* } */
 	
 	updateCurrPcb(currentProc); /* copying the saved processor state into the Current Process' pcb  */
