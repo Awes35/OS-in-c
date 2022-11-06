@@ -70,7 +70,6 @@ And if the Process Count is greater than zero and the Soft-block Count is zero, 
 void switchProcess(){
 	currentProc = removeProcQ(&ReadyQueue); /* removing the pcb from the head of the ReadyQueue and storing its pointer in currentProc */
 	if (currentProc != NULL){ /* if the Ready Queue is not empty */
-		readyQueueSize--;
 		setTIMER(INITIALPLT); /* loading five milliseconds on the processor's Local Timer (PLT) */
 		switchContext(currentProc); /* invoking the internal function that will perform the LDST on the Current Process' processor state */
 	}
@@ -81,7 +80,7 @@ void switchProcess(){
 	}
 	
 	if ((procCnt > INITIALPROCCNT) && (softBlockCnt > INITIALSFTBLKCNT)){ /* if the number of started, but not yet terminated, processes is greater than zero and there's at least one such process is "blocked" */
-		setSTATUS((ALLOFF | IMON | IECON)); /* enabling interrupts for the Status register so we can execute the WAIT instruction */
+		setSTATUS(ALLOFF | IMON | IECON); /* enabling interrupts for the Status register so we can execute the WAIT instruction */
 		setTIMER(NEVER); /* loading the PLT with a very large value so that the first interrupt that occurs after entering a WAIT state is not for the PLT */
 		WAIT(); /* invoking the WAIT() function to idle the processor, as it needs to wait for a device interrupt to occur */
 	}
