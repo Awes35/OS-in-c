@@ -20,10 +20,6 @@ extern cpu_t start_tod; /* the value on the time of day clock that the Current P
 extern int deviceSemaphores[MAXDEVICECNT]; /* array of integer semaphores that correspond to each external (sub) device, plus one semd for the Pseudo-clock, located 
 									at the last index of the array (PCLOCKIDX). Note that this array will be implemented so that terminal device semaphores are last and terminal device semaphores
 									associated with a read operation in the array come before those associated with a write operation. */
-
 extern state_PTR savedExceptState; /* a pointer to the saved exception state */
-extern int readyQueueSize;
-extern int temp1;
-extern int temp2;
 
 #endif
