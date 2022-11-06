@@ -264,7 +264,7 @@ exception), and checking to see what SYSCALL number was requested so it can invo
 SYSCALL. If an invalid SYSCALL number was provided (i.e., the SYSCALL number requested was nine or above), we invoke the internal
 function that performs a standard Pass Up or Die operation using the GENERALEXCEPT index value.  */
 void sysTrapH(){
-	/* initializing variables that are global to this module */ 
+	/* initializing variables that are global to this module, as well as savedExceptState */ 
 	savedExceptState = (state_PTR) BIOSDATAPAGE; /* initializing the saved exception state to the state stored at the start of the BIOS Data Page */
 	sysNum = savedExceptState->s_a0; /* initializing the SYSCALL number variable to the correct number for the exception */
 
