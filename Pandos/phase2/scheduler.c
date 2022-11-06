@@ -21,7 +21,6 @@
  * a LDST on the Current Process' processor state.
  * 
  * Written by: Kollen Gruizenga and Jake Heyser
- *
  ****************************************************************************/
 
 #include "../h/asl.h"
