@@ -2,21 +2,21 @@
  *
  * This module adds several important components to the development of our
  * Pandos operating system. First off, this module contains the entry point
- * for our program (i.e., main()). main() will, among other tasks, initialize
- * the Phase 1 data structures (i.e., the ASL, free list of semaphore descriptors,
+ * for Phase 2: main(). This function will, among other tasks, initialize
+ * the various Phase 1 data structures (ie: the ASL, free list of semaphore descriptors,
  * and the process queue that we will use to hold processes that are 
- * ready to be executed), initialize four words in the BIOS data page (i.e., one
+ * ready to be executed), initialize four words in the BIOS data page (ie: one
  * word each for the general exception handler, a corresponding stack pointer, the 
  * TLB-Refill handler, and a corresponding stack pointer), and create one
- * process and call the scheduler on it. We also define the global variables
- * (and initialize them in main()) needed in Phase 2 of development, and we 
- * implement the general exception handler in this module. The general exception
+ * process on the ReadyQueue so that the Scheduler can begin. 
+ * 
+ * We also define & initialize the global variables needed in Phase 2 of development, 
+ * and we implement the general exception handler in this module. The general exception
  * handler passes the handling of interrupts along to the device interrupt handler
  * and it passes the handling of all exceptions to the appropriate function
  * in the exceptions.c module to handle the particular type of exception.
  * 
  * Written by: Kollen Gruizenga and Jake Heyser
- *
  ****************************************************************************/
 
 #include "../h/asl.h"
