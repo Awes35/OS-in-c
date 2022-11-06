@@ -17,7 +17,6 @@
 #include "../h/const.h"
 #include "../h/types.h"
 #include "/usr/include/umps3/umps/libumps.h"
-#include "../h/initial.h"
 
 typedef unsigned int devregtr;
 
@@ -111,16 +110,10 @@ int creation = 0; 				/* return code for SYSCALL invocation */
 memaddr *p5MemLocation = 0;		/* To cause a p5 trap */
 
 void	p2(),p3(),p4(),p5(),p5a(),p5b(),p6(),p7(),p7a(),p5prog(),p5mm();
-void	p5sys(),p8root(),child1(),child2(),p8leaf(), debugFun(int x, int y);
+void	p5sys(),p8root(),child1(),child2(),p8leaf();
 
 extern void p5gen ();
 extern void p5mm ();
-
-void debugFun(int x, int y){
-	temp1 = x;
-	temp2 = y;
-}
-
 
 /* a procedure to print on terminal 0 */
 void print(char *msg) {
