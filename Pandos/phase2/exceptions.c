@@ -10,23 +10,22 @@
  * most of the functions within this module pertain to SYSCALL exceptions, and thus the
  * sysTrapH() function is the most developed entry point to this module. It first performs a few
  * checks, such as ensuring the requesting process was not in user mode when the SYSCALL was made
- * and confirming the requested SYSCALL will be handled. It then
+ * and confirming the requested SYSCALL will be uniquely handled (only SYS1-8). It then
  * passes control to the appropriate internal SYSCALL handler function.
  * 
- * Note that for the purposes of this phase of development, the time spent
- * handling SYSCALL requests is charged to the requesting process (namely, the Current Process). 
- * The CPU time used by the Current Process to handle the SYSCALL request is charged
- * to the Current Process in this module, regardless of whether the Current Process
- * continues executing after the SYSCALL request is handled, because once we return 
- * control to the Current Process, the start_tod variable (which indicates the value that
- * the executing (or soon-to-be executing) process started executing at) is reset.
- * This timing policy is implemented simply because it seems that charging such CPU
+ * 
+ * Note that for the purposes of this phase of development, the CPU time used by the 
+ * Current Process to handle the SYSCALL request is charged to the Current Process.
+ * This is true regardless of whether the Current Process continues executing after the SYSCALL
+ * request is handled, because once we return control to the Current Process, the start_tod variable (the 
+ * value that the process started executing at) is reset.
+ * 
+ * We decided on this timing policy as we believe charging such CPU
  * time to the requesting process is the most logical way to account for the CPU time
  * used in this module, as the Current Process, after all, was the process that
  * requested that part of its quantum (and CPU time) be spent handling the SYSCALL request.
  *  
  * Written by: Kollen Gruizenga and Jake Heyser
- *
  ****************************************************************************/
 
 #include "../h/asl.h"
