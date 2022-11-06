@@ -276,9 +276,9 @@ void sysTrapH(){
 		pgmTrapH(); /* invoking the internal function that handles program trap events */
 	}
 	
-	/* if (sysNum > 8){ */
-		/* pgmTrapH(); */ /* invoking the internal function that handles program trap events */
-	/* } */
+	if (sysNum > 8){ /* check if the SYSCALL number was 9 or above (we'll punt for now) */
+		pgmTrapH(); /* invoking the internal function that handles program trap events */
+	} 
 	
 	updateCurrPcb(currentProc); /* copying the saved processor state into the Current Process' pcb  */
 	
@@ -316,9 +316,7 @@ void sysTrapH(){
 		
 		case SYS8NUM: /* if the sysNum indicates a SYS8 event */
 			getSupportData(); /* invoking the internal function that handles SYS 8 events */
-			
-		default: /* if the SYSCALL number is 9 or above */
-			pgmTrapH(); /* invoking the internal function that handles program trap events */
+		
 	}
 }
 
