@@ -275,7 +275,7 @@ void sysTrapH(){
 		pgmTrapH(); /* invoking the internal function that handles program trap events */
 	}
 	
-	if (sysNum > 8){ /* check if the SYSCALL number was 9 or above (we'll punt for now) */
+	if ((sysNum<SYS1NUM) || (sysNum > SYS8NUM)){ /* check if the SYSCALL number was not 1-8 (we'll punt & avoid uniquely handling it) */
 		pgmTrapH(); /* invoking the internal function that handles program trap events */
 	} 
 	
