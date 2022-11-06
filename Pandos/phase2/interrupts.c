@@ -34,7 +34,6 @@
  * 
  * 
  * Written by: Kollen Gruizenga and Jake Heyser
- *
  ****************************************************************************/
 
 #include "../h/asl.h"
