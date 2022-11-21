@@ -38,5 +38,9 @@ void initSwapStructs(){
 	}
 }
 
+/* Function that handles page faults that are passed up by the Nucleus */
+void vmTlbHandler(){
+}
+
 
 

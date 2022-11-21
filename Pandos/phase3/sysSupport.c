@@ -19,3 +19,8 @@
 /* function declarations */
 
 /* declaring variables that are global to this module */
+
+/* Function that handles all passed up non-TLB exceptions (i.e., all SYSCALL exceptions numbered 9 and above, as well as all Program
+Trap exceptions) */
+void vmGeneralExceptionHandler{
+}
