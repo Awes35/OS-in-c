@@ -13,6 +13,6 @@
 
 #include "../h/types.h"
 
-extern void temp();
+extern void vmGeneralExceptionHandler();
 
 #endif
