@@ -45,6 +45,12 @@ typedef struct {
 	device_t	devreg[DEVINTNUM * DEVPERINT];
 } devregarea_t;
 
+/* strucure that represents a single page table entry */
+typedef struct pte_entry_t {
+	unsigned int entryHI;
+	unsigned int entryLO;
+} pte_entry_t;
+
 #define STATEREGNUM	31
 typedef struct state_t { /* TEMP-- POO pg8 */
 	unsigned int	s_entryHI; /* the entryHI register, containing the current ASID --aka processID */
@@ -62,11 +68,21 @@ typedef struct context_t {
 					c_pc;		/* PC address */
 } context_t;
 
+/* type representing the table of entries whose frames are in the Swap Pool (i.e., the Swap Pool table)*/
+typedef struct swap_t {
+	unsigned int	asid; 		/* the ASID of the U-Proc whose page is occupying the frame */
+	int				pgNo; 		/* the logical page number of the occupying page */
+	pte_entry_t		*ownerProc;	/* a pointer to the matching Page Table entry in the Page Table belonging directly to the owner process */
+} swap_t;
+
 /* Support structure type */
 typedef struct support_t {
 	int				sup_asid;				/* process Id (asid) */
-	state_t			sup_exceptState[2];	/* stored except states */
+	state_t			sup_exceptState[2];		/* stored except states */
 	context_t		sup_exceptContext[2];	/* pass up contexts */
+	pte_entry_t		sup_privatePgTbl[32];	/* the user process's page table */
+	int				sup_stackTLB[500];		/* the stack area for the process' TLB exception handler */
+	int				sup_stackGen[500];		/* the stack area for the process' general exception handler */
 } support_t;
 
 /* Process control block type */

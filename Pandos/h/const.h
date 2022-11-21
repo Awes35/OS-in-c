@@ -209,4 +209,40 @@ This constant is subtracted from the line number, since interrupt lines 3-7 are 
 /* Constant that represents when the first four bits in a terminal device's device register's status field are turned on */
 #define	STATUSON		0x0F
 
+/* Phase 3 constant that defines how many user processes can be running at once */
+#define UPROCMAX		1
+
+/* Constant representing how many page table entries there are per page table */
+#define	ENTRIESPERPG	32
+
+/* TLB constants to help retrieve the virtual page number (VPN) of a TLB entry */
+#define GETVPN			0xFFFFF000		/* Constant for setting all of the non-VPN bits in a TLB entry to 0 */
+#define	VPNSHIFT		12				/* Number of bits needed to shift the VPN field of EntryLo over to the right so that we can read the VPN directly */
+
+/* Constant that represents the number of sharable peripheral I/O devices */
+#define	MAXIODEVICES	48		
+
+/* Constant that represents the ASID of a frame is unoccupied */
+#define	EMPTYFRAME		-1
+
+/* Constant that represents the top of the stack for handling general exceptions and TLB exceptions, with each of these handlers having their own stack area */
+#define	TOPOFSTACK		499
+
+/* Constants that denote important addresses when initializing a U-proc's initial processor state */
+#define	UPROCPC			0x800000B0		/* the address of a U-proc's PC; this address is the address of the start of the .text section */
+#define	UPROCSP			0xC0000000		/* the address of a U-proc's stack pointer */
+
+/* Constant that represents the number of bits needd to shift the ASID field of EntryHi over to the left when initializing that field */
+#define	ASIDSHIFT		6
+
+/* Constant that represents the initial contents of the VPN field for the stack page in a U-proc's Page Table */
+#define	STACKPGVPN		0xBFFFF		
+
+/* Constants that help initialize the EntryLo fields in a U-proc's page table */
+#define	GBITOFF			0x00000100		/* Constant for setting all of the bits to 0 in the EntryLo portion of a TLB entry except for the G bit (i.e., G (bit 8) = 1) */
+#define	DBITON			0x00000400		/* Constant for setting all of the bits to 0 in the EntryLo portion of a TLB entry except for the D bit (i.e., D (bit 10) = 1) */
+
+/* Constant that represents the maximum number of frames in phase 3 */
+#define	MAXFRAMES		10
+
 #endif
