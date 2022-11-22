@@ -26,7 +26,7 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
-HIDDEN void initProcessorState(state_t newState); 
+HIDDEN void initProcessorState(state_t newState); /* function declaration for the function that is responsible for initializing the processor state for a U-proc */
 
 /* declaring the phase 3 global variables */
 int masterSemaphore; /* semaphore to be V'd and P'd by test as a means to ensure test terminates in a way so that the PANIC() function is not called */
@@ -50,8 +50,8 @@ for the U-proc, initializes the Support Structure for the U-proc, launches UPROC
 "children" processes conclude */
 void test(){
 	/* declaring local variables */
-	int pid; /* the process ID of the process that is instantiated; this is different from the ASID of the U-proc, which must be non-zero */
-	static support_t supportStructArr[UPROCMAX]; /* static array of UPROCMAX Support Strucures that will allow one to obtain the
+	int pid; /* the process ID (which is equivalent to the ASID) of the process that is instantiated */
+	static support_t supportStructArr[UPROCMAX + 1]; /* static array of UPROCMAX + 1 Support Strucures that will allow one to obtain the
 													address of the next unused Support Structure that needs to be initialized */
 	int returnCode; /* the value that is returned from SYS1 when launching a new U-proc */
 	state_t initialState; /* the processor state for a U-proc, which will be initialized in this module */
@@ -66,10 +66,10 @@ void test(){
 	initProcessorState(initialState); /* calling the internal function that initializes the processor state of a given U-proc */
 
 	/* initializing UPROCMAX U-procs */
-	for (pid = 0; pid < UPROCMAX; pid++){
+	for (pid = 1; pid < UPROCMAX + 1; pid++){
 
 		/* completing the initialization of the processor state for the U-proc using the process' unique ID*/
-		initialState.s_entryHI = (ALLOFF | pid + 1) << ASIDSHIFT; /* initializing the U-proc's EntryHi.ASID field to the process' unique ID */
+		initialState.s_entryHI = (ALLOFF | pid) << ASIDSHIFT; /* initializing the U-proc's EntryHi.ASID field to the process' unique ID */
 
 		/* initializing the Support Structure for the U-proc */
 		supportStructArr[pid].sup_exceptContext[PGFAULTEXCEPT].c_pc = (memaddr) vmTlbHandler; /* initializing the PC for handling page fault excpetions to the address of this phase's TLB handler */
@@ -81,21 +81,21 @@ void test(){
 																																of the top of the stack reserved for handling TLB exceptions */
 		supportStructArr[pid].sup_exceptContext[GENERALEXCEPT].c_stackPtr = &(supportStructArr[pid].sup_stackGen[TOPOFSTACK]); /* setting the SP field for handling non-page fault exceptions to the address
 																																of the top of the stack reserved for handling such exceptions */																												
-		supportStructArr[pid].sup_asid = pid + 1; /* initializing the U-proc's ASID */
+		supportStructArr[pid].sup_asid = pid; /* initializing the U-proc's ASID */
 
 		/* initializing the Page Table for the U-proc */
 		int j;
 		for (j = 0; j < ENTRIESPERPG; j++){
-			supportStructArr[pid].sup_privatePgTbl[j].entryHI = ALLOFF | ((KUSEG + j) << VPNSHIFT) | ((pid + 1) << ASIDSHIFT); /* initializing the EntryHI fields in the U-proc's Page Table */
+			supportStructArr[pid].sup_privatePgTbl[j].entryHI = ALLOFF | ((KUSEG + j) << VPNSHIFT) | (pid << ASIDSHIFT); /* initializing the EntryHI fields in the U-proc's Page Table */
 			supportStructArr[pid].sup_privatePgTbl[j].entryLO = ALLOFF | GBITOFF | DBITON; /* initializing the EntryLo fields in the U-proc's Page Table so that the G and V bits are off and the D bit is on */
 		}
 
-		supportStructArr[pid].sup_privatePgTbl[ENTRIESPERPG - 1].entryHI = ALLOFF | (STACKPGVPN << VPNSHIFT) | ((pid + 1) << ASIDSHIFT); /* (re)initializing the stack page's EntryHI fields in the U-proc's Page Table */
+		supportStructArr[pid].sup_privatePgTbl[ENTRIESPERPG - 1].entryHI = ALLOFF | (STACKPGVPN << VPNSHIFT) | (pid << ASIDSHIFT); /* (re)initializing the stack page's EntryHI fields in the U-proc's Page Table */
 
 		returnCode = SYSCALL(SYS1NUM, (int) (&initialState), (int) (&supportStructArr[pid])); /* issuing the SYS 1 to launch the new U-proc and assigning the function's return value to returnCode */
 
 		if (returnCode != SUCCESSCONST){ /* if the new U-proc was not launched successfully */
-			SYSCALL(SYSNUM2, 0, 0, 0); /* terminating the Current Process */
+			SYSCALL(SYSNUM2, 0, 0, 0); /* terminate the process */
 		}
 	}
 

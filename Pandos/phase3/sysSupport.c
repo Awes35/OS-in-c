@@ -22,5 +22,9 @@
 
 /* Function that handles all passed up non-TLB exceptions (i.e., all SYSCALL exceptions numbered 9 and above, as well as all Program
 Trap exceptions) */
-void vmGeneralExceptionHandler{
+void vmGeneralExceptionHandler(){
+}
+
+/* Function that handles Program Traps */
+void programTrapHandler(){
 }
