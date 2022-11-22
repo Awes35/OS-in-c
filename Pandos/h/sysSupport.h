@@ -14,5 +14,6 @@
 #include "../h/types.h"
 
 extern void vmGeneralExceptionHandler();
+extern void programTrapHandler();
 
 #endif

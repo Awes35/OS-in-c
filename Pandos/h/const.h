@@ -245,4 +245,10 @@ This constant is subtracted from the line number, since interrupt lines 3-7 are 
 /* Constant that represents the maximum number of frames in phase 3 */
 #define	MAXFRAMES		10
 
+/* Constant representing the exception code that signfifies that a TLB-Modification Exception occurred */
+#define	TLBMODEXCCODE	1
+
+/* Constant that denotes the size of the Swap Pool */
+#define	SWAPPOOLSIZE	2 * UPROCMAX
+
 #endif
