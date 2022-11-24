@@ -61,6 +61,8 @@
 /* device common COMMAND codes */
 #define RESET			    0
 #define ACK				    1
+#define	READBLK				2
+#define	WRITEBLK			3
 
 /* Memory related constants */
 #define KSEG0           0x00000000 /* the installed EPROM - BIOS memory region */
@@ -139,8 +141,8 @@ the accumulated CPU time field for a process that is instantiated */
 #define ERRORCONST		-1			/* constant denoting an error occurred in the caller's request */
 #define SUCCESSCONST	0			/* constant denoting that the caller's request completed successfully */
 
-/* Constant to help determine the index in deviceSemaphores and in the Interrupt Devices Bitmap that a particular device is located at. 
-This constant is subtracted from the line number, since interrupt lines 3-7 are used for peripheral devices  */
+/* Constant to help determine the index in deviceSemaphores/devSemaphores and in the Interrupt Devices Bitmap that a particular device is located at. 
+This constant is subtracted from the line number (or 4, in the case of backing store management), since interrupt lines 3-7 are used for peripheral devices  */
 #define	OFFSET			3	
 
 /* Cause register constant for setting all bits to 1 in the Cause register except for the ExcCode field, which is set to 10 for the RI code */
@@ -250,5 +252,19 @@ This constant is subtracted from the line number, since interrupt lines 3-7 are 
 
 /* Constant that denotes the size of the Swap Pool */
 #define	SWAPPOOLSIZE	2 * UPROCMAX
+
+/* Constant for setting all of the bits to 1 in the EntryLo portion of a TLB entry except for the V bit */
+#define	VBITOFF			0xFFFFFD
+
+/* Constants to signify whether one wishes to read or write to a flash device; these constants serve as potential parameters to the flashOperation() function in vmSupport.c */
+#define	WRITE			0				/* Constant that represents the parameter to flashOperation() for writing a flash device */
+#define	READ			1 				/* Constant that represents the parameter to flashOperation() for reading a flash device */
+
+/* Constant that represents the Swap Pool's starting address */
+#define	SWAPPOOLADDR	0x20020000
+
+/* Constants for setting the COMMAND field of a flash device */
+#define	BLKNUMSHIFT		8				/* Constant that represents the number of bits needed to shift a flash device's block number over to the left */
+
 
 #endif

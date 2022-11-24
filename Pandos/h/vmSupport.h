@@ -16,5 +16,6 @@
 
 extern void initSwapStructs();
 extern void vmTlbHandler();
+extern void setInterrupts(int onOrOff);
 
 #endif
