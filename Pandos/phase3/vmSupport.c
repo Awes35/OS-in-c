@@ -1,8 +1,15 @@
 /**************************************************************************** 
  *
  * This module implements the TLB exception handler (i.e., The Pager) and contains
- * the functions for reading and writing flash devices. Furthermore, the module
- * also initializes both the Swap Pool table and the accompanying semaphore.
+ * the functions for reading and writing flash devices. The module
+ * also initializes both the Swap Pool table and the accompanying semaphore. 
+ * Furthermore, the module contains several helper functions that are called
+ * by the Pager. For example, the module contains a helper function that
+ * turns interrupts in the Status register on and off, a helper function that
+ * is responsible for gaining or releasing mutual exclusion and a helper function
+ * that is responsible for returning control back to a particular process. In 
+ * short, this module is responsible for handling page faults and initializing
+ * virtual memory in phase 3.
  *  
  * Written by: Kollen Gruizenga and Jake Heyser
  ****************************************************************************/
@@ -54,7 +61,12 @@ void mutex(int opCode, int *semaphore){
 	}
 }
 
-/* Function that is responsible for reading or writing to process pid's flash device/backing store */
+/* Function that is responsible for reading or writing to process pid's flash device/backing store. More specifically, this function
+performs five key steps. First off, the function gains mutual exclusion over the appropriate device's device register. Next, it writes
+the device's DATA0 field with the particular frame's starting address (as indicated by the parameter frameAddress). Then, the function
+writes the device's COMMAND field with the device block number and the command to read or write (as indicated by the parameter readOrWrite).
+Then, the function issues a SYS 5 with the appropriate parameters to block the I/O requesting process process until the operation
+completes before releasing mutual exclusion over the device's device register. */
 void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingPgNum){
 	/* declaring local variables */
 	devregarea_t *temp; /* device register area that we can use to read and write the process pid's flash device */
@@ -97,7 +109,9 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 }
 
 /* Function that initializes the Swap Pool table and the Swap Pool semaphore (i.e., the variables that are global
-to this module) */
+to this module). Since the Swap Pool semaphore is used for mutual exclusion, the function initializes the semaphore to 1,
+and the function initializes every entry's ASID in the Swap Pool table to -1, since none of the frames in the Swap Pool
+are curretly occupied. */
 void initSwapStructs(){
 	swapSem = 1; /* initializing the Swap Pool semaphore to 1, since it will be used for the purpose of mutual exclusion */
 
@@ -108,13 +122,22 @@ void initSwapStructs(){
 	}
 }
 
-/* Function that returns control back to a particular process whose processor state is returnState */
+/* Function that returns control back to a particular process whose processor state is returnState. This function is used
+primarily as a debugging function. */
 void switchContext(state_t returnState){
 	LDST(&returnState); /* returning control back to the desired process */
 }
 
 /* Function that handles page faults that are passed up by the Nucleus. Note that this function utilizes a FIFO page replacement
-algorithm. */
+algorithm. Now, more specifically, the function obtains a pointer to the Current Process' Support Structure, determines the cause
+of the TLB exception, and then, if the cause is a TLB-Modification exception, passes control to the phase 3 function that handles
+program traps. Next, the function gains mutual exclusion over the Swap Pool table, determines the missing page number, selects
+a frame from the Swap Pool using a FIFO page replacement algorithm to satisfy the page fault, and determines if the selected frame
+is occupied. If it is occupied, the function then updates the correct process' Page Table, updates the TLB (if needed), and then
+updates the correct process' backing store. Next, the function reads the contents of the Current Process' backing store's correct logical
+page into the frame previously selected, updates the Swap Pool table, updates the Current Process' Page Table, and then updates the
+TLB. Finally, the function releases mutual exclusion over the Swap Pool table before returning control back to the Current Process
+to retry the instruction that caused the page fault. */
 void vmTlbHandler(){
 	/* declaring local variables */
 	state_t oldState; /* a pointer to the saved exception state responsible for the TLB exception */
