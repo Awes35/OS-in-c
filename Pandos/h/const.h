@@ -266,5 +266,13 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 /* Constants for setting the COMMAND field of a flash device */
 #define	BLKNUMSHIFT		8				/* Constant that represents the number of bits needed to shift a flash device's block number over to the left */
 
+/* Constant for setting all of the bits to 0 in the EntryLo portion of a TLB entry except for the V bit */
+#define	VBITON			0x000002		
+
+/* Constant that represents the number of bits needed to shift the PFN field of EntryLo over to the left when setting the contents of that field */
+#define	PFNSHIFT		12
+
+/* Constant for setting all of the bits to 1 in the EntryLo portion of a TLB entry except for the PFN field */
+#define	PFNCLEAR		0x00000F	
 
 #endif
