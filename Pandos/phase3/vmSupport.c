@@ -34,7 +34,7 @@ HIDDEN void switchContext(state_t returnState); /* function declaration for the 
 
 /* declaring variables that are global to this module */
 int swapSem; /* mutual exclusion semaphore that controls access to the Swap Pool data structure */
-HIDDEN swap_t swapPoolTbl[SWAPPOOLSIZE]; /* the Swap Pool data structure/table */
+HIDDEN swap_t swapPoolTbl[MAXFRAMECNT]; /* the Swap Pool data structure/table */
 
 /* Function that turns interrupts in the Status register on or off, as indicated by the function's parameter. If the caller wishes to
 turn interrupts on, then the value 1 is passed into the function, whereas if the caller wishes to disable interrupts, then the value 0
@@ -117,7 +117,7 @@ void initSwapStructs(){
 
 	/* initializing the Swap Pool table */
 	int i;
-	for (i = 0; i < SWAPPOOLSIZE; i++){
+	for (i = 0; i < MAXFRAMECNT; i++){
 		swapPoolTbl[i].asid = EMPTYFRAME; /* initializing the ASID to -1, since all frames are currently unoccupied */
 	}
 }
@@ -161,15 +161,13 @@ void vmTlbHandler(){
 	missingPgNo = ((oldState.s_entryHI) & GETVPN) >> VPNSHIFT; /* initializing the missing page number to the VPN specified in the EntryHI field of the saved exception state */
 	missingPgNo = missingPgNo % ENTRIESPERPG; /* using the hash function to determine the page number of the missing TLB entry from the VPN calculated in the previous line */
 
-	frameNo = (frameNo + 1) % SWAPPOOLSIZE; /* selecting a frame to satisfy the page fault, as determined by Pandos' FIFO page replacement algorithm */
+	frameNo = (frameNo + 1) % MAXFRAMECNT; /* selecting a frame to satisfy the page fault, as determined by Pandos' FIFO page replacement algorithm */
 	frameAddr = SWAPPOOLADDR + (frameNo * PAGESIZE); /* calculating the frameNo's starting address */
 
 	if (swapPoolTbl[frameNo].asid != EMPTYFRAME){ /* if the frame selected by the page replacement algorithm is occupied */
 		setInterrupts(FALSE); /* calling the function that disables interrupts for the Status register so we can update the page table entry and its cached counterpart in the TLB atomically */
 		swapPoolTbl[frameNo].ownerProc->entryHI = (swapPoolTbl[frameNo].ownerProc->entryHI) & VBITOFF; /* updating the page table for the process occupying the frame by marking the entry as not valid */
-		/* if (the the page table entry is in the TLB){ */
-			TLBCLR(); /* erasing all of the entries in the TLB to ensure cache consistency */
-		/*}*/
+		TLBCLR(); /* erasing all of the entries in the TLB to ensure cache consistency */
 		setInterrupts(TRUE) /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
 		flashOperation(WRITE, swapPoolTbl[frameNo].asid, frameAddr, missingPgNo); /* calling the internal helper function to update the correct process' backing store */
 	}
