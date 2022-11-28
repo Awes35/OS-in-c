@@ -245,13 +245,10 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 #define	DBITON			0x00000400		/* Constant for setting all of the bits to 0 in the EntryLo portion of a TLB entry except for the D bit (i.e., D (bit 10) = 1) */
 
 /* Constant that represents the maximum number of frames in phase 3 */
-#define	MAXFRAMES		10
+#define	MAXFRAMECNT		10
 
 /* Constant representing the exception code that signfifies that a TLB-Modification Exception occurred */
 #define	TLBMODEXCCODE	1
-
-/* Constant that denotes the size of the Swap Pool */
-#define	SWAPPOOLSIZE	2 * UPROCMAX
 
 /* Constant for setting all of the bits to 1 in the EntryLo portion of a TLB entry except for the V bit */
 #define	VBITOFF			0xFFFFFD
