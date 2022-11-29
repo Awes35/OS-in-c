@@ -126,6 +126,7 @@ the accumulated CPU time field for a process that is instantiated */
 #define IECON			0x00000001	/* constant for enabling the global interrupt bit (i.e., IEc (bit 0) = 1) */
 #define PLTON			0x08000000	/* constant for enabling PLT (i.e., TE (bit 27) = 1) */
 #define IMON			0x0000FF00	/* constant for setting the Interrupt Mask bits to on so interrupts are fully enabled */
+#define	IECOFF			0xFFFFFFFE	/* constant for disabling the global interrupt bit (i.e., IEc (bit 0) = 0) */
 
 /* Value that the processor's Local Timer (PLT) is intialized to 5 milliseconds (5,000 microseconds) */
 #define INITIALPLT		5000
