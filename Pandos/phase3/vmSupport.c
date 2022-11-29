@@ -41,10 +41,10 @@ turn interrupts on, then the value 1 is passed into the function, whereas if the
 is passed into the function. */
 void setInterrupts(int onOrOff){
 	if (onOrOff == TRUE){ /* the caller wishes to enable interrupts */
-		setSTATUS(ALLOFF | IMON | IECON); /* enabling interrupts for the Status register, as dictated by the function's parameter */
+		setSTATUS(getSTATUS() | IMON | IECON); /* enabling interrupts for the Status register, as dictated by the function's parameter */
 	}
 	else{ /* the caller wishes to disable interrupts */
-		setSTATUS(ALLOFF); /* disabling interrupts for the Status register, as dictated by the function's parameter */
+		setSTATUS(getSTATUS() & IECOFF); /* disabling interrupts for the Status register, as dictated by the function's parameter */
 	}
 }
 
