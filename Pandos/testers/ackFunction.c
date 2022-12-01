@@ -11,9 +11,9 @@
 #include "h/print.h"
 
 /* Function that implements Ackermann's function, as defined as:
-		A(0,n) = n+1
-		A(m+1,0) = A(m,1)
-		A(m+1, n+1) = A(m,A(m+1,n)) */
+		ack(0,n) = n+1
+		ack(m+1,0) = ack(m,1)
+		ack(m+1, n+1) = ack(m,ack(m+1,n)) */
 int ack(int m, int n){
 	int k; /* local variable representing A(m,n) */
 
