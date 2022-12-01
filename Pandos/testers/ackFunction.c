@@ -15,8 +15,6 @@
 		ack(m+1,0) = ack(m,1)
 		ack(m+1, n+1) = ack(m,ack(m+1,n)) */
 int ack(int m, int n){
-	int k; /* local variable representing A(m,n) */
-
 	if (m == 0){ /* if m is 0, then we just need to return n+1 */
 		return n++; /* returning n + 1 */
 	}
