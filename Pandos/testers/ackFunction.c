@@ -1,7 +1,7 @@
 /**************************************************************************** 
  *
- * Program that implements Ackermann's function and tests our operating system by,
- * in part, running Ackermann's function on a sample input (2,3)
+ * Program that implements Ackermann's function and tests our operating system 
+ * by running Ackermann's function on a sample input (2,3)
  * 
  * Written by: Kollen Gruizenga and Jake Heyser
  ****************************************************************************/
