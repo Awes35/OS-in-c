@@ -21,11 +21,11 @@ int ack(int m, int n){
 
 	if (n == 0){ /* if n is 0, then we need to call ack(m-1,1) */
 		m--; /* decrementing the value of m by 1 */
-		return ack(m,1); /* making the recursive call to calculate ack(m-1,1) */
+		return ack(m,1); /* making the recursive call to calculate ack(m-1,1) and returning that value to the caller */
 	}
 
 	/* m and n are both not equal to 0 */
-	return ack(m-1, ack(m,n-1)); /* making the recursive call to calculate ack(m-1, ack(m,n-1)) */
+	return ack(m-1, ack(m,n-1)); /* making the recursive call to calculate ack(m-1, ack(m,n-1)) and returning that value to the caller */
 }
 
 /* Function that prints messages to the terminal as decided by what value is returned by Ackermann's function when the values 2 and 3,
