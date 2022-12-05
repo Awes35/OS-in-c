@@ -17,5 +17,6 @@
 extern void initSwapStructs();
 extern void vmTlbHandler();
 extern void setInterrupts(int onOrOff);
+extern void switchContext(state_t returnState); 
 
 #endif
