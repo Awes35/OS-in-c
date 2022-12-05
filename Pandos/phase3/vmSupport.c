@@ -54,10 +54,10 @@ passed into the function as a parameter if one wishes to gain mutual exclusion, 
 semaphore whose pointer is passed into the function if one wishes to relinquish mutual exclusion. */
 void mutex(int opCode, int *semaphore){
 	if (opCode == TRUE){ /* if the parameter passed in is 1, meaning one wishes to gain mutual exclusion */
-		SYSCALL(SYSNUM3, semaphore, 0, 0); /* issuing a SYS 3 (i.e., performing a P operation) on the desired semaphore */
+		SYSCALL(SYS3NUM, semaphore, 0, 0); /* issuing a SYS 3 (i.e., performing a P operation) on the desired semaphore */
 	}
 	else{ /* the parameter passed in is 0, meaning one wishes to lose mutual exclusion */
-		SYSCALL(SYSNUM4, semaphore, 0, 0); /* issuing a SYS 4 (i.e., performing a V operation) on the desired semaphore */
+		SYSCALL(SYS4NUM, semaphore, 0, 0); /* issuing a SYS 4 (i.e., performing a V operation) on the desired semaphore */
 	}
 }
 
@@ -80,7 +80,7 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 	blockNum = missingPgNum; /* initializing the device block number that we will place in the COMMAND field of the correct flash device later on */
 
 	mutex(TRUE, &devSemaphores[index]); /* calling the funciton that gains mutual exclusion exclusion over process pid's flash device's device register */
-	temp->devreg[index].d_data0 = frameAddr; /* writing the flash device's DATA0 field with the selected frame number's starting address */
+	temp->devreg[index].d_data0 = frameAddress; /* writing the flash device's DATA0 field with the selected frame number's starting address */
 
 	if (readOrWrite == TRUE){ /* if the caller wishes to write to the flash device */
 		setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
@@ -168,7 +168,7 @@ void vmTlbHandler(){
 		setInterrupts(FALSE); /* calling the function that disables interrupts for the Status register so we can update the page table entry and its cached counterpart in the TLB atomically */
 		swapPoolTbl[frameNo].ownerProc->entryHI = (swapPoolTbl[frameNo].ownerProc->entryHI) & VBITOFF; /* updating the page table for the process occupying the frame by marking the entry as not valid */
 		TLBCLR(); /* erasing all of the entries in the TLB to ensure cache consistency */
-		setInterrupts(TRUE) /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
+		setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
 		flashOperation(WRITE, swapPoolTbl[frameNo].asid, frameAddr, missingPgNo); /* calling the internal helper function to update the correct process' backing store */
 	}
 
