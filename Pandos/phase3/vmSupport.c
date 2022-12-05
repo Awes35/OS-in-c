@@ -30,7 +30,6 @@
 /* function declarations */
 HIDDEN void mutex(int opCode); /* function declaration for the function that is responsible for gaining or losing mutual exclusion over the Swap Pool table */
 HIDDEN void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingPgNum); /* function declaration for the function that is responsible for reading or writing to a flash device */
-HIDDEN void switchContext(state_t returnState); /* function declaration for the function that returns control back to a particular process whose processor state is returnState */
 
 /* declaring variables that are global to this module */
 int swapSem; /* mutual exclusion semaphore that controls access to the Swap Pool data structure */
