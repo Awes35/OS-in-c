@@ -18,7 +18,7 @@
 #include "../h/types.h"
 #include "../h/const.h"
 #include "../h/pcb.h"
-#include "../h/scheduler.h"
+#include "../h/scheduler.h" /* ?? */
 #include "../h/exceptions.h"
 #include "../h/interrupts.h"
 #include "../h/initial.h"
@@ -78,29 +78,24 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 	index = ((FLASHINT - OFFSET) * DEVPERINT) + (pid - 1); /* initializing the index in devreg (and in devSemaphores) of process pid's flash device/backing store */
 	blockNum = missingPgNum; /* initializing the device block number that we will place in the COMMAND field of the correct flash device later on */
 
-	mutex(TRUE, &devSemaphores[index]); /* calling the funciton that gains mutual exclusion exclusion over process pid's flash device's device register */
+	mutex(TRUE, &devSemaphores[index]); /* calling the function that gains mutual exclusion exclusion over process pid's flash device's device register */
 	temp->devreg[index].d_data0 = frameAddress; /* writing the flash device's DATA0 field with the selected frame number's starting address */
 
-	if (readOrWrite == TRUE){ /* if the caller wishes to write to the flash device */
-		setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
-		temp->devreg[index].d_command = WRITEBLK | (blockNum << BLKNUMSHIFT); /* writing the device's COMMAND field with the device block number and the command to write */
-	}
-	else{ /* the caller wishes to read the flash device */
+	if (readOrWrite == TRUE){ /* if the caller wishes to read from the flash device */
 		setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
 		temp->devreg[index].d_command = READBLK | (blockNum << BLKNUMSHIFT); /* writing the device's COMMAND field with the device block number and the command to read */
+	}
+	else{ /* the caller wishes to write to the flash device */
+		setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
+		temp->devreg[index].d_command = WRITEBLK | (blockNum << BLKNUMSHIFT); /* writing the device's COMMAND field with the device block number and the command to write */
 	}
 
 	SYSCALL(SYS5NUM, LINE4, (pid - 1), readOrWrite); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
 
-	if (readOrWrite == TRUE){ /* if the caller wished to read the flash device */
-		statusCode = temp->devreg[index].t_recv_status; /* setting the status code from the device register associated with process pid's flash device */
-	}
-	else{ /* the caller wished to write to the flash device */
-		statusCode = temp->devreg[index].t_transm_status; /* setting the status code from the device register associated with process pid's flash device */
-	}
+	statusCode = temp->devreg[index].d_status; /* setting the status code from the device register associated with process pid's flash device */
 	
-	if (statusCode != READY){ /* if the write or write operation led to an error status */
+	if (statusCode != READY){ /* if the read or write operation led to an error status */
 		programTrapHandler(); /* invoking the function that handles program traps in phase 3 */
 	}
 
