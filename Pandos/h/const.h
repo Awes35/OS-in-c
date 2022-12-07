@@ -64,6 +64,9 @@
 #define	READBLK				2
 #define	WRITEBLK			3
 
+/* printer device unique COMMAND codes */
+#define PRINTCHR            2
+
 /* Memory related constants */
 #define KSEG0           0x00000000 /* the installed EPROM - BIOS memory region */
 #define KSEG1           0x20000000 /* the start of kernel n OS */
@@ -98,6 +101,9 @@
 
 /* Minimum int field for the value of a semaphore address in the ASL */
 #define LEASTINT	0x00000000
+
+/* Maximum string length for transmitting to device */
+#define MAXSTRLEN    128
 
 /* Maximum number of external (sub)devices in UMPS3, plus one additional semaphore to support
 the Pseudo-clock */
@@ -199,6 +205,11 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 #define	SYS6NUM			6
 #define	SYS7NUM			7
 #define	SYS8NUM			8
+#define SYS9NUM         9
+#define SYS10NUM        10
+#define SYS11NUM        11
+#define SYS12NUM        12
+#define SYS13NUM        13
 
 /* Constant representing the lower bound on which we unblock semaphores and remove them from the ASL */
 #define	SEMA4THRESH		0
@@ -213,7 +224,7 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 #define	STATUSON		0x0F
 
 /* Phase 3 constant that defines how many user processes can be running at once */
-#define UPROCMAX		1
+#define UPROCMAX		8
 
 /* Constant representing how many page table entries there are per page table */
 #define	ENTRIESPERPG	32
@@ -224,6 +235,7 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 
 /* Constant that represents the number of sharable peripheral I/O devices */
 #define	MAXIODEVICES	48		
+
 
 /* Constant that represents the ASID of a frame is unoccupied */
 #define	EMPTYFRAME		-1
