@@ -17,7 +17,7 @@
 extern void initSwapStructs();
 extern void vmTlbHandler();
 extern void setInterrupts(int onOrOff);
-extern void switchContext(state_t returnState); 
+extern void switchContext(state_PTR returnState); 
 extern int swapSem; /* mutual exclusion semaphore that controls access to the Swap Pool data structure */
 
 #endif
