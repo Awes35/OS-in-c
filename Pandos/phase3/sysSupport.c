@@ -91,7 +91,7 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID){
         error if strLength > 128
     */
     proc_logicalAddr = KUSEG + procASID;
-    if ((virtAddr < proc_logicalAddr) || (strLength < 0) || (strLength > MAXSTRLEN)){
+    if ((virtAddr < KUSEG) || (strLength < 0) || (strLength > MAXSTRLEN)){
         SYSCALL(SYS9NUM, 0, 0, 0); /* issue a SYS9 call to terminate the u-proc, as the request info is an error */
     }
 
@@ -211,9 +211,8 @@ void sysTrapHandler(){
 void programTrapHandler(){
     /* if the process to be terminated is currently holding mutual exclusion on a Support Level semaphore (Swap Pool semaphore),
         mutual exclusion must first be released (sys4) before invoking the Nucleus terminate command (sys2). */
-    if (swapSem == 1){ /* ALSO CHECK HOLDING MUTUAL EXCLUSION OVER DEVICESEMAPHORE? */
-        mutex(FALSE, &swapSem); /* calling the internal helper function to release mutual exclusion over the Swap Pool table */
-    }
+
+    /* CHECK HOLDING MUTUAL EXCLUSION OVER POOLSEMAPHORE, DEVICESEMAPHORE? */
 
     /* terminate process in an orderly fashion -- perform same operations as a sys9 */
     SYSCALL(SYS4NUM, &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
