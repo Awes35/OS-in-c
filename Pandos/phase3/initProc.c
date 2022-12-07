@@ -95,7 +95,7 @@ void test(){
 		returnCode = SYSCALL(SYS1NUM, (int) (&initialState), (int) (&supportStructArr[pid])); /* issuing the SYS 1 to launch the new U-proc and assigning the function's return value to returnCode */
 
 		if (returnCode != SUCCESSCONST){ /* if the new U-proc was not launched successfully */
-			SYSCALL(SYSNUM2, 0, 0, 0); /* terminate the process */
+			SYSCALL(SYS2NUM, 0, 0, 0); /* terminate the process */
 		}
 	}
 
@@ -107,5 +107,5 @@ void test(){
 		SYSCALL(SYS3NUM, &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */
 	}
 
-	SYSCALL(SYSNUM2, 0, 0, 0); /* terminating the instantiator process, as all of its U-proc "children" processes have concluded */
+	SYSCALL(SYS2NUM, 0, 0, 0); /* terminating the instantiator process, as all of its U-proc "children" processes have concluded */
 }
