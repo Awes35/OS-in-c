@@ -118,8 +118,8 @@ void initSwapStructs(){
 
 /* Function that returns control back to a particular process whose processor state is returnState. This function is used
 primarily as a debugging function. */
-void switchContext(state_t returnState){
-	LDST(&returnState); /* returning control back to the desired process */
+void switchContext(state_PTR returnState){
+	LDST(returnState); /* returning control back to the desired process */
 }
 
 /* Function that handles page faults that are passed up by the Nucleus. Note that this function utilizes a FIFO page replacement
@@ -134,7 +134,7 @@ TLB. Finally, the function releases mutual exclusion over the Swap Pool table be
 to retry the instruction that caused the page fault. */
 void vmTlbHandler(){
 	/* declaring local variables */
-	state_t oldState; /* a pointer to the saved exception state responsible for the TLB exception */
+	state_PTR oldState; /* a pointer to the saved exception state responsible for the TLB exception */
 	support_t *curProcSupportStruct; /* a pointer to the Current Process' Support Structure */
 	memaddr frameAddr; /* the address of the frame selected by the page replacement algorithm to satisfy the page fault */
 	int exceptionCode; /* the exception code */
@@ -142,8 +142,8 @@ void vmTlbHandler(){
 	HIDDEN int frameNo; /* the frame number used to satisfy a page fault */
 
 	curProcSupportStruct = SYSCALL(SYS8NUM, 0, 0, 0); /* obtaining a pointer to the Current Process' Support Structure */
-	oldState = curProcSupportStruct->sup_exceptState[PGFAULTEXCEPT]; /* initializing oldState to the state found in the Current Process' Support Structure for TLB exceptions */
-	exceptionCode = ((oldState.s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
+	oldState = &(curProcSupportStruct->sup_exceptState[PGFAULTEXCEPT]); /* initializing oldState to the state found in the Current Process' Support Structure for TLB exceptions */
+	exceptionCode = ((oldState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
 
 	if (exceptionCode == TLBMODEXCCODE){ /* if the exception code indicates that a TLB-Modification exception occurred */
 		programTrapHandler(); /* invoking the function that handles program traps in phase 3 */
@@ -152,7 +152,7 @@ void vmTlbHandler(){
 	mutex(TRUE, &swapSem); /* calling the internal helper function to gain mutual exclusion over the Swap Pool table */
 
 	/* determining the mising page number found in the saved exception state's EntryHI field */
-	missingPgNo = ((oldState.s_entryHI) & GETVPN) >> VPNSHIFT; /* initializing the missing page number to the VPN specified in the EntryHI field of the saved exception state */
+	missingPgNo = ((oldState->s_entryHI) & GETVPN) >> VPNSHIFT; /* initializing the missing page number to the VPN specified in the EntryHI field of the saved exception state */
 	missingPgNo = missingPgNo % ENTRIESPERPG; /* using the hash function to determine the page number of the missing TLB entry from the VPN calculated in the previous line */
 
 	frameNo = (frameNo + 1) % MAXFRAMECNT; /* selecting a frame to satisfy the page fault, as determined by Pandos' FIFO page replacement algorithm */
