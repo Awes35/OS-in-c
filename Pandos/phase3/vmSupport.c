@@ -95,11 +95,12 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 
 	statusCode = temp->devreg[index].d_status; /* setting the status code from the device register associated with process pid's flash device */
 	
+	mutex(FALSE, &devSemaphores[index]); /* calling the function that releases mutual exclusion over process pid's flash device's device register */
+	
 	if (statusCode != READY){ /* if the read or write operation led to an error status */
 		programTrapHandler(); /* invoking the function that handles program traps in phase 3 */
 	}
 
-	mutex(FALSE, &devSemaphores[index]); /* calling the function that releases mutual exclusion over process pid's flash device's device register */
 }
 
 /* Function that initializes the Swap Pool table and the Swap Pool semaphore (i.e., the variables that are global
