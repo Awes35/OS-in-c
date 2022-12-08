@@ -28,7 +28,6 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
-HIDDEN void mutex(int opCode, int *semaphore); /* function declaration for the function that is responsible for gaining or losing mutual exclusion over the Swap Pool table */
 HIDDEN void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingPgNum); /* function declaration for the function that is responsible for reading or writing to a flash device */
 
 /* declaring variables that are global to this module */
