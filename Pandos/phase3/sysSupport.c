@@ -55,7 +55,7 @@ function while in Kernel-mode. */
 void terminateUProc(){
     /* We are in kernel-mode already */
 
-    SYSCALL(SYS4NUM, &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
+    SYSCALL(SYS4NUM, (int*) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
     SYSCALL(SYS2NUM, 0, 0, 0); /* issuing a SYS2 to terminate the u-proc */
 }
 
@@ -67,7 +67,7 @@ void getTOD(state_PTR savedState){
 
     STCK(currTOD); /* storing the current value on the Time of Day clock into currTOD */
     savedState->s_v0 = currTOD; /* placing the current system time (since last reboot) in v0 */
-    switchContext(savedState); /* returning control to the Current Process by loading its (updated) processor state */
+    switchUContext(savedState); /* returning control to the Current Process by loading its (updated) processor state */
 }
 
 
@@ -96,7 +96,7 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
 	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
     index = ((PRNTINT - OFFSET) * DEVPERINT) + (procASID - 1); /* index of printer device associated with the u-proc */
     
-    mutex(TRUE, &devSemaphores[index]); /* calling the function that gains mutual exclusion over process's printer device's device register */
+    mutex(TRUE, (int*) (&devSemaphores[index])); /* calling the function that gains mutual exclusion over process's printer device's device register */
 	
     int i;
     for (i = 0; i < strLength; i++){
@@ -122,8 +122,8 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
         savedState->s_v0 = strLength; /* return length of string transmitted */
     }
 
-	mutex(FALSE, &devSemaphores[index]); /* calling the function that releases mutual exclusion over process's printer device's device register */
-    switchContext(savedState); /* return */
+	mutex(FALSE, (int*) (&devSemaphores[index])); /* calling the function that releases mutual exclusion over process's printer device's device register */
+    switchUContext(savedState); /* return */
 }
 
 
