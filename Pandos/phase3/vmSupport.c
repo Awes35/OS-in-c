@@ -98,6 +98,7 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 	mutex(FALSE, &devSemaphores[index]); /* calling the function that releases mutual exclusion over process pid's flash device's device register */
 	
 	if (statusCode != READY){ /* if the read or write operation led to an error status */
+		mutex(FALSE, &swapSem); /* calling the internal helper function to make sure we release mutual exclusion over the Swap Pool table */
 		programTrapHandler(); /* invoking the function that handles program traps in phase 3 */
 	}
 
