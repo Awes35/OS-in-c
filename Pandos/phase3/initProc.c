@@ -92,7 +92,7 @@ void test(){
 
 		supportStructArr[pid].sup_privatePgTbl[ENTRIESPERPG - 1].entryHI = ALLOFF | (STACKPGVPN << VPNSHIFT) | (pid << ASIDSHIFT); /* (re)initializing the stack page's EntryHI fields in the U-proc's Page Table */
 
-		returnCode = SYSCALL(SYS1NUM, (int) (&initialState), (int) (&supportStructArr[pid]), 0); /* issuing the SYS 1 to launch the new U-proc and assigning the function's return value to returnCode */
+		returnCode = SYSCALL(SYS1NUM, (state_PTR) (&initialState), (support_t *) (&supportStructArr[pid]), 0); /* issuing the SYS 1 to launch the new U-proc and assigning the function's return value to returnCode */
 
 		if (returnCode != SUCCESSCONST){ /* if the new U-proc was not launched successfully */
 			SYSCALL(SYS2NUM, 0, 0, 0); /* terminate the process */
