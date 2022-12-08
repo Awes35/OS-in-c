@@ -26,7 +26,7 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
-HIDDEN void initProcessorState(state_t newState); /* function declaration for the function that is responsible for initializing the processor state for a U-proc */
+HIDDEN void initProcessorState(state_PTR newState); /* function declaration for the function that is responsible for initializing the processor state for a U-proc */
 
 /* declaring the phase 3 global variables */
 int masterSemaphore; /* semaphore to be V'd and P'd by test as a means to ensure test terminates in a way so that the PANIC() function is not called */
@@ -38,10 +38,10 @@ int devSemaphores[MAXIODEVICES]; /* array of mutual exclusion semaphores; each p
 /* Function that initializes the processor state (which is passed into the function as a parameter) for a U-proc. This function sets the address of the
 state's PC (and t9 register) to 0x8000.00B0, which is the address of the start of the .text section, sets the SP to 0xC000.0000, and sets the Status register
 for user-mode with all interrupts and the processor Local Timer enabled. */
-void initProcessorState(state_t newState){
-	newState.s_pc = initialState.s_t9 = UPROCPC; /* initializing the U-proc's PC (and the contents of the U-proc's t9 register) to 0x800000B0 */
-	newState.s_sp = UPROCSP; /* initializing the U-proc's stack pointer to 0xC0000000 */
-	newState.s_status = ALLOFF | USERPON | IEPON | PLTON | IMON; /* initializing the U-procs' status register so that interrupts are enabled, user-mode is on and the PLT is enabled */
+void initProcessorState(state_PTR newState){
+	newState->s_pc = newState->s_t9 = UPROCPC; /* initializing the U-proc's PC (and the contents of the U-proc's t9 register) to 0x800000B0 */
+	newState->s_sp = UPROCSP; /* initializing the U-proc's stack pointer to 0xC0000000 */
+	newState->s_status = ALLOFF | USERPON | IEPON | PLTON | IMON; /* initializing the U-procs' status register so that interrupts are enabled, user-mode is on and the PLT is enabled */
 }
 
 /* Function that represents the instantiator process. The function initializes the Phase 3 global variables, calls the function in 
@@ -63,7 +63,7 @@ void test(){
 	}
 
 	initSwapStructs(); /* calling the function in the vmSupport.c module that initializes virtual memory */
-	initProcessorState(initialState); /* calling the internal function that initializes the processor state of a given U-proc */
+	initProcessorState(&initialState); /* calling the internal function that initializes the processor state of a given U-proc */
 
 	/* initializing UPROCMAX U-procs */
 	for (pid = 1; pid < UPROCMAX + 1; pid++){
@@ -77,9 +77,9 @@ void test(){
 																											address of this phase's general exception handler */
 		supportStructArr[pid].sup_exceptContext[PGFAULTEXCEPT].c_status = ALLOFF | IEPON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
 		supportStructArr[pid].sup_exceptContext[GENERALEXCEPT].c_status = ALLOFF | IEPON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
-		supportStructArr[pid].sup_exceptContext[PGFAULTEXCEPT].c_stackPtr = &(supportStructArr[pid].sup_stackTLB[TOPOFSTACK]); /* setting the SP field for handling page fault exceptions to the address
+		supportStructArr[pid].sup_exceptContext[PGFAULTEXCEPT].c_stackPtr = (int) &(supportStructArr[pid].sup_stackTLB[TOPOFSTACK]); /* setting the SP field for handling page fault exceptions to the address
 																																of the top of the stack reserved for handling TLB exceptions */
-		supportStructArr[pid].sup_exceptContext[GENERALEXCEPT].c_stackPtr = &(supportStructArr[pid].sup_stackGen[TOPOFSTACK]); /* setting the SP field for handling non-page fault exceptions to the address
+		supportStructArr[pid].sup_exceptContext[GENERALEXCEPT].c_stackPtr = (int) &(supportStructArr[pid].sup_stackGen[TOPOFSTACK]); /* setting the SP field for handling non-page fault exceptions to the address
 																																of the top of the stack reserved for handling such exceptions */																												
 		supportStructArr[pid].sup_asid = pid; /* initializing the U-proc's ASID */
 
@@ -92,7 +92,7 @@ void test(){
 
 		supportStructArr[pid].sup_privatePgTbl[ENTRIESPERPG - 1].entryHI = ALLOFF | (STACKPGVPN << VPNSHIFT) | (pid << ASIDSHIFT); /* (re)initializing the stack page's EntryHI fields in the U-proc's Page Table */
 
-		returnCode = SYSCALL(SYS1NUM, (int) (&initialState), (int) (&supportStructArr[pid])); /* issuing the SYS 1 to launch the new U-proc and assigning the function's return value to returnCode */
+		returnCode = SYSCALL(SYS1NUM, (int) (&initialState), (int) (&supportStructArr[pid]), 0); /* issuing the SYS 1 to launch the new U-proc and assigning the function's return value to returnCode */
 
 		if (returnCode != SUCCESSCONST){ /* if the new U-proc was not launched successfully */
 			SYSCALL(SYS2NUM, 0, 0, 0); /* terminate the process */
@@ -104,7 +104,7 @@ void test(){
 	/* performing a P operation on masterSemaphore UPROCMAX number of times in order to contribute to a more graceful conclusion of test() */
 	int k;
 	while (k < UPROCMAX){
-		SYSCALL(SYS3NUM, &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */
+		SYSCALL(SYS3NUM, (int*) &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */
 	}
 
 	SYSCALL(SYS2NUM, 0, 0, 0); /* terminating the instantiator process, as all of its U-proc "children" processes have concluded */
