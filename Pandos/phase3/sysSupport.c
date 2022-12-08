@@ -36,8 +36,8 @@ void vmGeneralExceptionHandler(){
 	support_t *curProcSupportStruct; /* a pointer to the Current Process' Support Structure */
 	int exceptionCode; /* the exception code */
 
-	curProcSupportStruct = SYSCALL(SYS8NUM, 0, 0, 0); /* obtaining a pointer to the Current Process' Support Structure */
-	savedState = curProcSupportStruct->sup_exceptState[GENERALEXCEPT]; /* initializing savedState to the state found in the Current Process' Support Structure for General (non-TLB) exceptions */
+	curProcSupportStruct = (support_t *) SYSCALL(SYS8NUM, 0, 0, 0); /* obtaining a pointer to the Current Process' Support Structure */
+	savedState = &(curProcSupportStruct->sup_exceptState[GENERALEXCEPT]); /* initializing savedState to the state found in the Current Process' Support Structure for General (non-TLB) exceptions */
 	exceptionCode = ((savedState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
 
 	if (exceptionCode == SYSCONST){ /* if the exception code is 8 */
@@ -55,7 +55,7 @@ function while in Kernel-mode. */
 void terminateUProc(){
     /* We are in kernel-mode already */
 
-    SYSCALL(SYS4NUM, (int*) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
+    SYSCALL(SYS4NUM, (int *) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
     SYSCALL(SYS2NUM, 0, 0, 0); /* issuing a SYS2 to terminate the u-proc */
 }
 
@@ -96,7 +96,7 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
 	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
     index = ((PRNTINT - OFFSET) * DEVPERINT) + (procASID - 1); /* index of printer device associated with the u-proc */
     
-    mutex(TRUE, (int*) (&devSemaphores[index])); /* calling the function that gains mutual exclusion over process's printer device's device register */
+    mutex(TRUE, (int *) (&devSemaphores[index])); /* calling the function that gains mutual exclusion over process's printer device's device register */
 	
     int i;
     for (i = 0; i < strLength; i++){
@@ -122,8 +122,8 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
         savedState->s_v0 = strLength; /* return length of string transmitted */
     }
 
-	mutex(FALSE, (int*) (&devSemaphores[index])); /* calling the function that releases mutual exclusion over process's printer device's device register */
-    switchUContext(savedState); /* return */
+	mutex(FALSE, (int *) (&devSemaphores[index])); /* calling the function that releases mutual exclusion over process's printer device's device register */
+    switchUContext(savedState); /* return control back to the Current Process */
 }
 
 
@@ -148,7 +148,7 @@ void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct){
         case SYS11NUM: /* if the sysNum indicates a SYS11 event */
             /* a1 should contain the virtual address of the first character of the string to be transmitted */
 			/* a2 should contain the length of this string */
-            writeToPrinter((char *) (savedState->s_a1), (savedState->s_a2), procASID, savedState); /* invoking the internal function that handles SYS11 events */
+            writeToPrinter((char *) (savedState->s_a1), (int) (savedState->s_a2), procASID, savedState); /* invoking the internal function that handles SYS11 events */
     }
 }
 
