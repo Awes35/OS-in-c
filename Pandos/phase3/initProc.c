@@ -103,8 +103,9 @@ void test(){
 
 	/* performing a P operation on masterSemaphore UPROCMAX number of times in order to contribute to a more graceful conclusion of test() */
 	int k;
-	while (k < UPROCMAX){
-		SYSCALL(SYS3NUM, (int*) &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */
+	for (k = 0; k < UPROCMAX; k++){
+		SYSCALL(SYS3NUM, (int *) &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */
+		
 	}
 
 	SYSCALL(SYS2NUM, 0, 0, 0); /* terminating the instantiator process, as all of its U-proc "children" processes have concluded */
