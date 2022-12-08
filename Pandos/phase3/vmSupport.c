@@ -28,7 +28,7 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
-HIDDEN void mutex(int opCode); /* function declaration for the function that is responsible for gaining or losing mutual exclusion over the Swap Pool table */
+HIDDEN void mutex(int opCode, int *semaphore); /* function declaration for the function that is responsible for gaining or losing mutual exclusion over the Swap Pool table */
 HIDDEN void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingPgNum); /* function declaration for the function that is responsible for reading or writing to a flash device */
 
 /* declaring variables that are global to this module */
@@ -78,7 +78,7 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 	index = ((FLASHINT - OFFSET) * DEVPERINT) + (pid - 1); /* initializing the index in devreg (and in devSemaphores) of process pid's flash device/backing store */
 	blockNum = missingPgNum; /* initializing the device block number that we will place in the COMMAND field of the correct flash device later on */
 
-	mutex(TRUE, &devSemaphores[index]); /* calling the function that gains mutual exclusion exclusion over process pid's flash device's device register */
+	mutex(TRUE, (int*) &(devSemaphores[index])); /* calling the function that gains mutual exclusion exclusion over process pid's flash device's device register */
 	temp->devreg[index].d_data0 = frameAddress; /* writing the flash device's DATA0 field with the selected frame number's starting address */
 
 	if (readOrWrite == TRUE){ /* if the caller wishes to read from the flash device */
@@ -95,10 +95,10 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 
 	statusCode = temp->devreg[index].d_status; /* setting the status code from the device register associated with process pid's flash device */
 	
-	mutex(FALSE, &devSemaphores[index]); /* calling the function that releases mutual exclusion over process pid's flash device's device register */
+	mutex(FALSE, (int*) &(devSemaphores[index])); /* calling the function that releases mutual exclusion over process pid's flash device's device register */
 	
 	if (statusCode != READY){ /* if the read or write operation led to an error status */
-		mutex(FALSE, &swapSem); /* calling the internal helper function to make sure we release mutual exclusion over the Swap Pool table */
+		mutex(FALSE, (int*) &swapSem); /* calling the internal helper function to make sure we release mutual exclusion over the Swap Pool table */
 		programTrapHandler(); /* invoking the function that handles program traps in phase 3 */
 	}
 
@@ -120,7 +120,7 @@ void initSwapStructs(){
 
 /* Function that returns control back to a particular process whose processor state is returnState. This function is used
 primarily as a debugging function. */
-void switchContext(state_PTR returnState){
+void switchUContext(state_PTR returnState){
 	LDST(returnState); /* returning control back to the desired process */
 }
 
@@ -151,7 +151,7 @@ void vmTlbHandler(){
 		programTrapHandler(); /* invoking the function that handles program traps in phase 3 */
 	}
 
-	mutex(TRUE, &swapSem); /* calling the internal helper function to gain mutual exclusion over the Swap Pool table */
+	mutex(TRUE, (int*) &swapSem); /* calling the internal helper function to gain mutual exclusion over the Swap Pool table */
 
 	/* determining the mising page number found in the saved exception state's EntryHI field */
 	missingPgNo = ((savedState->s_entryHI) & GETVPN) >> VPNSHIFT; /* initializing the missing page number to the VPN specified in the EntryHI field of the saved exception state */
@@ -183,6 +183,6 @@ void vmTlbHandler(){
 
 	TLBCLR(); /* erasing all of the entries in the TLB to ensure cache consistency */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
-	mutex(FALSE, &swapSem); /* calling the internal helper function to release mutual exclusion over the Swap Pool table */
-	switchContext(savedState); /* calling the internal helper function to return control to the Current Process to retry the instruction that caused the page fault */
+	mutex(FALSE, (int*) &swapSem); /* calling the internal helper function to release mutual exclusion over the Swap Pool table */
+	switchUContext(savedState); /* calling the internal helper function to return control to the Current Process to retry the instruction that caused the page fault */
 }
