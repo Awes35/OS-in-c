@@ -43,7 +43,7 @@ void vmGeneralExceptionHandler(){
 	if (exceptionCode == SYSCONST){ /* if the exception code is 8 */
 		sysTrapHandler(savedState, curProcSupportStruct); /* calling the Nucleus' SYSCALL exception handler function */
 	}
-    else if(exceptionCode > TLBCONST || exceptionCode == INTCONST){ /* avoid exception codes 1,2,3 pertaining to TLB exceptions */ 
+    if (exceptionCode > TLBCONST || exceptionCode == INTCONST){ /* avoid exception codes 1,2,3 pertaining to TLB exceptions */ 
         programTrapHandler();
     }
 
@@ -137,7 +137,7 @@ void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct){
 
 	savedState->s_pc = savedState->s_pc + WORDLEN; /* increment the proc's PC to continue with the next instruction when it resumes running */
 
-	/* enumerating the sysNum values (9-13) and passing control to the respective function to handle it */
+	/* enumerating the sysNum values (9-11) and passing control to the respective function to handle it */
 	switch (sysNum){ 
         case SYS9NUM: /* if the sysNum indicates a SYS9 event */
             terminateUProc(); /* invoking the internal function that handles SYS9 events */
@@ -149,15 +149,6 @@ void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct){
             /* a1 should contain the virtual address of the first character of the string to be transmitted */
 			/* a2 should contain the length of this string */
             writeToPrinter((char *) (savedState->s_a1), (savedState->s_a2), procASID, savedState); /* invoking the internal function that handles SYS11 events */
-        
-        case SYS12NUM: /* if the sysNum indicates a SYS12 event */
-            /* a1 should contain the virtual address of the first character of the string to be transmitted */
-			/* a2 should contain the length of this string */
-            writeToTerminal((char *) (savedState->s_a1), (savedState->s_a2), procASID, savedState); /* invoking the internal function that handles SYS12 events */
-        
-        case SYS13NUM: /* if the sysNum indicates a SYS13 event */
-            /* a1 should contain the virtual address of a string buffer where the data read should be placed */
-            readFromTerminal((char *) (savedState->s_a1), savedState); /* invoking the internal function that handles SYS13 events */
     }
 }
 
