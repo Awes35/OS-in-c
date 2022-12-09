@@ -57,6 +57,7 @@
 #define UNINSTALLED		0
 #define READY			    1
 #define BUSY			    3
+#define CHARTRANSM    5
 
 /* device common COMMAND codes */
 #define RESET			    0
@@ -64,8 +65,9 @@
 #define	READBLK				2
 #define	WRITEBLK			3
 
-/* printer device unique COMMAND codes */
+/* printer and terminal device unique COMMAND codes */
 #define PRINTCHR            2
+#define TRANSMITCHAR        2
 
 /* Memory related constants */
 #define KSEG0           0x00000000 /* the installed EPROM - BIOS memory region */
@@ -273,8 +275,8 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 /* Constant that represents the Swap Pool's starting address */
 #define	SWAPPOOLADDR	0x20020000
 
-/* Constants for setting the COMMAND field of a flash device */
-#define	BLKNUMSHIFT		8				/* Constant that represents the number of bits needed to shift a flash device's block number over to the left */
+/* Constant that represents the number of bits needed to shift a flash device's block number over to the left */
+#define	BLKNUMSHIFT		8				
 
 /* Constant for setting all of the bits to 0 in the EntryLo portion of a TLB entry except for the V bit */
 #define	VBITON			0x000002		
@@ -284,5 +286,8 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 
 /* Constant for setting all of the bits to 1 in the EntryLo portion of a TLB entry except for the PFN field */
 #define	PFNCLEAR		0x00000F	
+
+/* Constant that represents the number of bits needed to shift a terminal device's TRANSM_COMMAND.TRANSM-CHAR field over to the left */
+#define TERMSHIFT   8
 
 #endif
