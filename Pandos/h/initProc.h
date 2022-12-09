@@ -18,7 +18,7 @@
 
 extern int masterSemaphore; /* semaphore to be V'd and P'd by test as a means to ensure test terminates in a way so that the PANIC()
 							function is not called */
-int devSemaphores[MAXIODEVICES]; /* array of mutual exclusion semaphores; each potentially sharable peripheral I/O device has one
+extern int devSemaphores[MAXIODEVICES]; /* array of mutual exclusion semaphores; each potentially sharable peripheral I/O device has one
 									semaphore defined for it. Note that this array will be implemented so that terminal device
 									semaphores are last and terminal device semaphores	associated with a read operation in the array
 									come before those associated with a write operation. */
