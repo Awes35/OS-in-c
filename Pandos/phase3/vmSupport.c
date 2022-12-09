@@ -52,10 +52,10 @@ passed into the function as a parameter if one wishes to gain mutual exclusion, 
 semaphore whose pointer is passed into the function if one wishes to relinquish mutual exclusion. */
 void mutex(int opCode, int *semaphore){
 	if (opCode == TRUE){ /* if the parameter passed in is 1, meaning one wishes to gain mutual exclusion */
-		SYSCALL(SYS3NUM, (int *) semaphore, 0, 0); /* issuing a SYS 3 (i.e., performing a P operation) on the desired semaphore */
+		SYSCALL(SYS3NUM, (unsigned int) semaphore, 0, 0); /* issuing a SYS 3 (i.e., performing a P operation) on the desired semaphore */
 	}
 	else{ /* the parameter passed in is 0, meaning one wishes to lose mutual exclusion */
-		SYSCALL(SYS4NUM, (int *) semaphore, 0, 0); /* issuing a SYS 4 (i.e., performing a V operation) on the desired semaphore */
+		SYSCALL(SYS4NUM, (unsigned int) semaphore, 0, 0); /* issuing a SYS 4 (i.e., performing a V operation) on the desired semaphore */
 	}
 }
 

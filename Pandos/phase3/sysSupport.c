@@ -55,7 +55,7 @@ function while in Kernel-mode. */
 void terminateUProc(){
     /* We are in kernel-mode already */
 
-    SYSCALL(SYS4NUM, (int *) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
+    SYSCALL(SYS4NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
     SYSCALL(SYS2NUM, 0, 0, 0); /* issuing a SYS2 to terminate the u-proc */
 }
 
@@ -88,7 +88,7 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
         error if addr outside of u-proc's logical address space (KUSEG)
         error if strLength < 0
         error if strLength > 128 */
-    if ((virtAddr < KUSEG) || (strLength < 0) || (strLength > MAXSTRLEN)){
+    if (((unsigned int) virtAddr < KUSEG) || (strLength < 0) || (strLength > MAXSTRLEN)){
         SYSCALL(SYS9NUM, 0, 0, 0); /* issue a SYS9 call to terminate the u-proc, as the request info is an error */
     }
 
