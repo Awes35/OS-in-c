@@ -224,7 +224,7 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 #define	STATUSON		0x0F
 
 /* Phase 3 constant that defines how many user processes can be running at once */
-#define UPROCMAX		8
+#define UPROCMAX		1
 
 /* Constant representing how many page table entries there are per page table */
 #define	ENTRIESPERPG	32
