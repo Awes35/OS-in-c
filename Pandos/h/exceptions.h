@@ -15,5 +15,6 @@ extern void sysTrapH ();
 extern void tlbTrapH ();
 extern void pgmTrapH ();
 extern void updateCurrPcb();
+extern void uTLB_RefillHandler();
 
 #endif
