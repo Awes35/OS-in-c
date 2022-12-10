@@ -256,7 +256,6 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 #define	STACKPGVPN		0xBFFFF		
 
 /* Constants that help initialize the EntryLo fields in a U-proc's page table */
-#define	GBITOFF			0x00000100		/* Constant for setting all of the bits to 0 in the EntryLo portion of a TLB entry except for the G bit (i.e., G (bit 8) = 1) */
 #define	DBITON			0x00000400		/* Constant for setting all of the bits to 0 in the EntryLo portion of a TLB entry except for the D bit (i.e., D (bit 10) = 1) */
 
 /* Constant that represents the maximum number of frames in phase 3 */
