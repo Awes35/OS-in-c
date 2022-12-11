@@ -77,9 +77,9 @@ void test(){
 																											address of this phase's general exception handler */
 		supportStructArr[pid].sup_exceptContext[PGFAULTEXCEPT].c_status = ALLOFF | IEPON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
 		supportStructArr[pid].sup_exceptContext[GENERALEXCEPT].c_status = ALLOFF | IEPON | PLTON | IMON; /* enabling interrupts, setting kernel-mode to on and enabling PLT */
-		supportStructArr[pid].sup_exceptContext[PGFAULTEXCEPT].c_stackPtr = (int) &(supportStructArr[pid].sup_stackTLB[TOPOFSTACK]); /* setting the SP field for handling page fault exceptions to the address
+		supportStructArr[pid].sup_exceptContext[PGFAULTEXCEPT].c_stackPtr = (int *) &(supportStructArr[pid].sup_stackTLB[TOPOFSTACK]); /* setting the SP field for handling page fault exceptions to the address
 																																of the top of the stack reserved for handling TLB exceptions */
-		supportStructArr[pid].sup_exceptContext[GENERALEXCEPT].c_stackPtr = (int) &(supportStructArr[pid].sup_stackGen[TOPOFSTACK]); /* setting the SP field for handling non-page fault exceptions to the address
+		supportStructArr[pid].sup_exceptContext[GENERALEXCEPT].c_stackPtr = (int *) &(supportStructArr[pid].sup_stackGen[TOPOFSTACK]); /* setting the SP field for handling non-page fault exceptions to the address
 																																of the top of the stack reserved for handling such exceptions */																												
 		supportStructArr[pid].sup_asid = pid; /* initializing the U-proc's ASID */
 
