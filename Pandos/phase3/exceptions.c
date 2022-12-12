@@ -348,5 +348,5 @@ void uTLB_RefillHandler(){
 	setENTRYLO(currentProc->p_supportStruct->sup_privatePgTbl[missingPgNo].entryLO); /* writing EntryLO of the missing page table entry into the TLB */
 
 	TLBWR(); /* finalizing the writing of the missing page table entry into the TLB */
-	LDST((state_t *) BIOSDATAPAGE); /* returning control back to the Current Proccess to retry the instruction that caused the TLB-Refill event */
+	LDST(oldState); /* returning control back to the Current Proccess to retry the instruction that caused the TLB-Refill event */
 }
