@@ -61,9 +61,16 @@ void test(){
 	for (i = 0; i < MAXIODEVICES; i++){
 		devSemaphores[i] = 1; 
 	}
-
+ 
+	
 	initSwapStructs(); /* calling the function in the vmSupport.c module that initializes virtual memory */
-	initProcessorState(&initialState); /* calling the internal function that initializes the processor state of a given U-proc */
+	/* initProcessorState(&initialState); */ /* calling the internal function that initializes the processor state of a given U-proc */
+
+	/* testing */
+	initialState.s_pc = UPROCPC;
+	initialState.s_t9 = UPROCPC;
+	initialState.s_sp = UPROCSP;
+	initialState.s_status = ALLOFF | USERPON | IEPON | PLTON | IMON;
 
 	/* initializing UPROCMAX U-procs */
 	for (pid = 1; pid < UPROCMAX + 1; pid++){
