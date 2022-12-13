@@ -74,6 +74,7 @@
 #define KSEG1           0x20000000 /* the start of kernel n OS */
 #define KSEG2           0x40000000 
 #define KUSEG           0x80000000
+#define VPNSTART        0x80000    /* constant for KUSEG so that no bits get lost when writing an EntryHI field */
 #define RAMSTART        0x20000000
 #define BIOSDATAPAGE    0x0FFFF000
 #define	PASSUPVECTOR	  0x0FFFF900
