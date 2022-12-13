@@ -40,7 +40,7 @@ is passed into the function. */
 void setInterrupts(int onOrOff){
 	if (onOrOff == TRUE){ /* the caller wishes to enable interrupts */
 		setSTATUS(getSTATUS() | IMON | IECON); /* enabling interrupts for the Status register, as dictated by the function's parameter */
-	}
+	} /* don't need IMON technically */
 	else{ /* the caller wishes to disable interrupts */
 		setSTATUS(getSTATUS() & IECOFF); /* disabling interrupts for the Status register, as dictated by the function's parameter */
 	}
@@ -155,7 +155,7 @@ void vmTlbHandler(){
 	/* determining the mising page number found in the saved exception state's EntryHI field */
 	missingPgNo = ((savedState->s_entryHI) & GETVPN) >> VPNSHIFT; /* initializing the missing page number to the VPN specified in the EntryHI field of the saved exception state */
 	missingPgNo = missingPgNo % ENTRIESPERPG; /* using the hash function to determine the page number of the missing TLB entry from the VPN calculated in the previous line */
-
+ /* 2 TIMES MAXUPROC?? for Swap Pool size */
 	frameNo = (frameNo + 1) % MAXFRAMECNT; /* selecting a frame to satisfy the page fault, as determined by Pandos' FIFO page replacement algorithm */
 	frameAddr = SWAPPOOLADDR + (frameNo * PAGESIZE); /* calculating the frameNo's starting address */
 
