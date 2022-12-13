@@ -161,7 +161,7 @@ void vmTlbHandler(){
 
 	if (swapPoolTbl[frameNo].asid != EMPTYFRAME){ /* if the frame selected by the page replacement algorithm is occupied */
 		setInterrupts(FALSE); /* calling the function that disables interrupts for the Status register so we can update the page table entry and its cached counterpart in the TLB atomically */
-		swapPoolTbl[frameNo].ownerProc->entryHI = (swapPoolTbl[frameNo].ownerProc->entryHI) & VBITOFF; /* updating the page table for the process occupying the frame by marking the entry as not valid */
+		swapPoolTbl[frameNo].ownerProc->entryLO = (swapPoolTbl[frameNo].ownerProc->entryLO) & VBITOFF; /* updating the page table for the process occupying the frame by marking the entry as not valid */
 		TLBCLR(); /* erasing all of the entries in the TLB to ensure cache consistency */
 		setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
 		flashOperation(WRITE, swapPoolTbl[frameNo].asid, frameAddr, missingPgNo); /* calling the internal helper function to update the correct process' backing store */
@@ -177,8 +177,7 @@ void vmTlbHandler(){
 	setInterrupts(FALSE); /* calling the function that disables interrupts for the Status register so we can update the page table entry and the TLB atomically */
 
 	/* updating the appropriate Page Table entry for the Current Process */
-	curProcSupportStruct->sup_privatePgTbl[missingPgNo].entryLO = ((curProcSupportStruct->sup_privatePgTbl[missingPgNo].entryLO) & PFNCLEAR); /* zeroing out the PFN field of the appropriate Page Table entry */
-	curProcSupportStruct->sup_privatePgTbl[missingPgNo].entryLO = (curProcSupportStruct->sup_privatePgTbl[missingPgNo].entryLO | VBITON | (frameAddr << PFNSHIFT)); /* ensuring the V bit is on and upadting the PFN field of the appropriate Page Table entry for the Current Process */
+	curProcSupportStruct->sup_privatePgTbl[missingPgNo].entryLO = frameAddr | VBITON | DBITON; /* ensuring the V bit is on and upadting the PFN field of the appropriate Page Table entry for the Current Process */
 
 	TLBCLR(); /* erasing all of the entries in the TLB to ensure cache consistency */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
