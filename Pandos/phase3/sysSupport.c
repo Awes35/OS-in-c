@@ -102,7 +102,7 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
     int i;
     for (i = 0; i < strLength; i++){
         /* pass info to printer device */
-        temp->devreg[index].d_data0 = *(virtAddr + (i * WORDLEN)); /* pass character to print */
+        temp->devreg[index].d_data0 = *(virtAddr + i); /* pass character to print */
 
         /* prep to write to the printer device */
         setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
@@ -158,7 +158,7 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
     for (i = 0; i < strLength; i++){
         /* prep to write to the terminal device */
         setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
-        temp->devreg[index].t_transm_command = (*(virtAddr + (i * WORDLEN))  << TERMSHIFT) | TRANSMITCHAR; /* placing the command code for printing the character into the terminal's command field (and the character to be printed) */
+        temp->devreg[index].t_transm_command = (*(virtAddr + i)  << TERMSHIFT) | TRANSMITCHAR; /* placing the command code for printing the character into the terminal's command field (and the character to be printed) */
         
         SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
         setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
