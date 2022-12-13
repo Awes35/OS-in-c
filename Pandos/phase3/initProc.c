@@ -39,8 +39,8 @@ int devSemaphores[MAXIODEVICES]; /* array of mutual exclusion semaphores; each p
 state's PC (and t9 register) to 0x8000.00B0, which is the address of the start of the .text section, sets the SP to 0xC000.0000, and sets the Status register
 for user-mode with all interrupts and the processor Local Timer enabled. */
 void initProcessorState(state_PTR newState){
-	newState->s_pc = newState->s_t9 = UPROCPC; /* initializing the U-proc's PC (and the contents of the U-proc's t9 register) to 0x800000B0 */
-	newState->s_sp = UPROCSP; /* initializing the U-proc's stack pointer to 0xC0000000 */
+	newState->s_pc = newState->s_t9 = (memaddr) UPROCPC; /* initializing the U-proc's PC (and the contents of the U-proc's t9 register) to 0x800000B0 */
+	newState->s_sp = (memaddr) UPROCSP; /* initializing the U-proc's stack pointer to 0xC0000000 */
 	newState->s_status = ALLOFF | USERPON | IEPON | PLTON | IMON; /* initializing the U-procs' status register so that interrupts are enabled, user-mode is on and the PLT is enabled */
 }
 
@@ -61,16 +61,9 @@ void test(){
 	for (i = 0; i < MAXIODEVICES; i++){
 		devSemaphores[i] = 1; 
 	}
- 
 	
 	initSwapStructs(); /* calling the function in the vmSupport.c module that initializes virtual memory */
-	/* initProcessorState(&initialState); */ /* calling the internal function that initializes the processor state of a given U-proc */
-
-	/* testing */
-	initialState.s_pc = (memaddr) UPROCPC;
-	initialState.s_t9 = (memaddr) UPROCPC;
-	initialState.s_sp = (int) UPROCSP;
-	initialState.s_status = ALLOFF | USERPON | IEPON | PLTON | IMON;
+	initProcessorState(&initialState); /* calling the internal function that initializes the processor state of a given U-proc */
 
 	/* initializing UPROCMAX U-procs */
 	for (pid = 1; pid < UPROCMAX + 1; pid++){
