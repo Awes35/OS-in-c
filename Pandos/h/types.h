@@ -70,7 +70,7 @@ typedef struct context_t {
 
 /* type representing the table of entries whose frames are in the Swap Pool (i.e., the Swap Pool table)*/
 typedef struct swap_t {
-	unsigned int	asid; 		/* the ASID of the U-Proc whose page is occupying the frame */
+	int				asid; 		/* the ASID of the U-Proc whose page is occupying the frame */
 	int				pgNo; 		/* the logical page number of the occupying page */
 	pte_entry_t		*ownerProc;	/* a pointer to the matching Page Table entry in the Page Table belonging directly to the owner process */
 } swap_t;
