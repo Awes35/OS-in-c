@@ -67,16 +67,16 @@ void test(){
 	/* initProcessorState(&initialState); */ /* calling the internal function that initializes the processor state of a given U-proc */
 
 	/* testing */
-	initialState.s_pc = UPROCPC;
-	initialState.s_t9 = UPROCPC;
-	initialState.s_sp = UPROCSP;
+	initialState.s_pc = (memaddr) UPROCPC;
+	initialState.s_t9 = (memaddr) UPROCPC;
+	initialState.s_sp = (int) UPROCSP;
 	initialState.s_status = ALLOFF | USERPON | IEPON | PLTON | IMON;
 
 	/* initializing UPROCMAX U-procs */
 	for (pid = 1; pid < UPROCMAX + 1; pid++){
 
 		/* completing the initialization of the processor state for the U-proc using the process' unique ID*/
-		initialState.s_entryHI = (ALLOFF | pid) << ASIDSHIFT; /* initializing the U-proc's EntryHi.ASID field to the process' unique ID */
+		initialState.s_entryHI = ALLOFF | (pid << ASIDSHIFT); /* initializing the U-proc's EntryHi.ASID field to the process' unique ID */
 
 		/* initializing the Support Structure for the U-proc */
 		supportStructArr[pid].sup_exceptContext[PGFAULTEXCEPT].c_pc = (memaddr) vmTlbHandler; /* initializing the PC for handling page fault excpetions to the address of this phase's TLB handler */
