@@ -93,7 +93,7 @@ void test(){
 		/* initializing the Page Table for the U-proc */
 		int j;
 		for (j = 0; j < ENTRIESPERPG; j++){
-			supportStructArr[pid].sup_privatePgTbl[j].entryHI = ALLOFF | ((KUSEG + j) << VPNSHIFT) | (pid << ASIDSHIFT); /* initializing the EntryHI fields in the U-proc's Page Table */
+			supportStructArr[pid].sup_privatePgTbl[j].entryHI = ALLOFF | ((VPNSTART + j) << VPNSHIFT) | (pid << ASIDSHIFT); /* initializing the EntryHI fields in the U-proc's Page Table */
 			supportStructArr[pid].sup_privatePgTbl[j].entryLO = ALLOFF | DBITON; /* initializing the EntryLo fields in the U-proc's Page Table so that the G and V bits are off and the D bit is on */
 		}
 
