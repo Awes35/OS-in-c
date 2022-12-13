@@ -22,6 +22,6 @@ extern int devSemaphores[MAXIODEVICES]; /* array of mutual exclusion semaphores;
 									semaphore defined for it. Note that this array will be implemented so that terminal device
 									semaphores are last and terminal device semaphores	associated with a read operation in the array
 									come before those associated with a write operation. */
-extern void test();
+extern void test(); /* function that represents the instantiator process */
 
 #endif
