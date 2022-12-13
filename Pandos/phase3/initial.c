@@ -30,8 +30,6 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
-/* extern void test();*/ /* function declaration for test(), which will be defined in the test file for this module */
-/*extern void uTLB_RefillHandler();*/ /* function declaration for uTLB_RefillHandler(), which will be defined in exceptions.c */
 HIDDEN void generalExceptionHandler(); /* function declaration for the internal function that is responsible for handling general exceptions */
 
 /* declaring global variables */
