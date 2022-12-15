@@ -28,6 +28,7 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
+HIDDEN void debug1(int indx, int blkNum, memaddr frAddress);
 HIDDEN void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingPgNum); /* function declaration for the function that is responsible for reading or writing to a flash device */
 
 /* declaring variables that are global to this module */
@@ -58,6 +59,22 @@ void mutex(int opCode, int *semaphore){
 		SYSCALL(SYS4NUM, (unsigned int) semaphore, 0, 0); /* issuing a SYS 4 (i.e., performing a V operation) on the desired semaphore */
 	}
 }
+
+void debug1(int indx, int blkNum, memaddr frAddress, int processID){
+	int index;
+	int blNumber;
+	memaddr frmAddrss;
+	int prId;
+	
+	index = indx;
+	prId = processID;
+	blNumber = blkNum;
+	frmAddrss = frAddress;
+	setCAUSE(READBLK | (blNumber << BLKNUMSHIFT);
+	setSTATUS(ALLOFF);
+}
+	
+	
 
 /* Function that is responsible for reading or writing to process pid's flash device/backing store. More specifically, this function
 performs five key steps. First off, the function gains mutual exclusion over the appropriate device's device register. Next, it writes
