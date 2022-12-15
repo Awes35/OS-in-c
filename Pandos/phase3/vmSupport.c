@@ -106,6 +106,7 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 		temp->devreg[index].d_command = WRITEBLK | (blockNum << BLKNUMSHIFT); /* writing the device's COMMAND field with the device block number and the command to write */
 	}
 
+	debug1(index, blockNum, frameAddress, pid);
 	SYSCALL(SYS5NUM, LINE4, (pid - 1), readOrWrite); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
 
