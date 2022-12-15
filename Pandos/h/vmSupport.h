@@ -20,9 +20,4 @@ extern void setInterrupts(int onOrOff);
 extern void switchUContext(state_PTR returnState);
 extern void mutex(int opCode, int *semaphore); 
 
-extern int index;
-extern int blNumber;
-extern memaddr frmAddrss;
-extern int prId;
-
 #endif
