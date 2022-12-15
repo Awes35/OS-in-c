@@ -60,12 +60,7 @@ void mutex(int opCode, int *semaphore){
 	}
 }
 
-void debug1(int indx, int blkNum, memaddr frAddress, int processID){
-	int index;
-	int blNumber;
-	memaddr frmAddrss;
-	int prId;
-	
+void debug1(int indx, int blkNum, memaddr frAddress, int processID){	
 	index = indx;
 	prId = processID;
 	blNumber = blkNum;
