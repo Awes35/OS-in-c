@@ -34,6 +34,10 @@ int devSemaphores[MAXIODEVICES]; /* array of mutual exclusion semaphores; each p
 									semaphore defined for it. Note that this array will be implemented so that terminal device semaphores
 									are last and terminal device semaphores	associated with a read operation in the array come before those
 									associated with a write operation. */
+int index;
+int blNumber;
+memaddr frmAddrss;
+int prId;
 
 /* Function that initializes the processor state (which is passed into the function as a parameter) for a U-proc. This function sets the address of the
 state's PC (and t9 register) to 0x8000.00B0, which is the address of the start of the .text section, sets the SP to 0xC000.0000, and sets the Status register
@@ -61,6 +65,11 @@ void test(){
 	for (i = 0; i < MAXIODEVICES; i++){
 		devSemaphores[i] = 1; 
 	}
+	
+	index = -1;
+	blNumber = -1;
+	frmAddrss = 0;
+	prId = -1;
 	
 	initSwapStructs(); /* calling the function in the vmSupport.c module that initializes virtual memory */
 	initProcessorState(&initialState); /* calling the internal function that initializes the processor state of a given U-proc */
