@@ -85,7 +85,7 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 	int statusCode; /* the status code from the device register associated with the device that corresponds to the highest-priority interrupt */
 
 	/* initializing local variables, except for statusCode, which will be initialized later */
-	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
+	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */		
 	index = ((FLASHINT - OFFSET) * DEVPERINT) + (pid - 1); /* initializing the index in devreg (and in devSemaphores) of process pid's flash device/backing store */
 	blockNum = missingPgNum; /* initializing the device block number that we will place in the COMMAND field of the correct flash device later on */
 
@@ -168,7 +168,6 @@ void vmTlbHandler(){
 	/* determining the mising page number found in the saved exception state's EntryHI field */
 	missingPgNo = ((savedState->s_entryHI) & GETVPN) >> VPNSHIFT; /* initializing the missing page number to the VPN specified in the EntryHI field of the saved exception state */
 	missingPgNo = missingPgNo % ENTRIESPERPG; /* using the hash function to determine the page number of the missing TLB entry from the VPN calculated in the previous line */
- /* 2 TIMES MAXUPROC?? for Swap Pool size */
 	frameNo = (frameNo + 1) % MAXFRAMECNT; /* selecting a frame to satisfy the page fault, as determined by Pandos' FIFO page replacement algorithm */
 	frameAddr = SWAPPOOLADDR + (frameNo * PAGESIZE); /* calculating the frameNo's starting address */
 
@@ -180,7 +179,7 @@ void vmTlbHandler(){
 		flashOperation(WRITE, swapPoolTbl[frameNo].asid, frameAddr, missingPgNo); /* calling the internal helper function to update the correct process' backing store */
 	}
 
-	flashOperation(READ, swapPoolTbl[frameNo].asid, frameAddr, missingPgNo); /* calling the internal helper function to read the contents of the Current Process' missing page number into frame frameNo */
+	flashOperation(READ, curProcSupportStruct->sup_asid, frameAddr, missingPgNo); /* calling the internal helper function to read the contents of the Current Process' missing page number into frame frameNo */
 
 	/* updating the Swap Pool table to reflect the frame's new contents */
 	swapPoolTbl[frameNo].pgNo = missingPgNo; /* updating the page number field for the appropriate frame's entry in the Swap Pool table */
