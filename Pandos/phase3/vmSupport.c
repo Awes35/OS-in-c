@@ -28,7 +28,7 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
-HIDDEN void debug1(int indx, int blkNum, memaddr frAddress);
+HIDDEN void debug1(int indx, int blkNum, memaddr frAddress, int processID);
 HIDDEN void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingPgNum); /* function declaration for the function that is responsible for reading or writing to a flash device */
 
 /* declaring variables that are global to this module */
@@ -65,7 +65,7 @@ void debug1(int indx, int blkNum, memaddr frAddress, int processID){
 	prId = processID;
 	blNumber = blkNum;
 	frmAddrss = frAddress;
-	setCAUSE(READBLK | (blNumber << BLKNUMSHIFT);
+	setCAUSE(READBLK | (blNumber << BLKNUMSHIFT));
 	setSTATUS(ALLOFF);
 }
 	
