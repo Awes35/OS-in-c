@@ -42,14 +42,11 @@ void vmGeneralExceptionHandler(){
 	exceptionCode = ((savedState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
 
 	if (exceptionCode == SYSCONST){ /* if the exception code is 8 */
-		sysTrapHandler(savedState, curProcSupportStruct); /* calling the Nucleus' SYSCALL exception handler function */
-	}
-    if (exceptionCode > TLBCONST || exceptionCode == INTCONST){ /* avoid exception codes 1,2,3 pertaining to TLB exceptions */ 
-        programTrapHandler();
+		sysTrapHandler(savedState, curProcSupportStruct); /* calling the phase 3 SYSCALL exception handler */
+	} 
+        programTrapHandler(); /* calling the phase 3 Program Trap handler, as the exception cause indicated a non-SYSCALL and non-TLB exception */
     }
-
 }
-
 
 /* Function for SYS 9. This function kills the executing User Process by calling the Nucleus' SYS2 
 function while in Kernel-mode. */
@@ -59,7 +56,6 @@ void terminateUProc(){
     SYSCALL(SYS4NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
     SYSCALL(SYS2NUM, 0, 0, 0); /* issuing a SYS2 to terminate the u-proc */
 }
-
 
 /* Function for SYS 10. This function places the current system time (since last reboot) into 
 the calling User Process' v0 register */
@@ -180,10 +176,11 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
 }
 
 void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct){
-    /* initializing variables that are global to this module, as well as savedState */ 
+    /* declaring local variables */ 
     int sysNum; /* the number of the SYSCALL that we are addressing */
     int procASID; /* the ASID or Process ID for the Current Process */
-
+	
+	/* initializing local variables */
     sysNum = savedState->s_a0; /* initializing the SYSCALL number variable to the correct number for the exception */
     procASID = curProcSupportStruct->sup_asid; /* get the process ID from the support structure */
 
@@ -205,12 +202,15 @@ void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct){
 	case SYS12NUM: /* if the sysNum indicates a SYS12 event */
 		/* a1 should contain the virtual address of the first character of the string to be transmitted */
 			/* a2 should contain the length of this string */
-		writeToTerminal((char *) (savedState->s_a1), (int) (savedState->s_a2), procASID, savedState); /* invoking the internal function that handles SYS12 events */
-		
+		writeToTerminal((char *) (savedState->s_a1), (int) (savedState->s_a2), procASID, savedState); /* invoking the internal function that handles SYS12 events */	
+			
+	default: /* the sysNum indicates a SYSCALL event whose number is not between 9 and 12 */
+		programTrapHandler(); /* calling the phase 3 function that handles Program Traps */
+			
     }
 }
 
-/* Function that handles Program Traps */
+/* Function that handles Program Traps in phase 3. The function performs the same operation as a SYS9 request. */
 void programTrapHandler(){
     /* terminate process in an orderly fashion */
     SYSCALL(SYS9NUM, 0, 0, 0); /* issue a SYS9 call to terminate the u-proc (gracefully) */
