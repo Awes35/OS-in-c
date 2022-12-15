@@ -176,7 +176,7 @@ void vmTlbHandler(){
 		swapPoolTbl[frameNo].ownerProc->entryLO = (swapPoolTbl[frameNo].ownerProc->entryLO) & VBITOFF; /* updating the page table for the process occupying the frame by marking the entry as not valid */
 		TLBCLR(); /* erasing all of the entries in the TLB to ensure cache consistency */
 		setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
-		flashOperation(WRITE, swapPoolTbl[frameNo].asid, frameAddr, missingPgNo); /* calling the internal helper function to update the correct process' backing store */
+		flashOperation(WRITE, swapPoolTbl[frameNo].asid, frameAddr, swapPoolTbl[frameNo].pgNo); /* calling the internal helper function to update the correct process' backing store */
 	}
 
 	flashOperation(READ, curProcSupportStruct->sup_asid, frameAddr, missingPgNo); /* calling the internal helper function to read the contents of the Current Process' missing page number into frame frameNo */
