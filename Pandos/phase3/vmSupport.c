@@ -65,8 +65,8 @@ void debug1(int indx, int blkNum, memaddr frAddress, int processID){
 	prId = processID;
 	blNumber = blkNum;
 	frmAddrss = frAddress;
-	setCAUSE(READBLK | (blNumber << BLKNUMSHIFT));
-	setSTATUS(ALLOFF);
+	/*setCAUSE(READBLK | (blNumber << BLKNUMSHIFT)); */
+	/*setSTATUS(ALLOFF); */
 }
 	
 	
