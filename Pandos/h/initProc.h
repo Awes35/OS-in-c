@@ -24,4 +24,9 @@ extern int devSemaphores[MAXIODEVICES]; /* array of mutual exclusion semaphores;
 									come before those associated with a write operation. */
 extern void test(); /* function that represents the instantiator process */
 
+extern int index;
+extern int blNumber;
+extern memaddr frmAddrss;
+extern int prId;
+
 #endif
