@@ -44,8 +44,9 @@ void vmGeneralExceptionHandler(){
 	if (exceptionCode == SYSCONST){ /* if the exception code is 8 */
 		sysTrapHandler(savedState, curProcSupportStruct); /* calling the phase 3 SYSCALL exception handler */
 	} 
-        programTrapHandler(); /* calling the phase 3 Program Trap handler, as the exception cause indicated a non-SYSCALL and non-TLB exception */
-    }
+    
+    programTrapHandler(); /* calling the phase 3 Program Trap handler, as the exception cause indicated a non-SYSCALL and non-TLB exception */
+    
 }
 
 /* Function for SYS 9. This function kills the executing User Process by calling the Nucleus' SYS2 
