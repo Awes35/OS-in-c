@@ -86,7 +86,7 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
         error if strLength < 0
         error if strLength > 128 */
     if (((unsigned int) virtAddr < KUSEG) || (strLength < 0) || (strLength > MAXSTRLEN)){
-        SYSCALL(SYS9NUM, 0, 0, 0); /* issue a SYS9 call to terminate the u-proc, as the request info is an error */
+        terminateUProc(); /* calling the internal function that handles SYS9 requests to terminate the U-proc, as the request info is an error */
     }
 
 	/* initializing local variables, except for statusCode, which will be initialized later */
@@ -141,7 +141,7 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
         error if strLength < 0
         error if strLength > 128 */
     if (((unsigned int) virtAddr < KUSEG) || (strLength < 0) || (strLength > MAXSTRLEN)){
-        SYSCALL(SYS9NUM, 0, 0, 0); /* issue a SYS9 call to terminate the u-proc, as the request info is an error */
+        terminateUProc(); /* calling the internal function that handles SYS9 requests to terminate the U-proc, as the request info is an error */
     }
 
 	/* initializing local variables, except for statusCode, which will be initialized later */
