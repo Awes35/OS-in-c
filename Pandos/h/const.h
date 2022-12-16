@@ -279,7 +279,7 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 #define	BLKNUMSHIFT		8				
 
 /* Constant for setting all of the bits to 0 in the EntryLo portion of a TLB entry except for the V bit */
-#define	VBITON			0x000002		
+#define	VBITON			0x00000200		
 
 /* Constant that represents the number of bits needed to shift a terminal device's TRANSM_COMMAND.TRANSM-CHAR field over to the left */
 #define TERMSHIFT   8
