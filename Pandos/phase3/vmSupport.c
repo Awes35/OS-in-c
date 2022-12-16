@@ -34,6 +34,7 @@ HIDDEN void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int m
 /* declaring variables that are global to this module */
 int swapSem; /* mutual exclusion semaphore that controls access to the Swap Pool data structure */
 HIDDEN swap_t swapPoolTbl[MAXFRAMECNT]; /* the Swap Pool data structure/table */
+int missingPN;
 
 /* Function that turns interrupts in the Status register on or off, as indicated by the function's parameter. If the caller wishes to
 turn interrupts on, then the value 1 is passed into the function, whereas if the caller wishes to disable interrupts, then the value 0
@@ -153,7 +154,7 @@ void vmTlbHandler(){
 	memaddr frameAddr; /* the address of the frame selected by the page replacement algorithm to satisfy the page fault */
 	int exceptionCode; /* the exception code */
 	int missingPgNo; /* the missing page number, as indicated in the saved exception state's EntryHi field */
-	HIDDEN int frameNo; /* the frame number used to satisfy a page fault */
+	HIDDEN int frameNo = 0; /* the frame number used to satisfy a page fault */
 
 	curProcSupportStruct = (support_t *) SYSCALL(SYS8NUM, 0, 0, 0); /* obtaining a pointer to the Current Process' Support Structure */
 	savedState = &(curProcSupportStruct->sup_exceptState[PGFAULTEXCEPT]); /* initializing savedState to the state found in the Current Process' Support Structure for TLB exceptions */
@@ -168,6 +169,7 @@ void vmTlbHandler(){
 	/* determining the mising page number found in the saved exception state's EntryHI field */
 	missingPgNo = ((savedState->s_entryHI) & GETVPN) >> VPNSHIFT; /* initializing the missing page number to the VPN specified in the EntryHI field of the saved exception state */
 	missingPgNo = missingPgNo % ENTRIESPERPG; /* using the hash function to determine the page number of the missing TLB entry from the VPN calculated in the previous line */
+	missingPN = missingPgNo;
 	frameNo = (frameNo + 1) % MAXFRAMECNT; /* selecting a frame to satisfy the page fault, as determined by Pandos' FIFO page replacement algorithm */
 	frameAddr = SWAPPOOLADDR + (frameNo * PAGESIZE); /* calculating the frameNo's starting address */
 
