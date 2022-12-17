@@ -161,8 +161,8 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
     }
 
 	/* read the status returned by terminal device */
-	if (((temp->devreg[index].t_transm_status) & STATUSON) != CHARTRANSM){ /* if the write operation led to an error status */
-		savedState->s_v0 = ((temp->devreg[index].t_transm_status) & STATUSON) * (-1); /* returning the negative of the status code */
+	if (((temp->devreg[index].t_transm_status) & TERMSTATUSON) != CHARTRANSM){ /* if the write operation led to an error status */
+		savedState->s_v0 = ((temp->devreg[index].t_transm_status) & TERMSTATUSON) * (-1); /* returning the negative of the status code */
 	}
 	else{ /* else, the write operation was successful */
 		savedState->s_v0 = strLength; /* return length of string transmitted */
