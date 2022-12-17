@@ -266,7 +266,7 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 #define	TLBMODEXCCODE	1
 
 /* Constant for setting all of the bits to 1 in the EntryLo portion of a TLB entry except for the V bit */
-#define	VBITOFF			0xFFFFFD
+#define	VBITOFF			0xFFFFFDFF
 
 /* Constants to signify whether one wishes to read or write to a flash device; these constants serve as potential parameters to the flashOperation() function in vmSupport.c */
 #define	WRITE			0				/* Constant that represents the parameter to flashOperation() for writing a flash device */
