@@ -27,6 +27,12 @@ HIDDEN void getTOD(state_PTR savedState);
 HIDDEN void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR savedState);
 HIDDEN void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR savedState);
 HIDDEN void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct);
+HIDDEN void debug2(int statusCode, int negStatusCode, unsigned int terminalStatusReg);
+
+/* declaring debug vars */
+int statCode;
+int negStatCode;
+unsigned int termStatusReg;
 
 
 /* Function that handles all passed up non-TLB exceptions (i.e., all SYSCALL exceptions numbered 9 and above, as well as all Program
@@ -124,6 +130,13 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
     switchUContext(savedState); /* return control back to the Current Process */
 }
 
+void debug2(int statusCode, int negStatusCode, unsigned int terminalStatusReg){
+	statCode = statusCode;
+	negStatCode = negStatusCode;
+	termStatusReg = terminalStatusReg;
+}
+	
+
 /* Function for SYS 12. This function causes the requesting user-process to be suspended until
 a complete string of characters (of length strLength, with first character at address virtAddr) 
 has been transmitted to the terminal device associated with the user-process. 
@@ -159,6 +172,8 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
         SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
         setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
     }
+    
+    debug2(((temp->devreg[index].t_transm_status) & TERMSTATUSON), ((temp->devreg[index].t_transm_status) & TERMSTATUSON) * (-1), temp->devreg[index].t_transm_status);
 
 	/* read the status returned by terminal device */
 	if (((temp->devreg[index].t_transm_status) & TERMSTATUSON) != CHARTRANSM){ /* if the write operation led to an error status */
