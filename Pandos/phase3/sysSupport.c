@@ -135,7 +135,6 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
     /* terminals: interrupt line 7 */
     devregarea_t *temp; /* pointer to device register area that we can use to read and write the process procASID's terminal device */
     int index; /* the index in devreg (and in devSemaphores) of the terminal device associated with process procASID */
-	int statusCode; /* the terminal device's status value, located within the device's devreg */
 
     /* pre-checks: (each lead to SYS9)
         error if addr outside of u-proc's logical address space (KUSEG)
@@ -159,18 +158,15 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
         
         SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
         setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
-
     }
 
 	/* read the status returned by terminal device */
-    statusCode = temp->devreg[index].t_transm_status; /* setting the status code from the device register of process's associated terminal device */
-
-	if (statusCode != CHARTRANSM){ /* if the write operation led to an error status */
-        savedState->s_v0 = statusCode * (-1); /* return negative of the status code */
+	if (((temp->devreg[index].t_transm_status) & STATUSON) != CHARTRANSM){ /* if the write operation led to an error status */
+		savedState->s_v0 = ((temp->devreg[index].t_transm_status) & STATUSON) * (-1); /* returning the negative of the status code */
 	}
-    else{ /* else, successful operation */
-        savedState->s_v0 = strLength; /* return length of string transmitted */
-    }
+	else{ /* else, the write operation was successful */
+		savedState->s_v0 = strLength; /* return length of string transmitted */
+	}
 
 	mutex(FALSE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
     switchUContext(savedState); /* return control back to the Current Process */
