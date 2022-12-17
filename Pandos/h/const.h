@@ -284,4 +284,8 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 /* Constant that represents the number of bits needed to shift a terminal device's TRANSM_COMMAND.TRANSM-CHAR field over to the left */
 #define TERMSHIFT   8
 
+/* Constant that represents when the first eight bits in a terminal device's device register's status field are turned on */
+#define TERMSTATUSON  0x000000FF
+
+
 #endif
