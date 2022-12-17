@@ -147,9 +147,9 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
 
 	/* initializing local variables, except for statusCode, which will be initialized later */
 	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
-    index = ((TERMINT - OFFSET) * DEVPERINT) + (procASID - 1) + DEVPERINT; /* index of terminal device associated with the u-proc; note that terminal device semaphores for writing come after those for reading */
+    index = ((TERMINT - OFFSET) * DEVPERINT) + (procASID - 1); /* index of terminal device associated with the u-proc; note that terminal device semaphores for writing come after those for reading */
     
-    mutex(TRUE, (int *) (&devSemaphores[index])); /* calling the function that gains mutual exclusion over the appropriate terminal device's device register */
+    mutex(TRUE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that gains mutual exclusion over the appropriate terminal device's device register */
 	
     int i;
     for (i = 0; i < strLength; i++){
@@ -172,7 +172,7 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
         savedState->s_v0 = strLength; /* return length of string transmitted */
     }
 
-	mutex(FALSE, (int *) (&devSemaphores[index])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
+	mutex(FALSE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
     switchUContext(savedState); /* return control back to the Current Process */
 }
 
