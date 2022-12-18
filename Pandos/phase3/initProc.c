@@ -117,6 +117,6 @@ void test(){
 		
 	/*}*/
 
-	/* SYSCALL(SYS2NUM, 0, 0, 0); /* terminating the instantiator process, as all of its U-proc "children" processes have concluded */
+	/* SYSCALL(SYS2NUM, 0, 0, 0); */ /* terminating the instantiator process, as all of its U-proc "children" processes have concluded */
 	SYSCALL(SYS3NUM, (unsigned int) &masterSemaphore, 0, 0);
 }
