@@ -111,11 +111,12 @@ void test(){
 	masterSemaphore = 0; /* initializing the master semaphore to 0, since it will be used for synchronization */
 
 	/* performing a P operation on masterSemaphore UPROCMAX number of times in order to contribute to a more graceful conclusion of test() */
-	int k;
-	for (k = 0; k < UPROCMAX; k++){
-		SYSCALL(SYS3NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */
+	/* int k; */
+	/* for (k = 0; k < UPROCMAX; k++){ */
+		/*SYSCALL(SYS3NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */
 		
-	}
+	/*}*/
 
-	SYSCALL(SYS2NUM, 0, 0, 0); /* terminating the instantiator process, as all of its U-proc "children" processes have concluded */
+	/* SYSCALL(SYS2NUM, 0, 0, 0); /* terminating the instantiator process, as all of its U-proc "children" processes have concluded */
+	SYSCALL(SYS3NUM, &masterSemaphore, 0, 0);
 }
