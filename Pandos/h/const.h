@@ -227,7 +227,7 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 #define	STATUSON		0x0F
 
 /* Phase 3 constant that defines how many user processes can be running at once */
-#define UPROCMAX		2
+#define UPROCMAX		1
 
 /* Constant representing how many page table entries there are per page table */
 #define	ENTRIESPERPG	32
@@ -238,7 +238,6 @@ This constant is subtracted from the line number (or 4, in the case of backing s
 
 /* Constant that represents the number of sharable peripheral I/O devices */
 #define	MAXIODEVICES	48		
-
 
 /* Constant that represents the ASID of a frame is unoccupied */
 #define	EMPTYFRAME		-1
