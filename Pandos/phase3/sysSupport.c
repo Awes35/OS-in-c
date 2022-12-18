@@ -27,7 +27,7 @@ HIDDEN void getTOD(state_PTR savedState);
 HIDDEN void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR savedState);
 HIDDEN void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR savedState);
 HIDDEN void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct);
-HIDDEN void debug2(int statusCode, int negStatusCode, unsigned int terminalStatusReg);
+HIDDEN void debug2(int statusCode);
 
 /* declaring debug vars */
 int statCode;
