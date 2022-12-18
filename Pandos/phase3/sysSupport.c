@@ -31,9 +31,6 @@ HIDDEN void debug2(int statusCode, int negStatusCode, unsigned int terminalStatu
 
 /* declaring debug vars */
 int statCode;
-int negStatCode;
-unsigned int termStatusReg;
-
 
 /* Function that handles all passed up non-TLB exceptions (i.e., all SYSCALL exceptions numbered 9 and above, as well as all Program
 Trap exceptions). Upon reaching this function, the processor state within the u-proc's support structure is in kernel-mode, as this
@@ -130,10 +127,8 @@ void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR saved
     switchUContext(savedState); /* return control back to the Current Process */
 }
 
-void debug2(int statusCode, int negStatusCode, unsigned int terminalStatusReg){
+void debug2(int statusCode){
 	statCode = statusCode;
-	negStatCode = negStatusCode;
-	termStatusReg = terminalStatusReg;
 }
 	
 
@@ -170,7 +165,7 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
         temp->devreg[index].t_transm_command = (*(virtAddr + i)  << TERMSHIFT) | TRANSMITCHAR; /* placing the command code for printing the character into the terminal's command field (and the character to be printed) */
         statusCode = SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
-	    
+	debug2(statusCode);
 	if (statusCode != CHARTRANSM){ /* if the write operation led to an error status */
 		savedState->s_v0 = statusCode * (-1); /* returning the negative of the status code */
 		mutex(FALSE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
