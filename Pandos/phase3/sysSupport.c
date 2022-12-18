@@ -57,7 +57,7 @@ function while in Kernel-mode. */
 void terminateUProc(){
     /* We are in kernel-mode already */
 
-    SYSCALL(SYS4NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
+    /* SYSCALL(SYS4NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
     SYSCALL(SYS2NUM, 0, 0, 0); /* issuing a SYS2 to terminate the u-proc */
 }
 
