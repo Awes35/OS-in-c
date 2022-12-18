@@ -20,13 +20,8 @@ extern int masterSemaphore; /* semaphore to be V'd and P'd by test as a means to
 							function is not called */
 extern int devSemaphores[MAXIODEVICES]; /* array of mutual exclusion semaphores; each potentially sharable peripheral I/O device has one
 									semaphore defined for it. Note that this array will be implemented so that terminal device
-									semaphores are last and terminal device semaphores	associated with a read operation in the array
+									semaphores are last and terminal device semaphores associated with a read operation in the array
 									come before those associated with a write operation. */
 extern void test(); /* function that represents the instantiator process */
-
-extern int index;
-extern int blNumber;
-extern memaddr frmAddrss;
-extern int prId;
 
 #endif
