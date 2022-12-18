@@ -107,5 +107,5 @@ void test(){
 		SYSCALL(SYS3NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */	
 	}
 
-	SYSCALL(SYS2NUM, 0, 0, 0);
+	SYSCALL(SYS2NUM, 0, 0, 0); /* terminating the instantiator process, since all of its U-proc "children" have completed */
 }
