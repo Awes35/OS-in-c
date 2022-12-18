@@ -28,13 +28,11 @@
 #include "/usr/include/umps3/umps/libumps.h"
 
 /* function declarations */
-HIDDEN void debug1(int indx, int blkNum, memaddr frAddress, int processID);
 HIDDEN void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingPgNum); /* function declaration for the function that is responsible for reading or writing to a flash device */
 
 /* declaring variables that are global to this module */
 int swapSem; /* mutual exclusion semaphore that controls access to the Swap Pool data structure */
 HIDDEN swap_t swapPoolTbl[MAXFRAMECNT]; /* the Swap Pool data structure/table */
-int missingPN;
 
 /* Function that turns interrupts in the Status register on or off, as indicated by the function's parameter. If the caller wishes to
 turn interrupts on, then the value 1 is passed into the function, whereas if the caller wishes to disable interrupts, then the value 0
@@ -42,7 +40,7 @@ is passed into the function. */
 void setInterrupts(int onOrOff){
 	if (onOrOff == TRUE){ /* the caller wishes to enable interrupts */
 		setSTATUS(getSTATUS() | IECON); /* enabling interrupts for the Status register, as dictated by the function's parameter */
-	} /* don't need IMON technically */
+	} 
 	else{ /* the caller wishes to disable interrupts */
 		setSTATUS(getSTATUS() & IECOFF); /* disabling interrupts for the Status register, as dictated by the function's parameter */
 	}
@@ -60,17 +58,6 @@ void mutex(int opCode, int *semaphore){
 		SYSCALL(SYS4NUM, (unsigned int) semaphore, 0, 0); /* issuing a SYS 4 (i.e., performing a V operation) on the desired semaphore */
 	}
 }
-
-void debug1(int indx, int blkNum, memaddr frAddress, int processID){	
-	index = indx;
-	prId = processID;
-	blNumber = blkNum;
-	frmAddrss = frAddress;
-	/*setCAUSE(READBLK | (blNumber << BLKNUMSHIFT)); */
-	/*setSTATUS(ALLOFF); */
-}
-	
-	
 
 /* Function that is responsible for reading or writing to process pid's flash device/backing store. More specifically, this function
 performs five key steps. First off, the function gains mutual exclusion over the appropriate device's device register. Next, it writes
@@ -92,29 +79,24 @@ void flashOperation(int readOrWrite, int pid, memaddr frameAddress, int missingP
 
 	mutex(TRUE, (int *) &(devSemaphores[index])); /* calling the function that gains mutual exclusion exclusion over process pid's flash device's device register */
 	temp->devreg[index].d_data0 = frameAddress; /* writing the flash device's DATA0 field with the selected frame number's starting address */
-
+	setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
+	
 	if (readOrWrite == TRUE){ /* if the caller wishes to read from the flash device */
-		setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
 		temp->devreg[index].d_command = READBLK | (blockNum << BLKNUMSHIFT); /* writing the device's COMMAND field with the device block number and the command to read */
 	}
 	else{ /* the caller wishes to write to the flash device */
-		setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
 		temp->devreg[index].d_command = WRITEBLK | (blockNum << BLKNUMSHIFT); /* writing the device's COMMAND field with the device block number and the command to write */
 	}
 
-	debug1(index, blockNum, frameAddress, pid);
 	SYSCALL(SYS5NUM, LINE4, (pid - 1), readOrWrite); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
-
 	statusCode = temp->devreg[index].d_status; /* setting the status code from the device register associated with process pid's flash device */
-	
 	mutex(FALSE, (int *) &(devSemaphores[index])); /* calling the function that releases mutual exclusion over process pid's flash device's device register */
 	
 	if (statusCode != READY){ /* if the read or write operation led to an error status */
 		mutex(FALSE, (int *) &swapSem); /* calling the internal helper function to make sure we release mutual exclusion over the Swap Pool table */
 		programTrapHandler(); /* invoking the function that handles program traps in phase 3 */
 	}
-
 }
 
 /* Function that initializes the Swap Pool table and the Swap Pool semaphore (i.e., the variables that are global
@@ -140,7 +122,7 @@ void switchUContext(state_PTR returnState){
 /* Function that handles page faults that are passed up by the Nucleus. Note that this function utilizes a FIFO page replacement
 algorithm. Now, more specifically, the function obtains a pointer to the Current Process' Support Structure, determines the cause
 of the TLB exception, and then, if the cause is a TLB-Modification exception, passes control to the phase 3 function that handles
-program traps. Next, the function gains mutual exclusion over the Swap Pool table, determines the missing page number, selects
+Program Traps. Next, the function gains mutual exclusion over the Swap Pool table, determines the missing page number, selects
 a frame from the Swap Pool using a FIFO page replacement algorithm to satisfy the page fault, and determines if the selected frame
 is occupied. If it is occupied, the function then updates the correct process' Page Table, updates the TLB (if needed), and then
 updates the correct process' backing store. Next, the function reads the contents of the Current Process' backing store's correct logical
@@ -154,14 +136,14 @@ void vmTlbHandler(){
 	memaddr frameAddr; /* the address of the frame selected by the page replacement algorithm to satisfy the page fault */
 	int exceptionCode; /* the exception code */
 	int missingPgNo; /* the missing page number, as indicated in the saved exception state's EntryHi field */
-	HIDDEN int frameNo = 0; /* the frame number used to satisfy a page fault */
+	HIDDEN int frameNo; /* the frame number used to satisfy a page fault */
 
 	curProcSupportStruct = (support_t *) SYSCALL(SYS8NUM, 0, 0, 0); /* obtaining a pointer to the Current Process' Support Structure */
 	savedState = &(curProcSupportStruct->sup_exceptState[PGFAULTEXCEPT]); /* initializing savedState to the state found in the Current Process' Support Structure for TLB exceptions */
 	exceptionCode = ((savedState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
 
 	if (exceptionCode == TLBMODEXCCODE){ /* if the exception code indicates that a TLB-Modification exception occurred */
-		programTrapHandler(); /* invoking the function that handles program traps in phase 3 */
+		programTrapHandler(); /* invoking the function that handles Program Traps in phase 3 */
 	}
 
 	mutex(TRUE, (int *) &swapSem); /* calling the internal helper function to gain mutual exclusion over the Swap Pool table */
@@ -169,7 +151,7 @@ void vmTlbHandler(){
 	/* determining the mising page number found in the saved exception state's EntryHI field */
 	missingPgNo = ((savedState->s_entryHI) & GETVPN) >> VPNSHIFT; /* initializing the missing page number to the VPN specified in the EntryHI field of the saved exception state */
 	missingPgNo = missingPgNo % ENTRIESPERPG; /* using the hash function to determine the page number of the missing TLB entry from the VPN calculated in the previous line */
-	missingPN = missingPgNo;
+
 	frameNo = (frameNo + 1) % MAXFRAMECNT; /* selecting a frame to satisfy the page fault, as determined by Pandos' FIFO page replacement algorithm */
 	frameAddr = SWAPPOOLADDR + (frameNo * PAGESIZE); /* calculating the frameNo's starting address */
 
@@ -191,7 +173,7 @@ void vmTlbHandler(){
 	setInterrupts(FALSE); /* calling the function that disables interrupts for the Status register so we can update the page table entry and the TLB atomically */
 
 	/* updating the appropriate Page Table entry for the Current Process */
-	curProcSupportStruct->sup_privatePgTbl[missingPgNo].entryLO = frameAddr | VBITON | DBITON; /* ensuring the V bit is on and upadting the PFN field of the appropriate Page Table entry for the Current Process */
+	curProcSupportStruct->sup_privatePgTbl[missingPgNo].entryLO = frameAddr | VBITON | DBITON; /* ensuring the V and D bits are on and that the PFN field of the appropriate Page Table entry for the Current Process is updated */
 
 	TLBCLR(); /* erasing all of the entries in the TLB to ensure cache consistency */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
