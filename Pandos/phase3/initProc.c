@@ -113,7 +113,7 @@ void test(){
 	/* performing a P operation on masterSemaphore UPROCMAX number of times in order to contribute to a more graceful conclusion of test() */
 	/* int k; */
 	/* for (k = 0; k < UPROCMAX; k++){ */
-		/*SYSCALL(SYS3NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a P operation on masterSemaphore */
+		/*SYSCALL(SYS3NUM, (unsigned int) &masterSemaphore, 0, 0);*/ /* performing a P operation on masterSemaphore */
 		
 	/*}*/
 
