@@ -33,7 +33,6 @@
 /* function declarations */
 HIDDEN void terminateUProc();
 HIDDEN void getTOD(state_PTR savedState);
-HIDDEN void writeToPrinter(char *virtAddr, int strLength, int procASID, state_PTR savedState);
 HIDDEN void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR savedState);
 HIDDEN void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct);
 
@@ -43,19 +42,22 @@ phase will execute requests in kernel mode that a user normally could not. This 
 that was raised. If the exception code is 8, then control is passed to the sysTrapHandler() function; otherwise, control is passed to
 the phase 3 Program Trap handler. */
 void vmGeneralExceptionHandler(){
+	/* declaring local variables */
 	state_PTR savedState; /* a pointer to the saved processor's state at time of the exception */
 	support_t *curProcSupportStruct; /* a pointer to the Current Process' Support Structure */
 	int exceptionCode; /* the exception code */
 
+	/* initializing local variables */
 	curProcSupportStruct = (support_t *) SYSCALL(SYS8NUM, 0, 0, 0); /* obtaining a pointer to the Current Process' Support Structure */
 	savedState = &(curProcSupportStruct->sup_exceptState[GENERALEXCEPT]); /* initializing savedState to the state found in the Current Process' Support Structure for General (non-TLB) exceptions */
 	exceptionCode = ((savedState->s_cause) & GETEXCEPCODE) >> CAUSESHIFT; /* initializing the exception code so that it matches the exception code stored in the .ExcCode field in the Cause register */
 
+	/* calling the appropriate internal function based off the exception code */
 	if (exceptionCode == SYSCONST){ /* if the exception code is 8 */
 		sysTrapHandler(savedState, curProcSupportStruct); /* calling the phase 3 SYSCALL exception handler */
 	} 
     
-    programTrapHandler(); /* calling the phase 3 Program Trap handler, as the exception cause indicated a non-SYSCALL and non-TLB exception */
+    programTrapHandler(); /* calling the phase 3 Program Trap handler, as the exception code indicated a non-SYSCALL and non-TLB exception */
 }
 
 /* Internal function that handles SYS9 requests. This function kills the executing User Process by calling the Nucleus' SYS2 
@@ -65,13 +67,14 @@ void terminateUProc(){
     /* We are in kernel-mode already */
 
     SYSCALL(SYS4NUM, (unsigned int) &masterSemaphore, 0, 0); /* performing a V operation on masterSemaphore, to come to a more graceful conclusion */
-    SYSCALL(SYS2NUM, 0, 0, 0); /* issuing a SYS2 to terminate the u-proc */
+    SYSCALL(SYS2NUM, 0, 0, 0); /* issuing a SYS2 to terminate the U-proc */
 }
 
 /* Internal function that handles SYS10 requests. This function places the current system time (since the last reboot) into 
 the calling U-proc's v0 register and returns control back to the running U-proc. */
 void getTOD(state_PTR savedState){
-    cpu_t currTOD; /* variable to store the current value on the time of day clock, upon a sys10 */
+	/* declaring local variables */
+    cpu_t currTOD; /* local variable to store the current value on the time of day clock, upon a sys10 */
 
     STCK(currTOD); /* storing the current value on the Time of Day clock into currTOD */
     savedState->s_v0 = currTOD; /* placing the current system time (since last reboot) in v0 */
@@ -80,14 +83,12 @@ void getTOD(state_PTR savedState){
 
 /* Internal function that handles SYS12 requests. This function causes the requesting user-process to be suspended until
 a complete string of characters (of length strLength, with first character at address virtAddr) has been transmitted to the
-terminal device associated with the user-process. 
-
-Once the user-process resumes, this function returns in the process' v0 register either:
+terminal device associated with the user-process. Once the user-process resumes, this function returns in the process' v0 register either:
 - the number of characters actually transmitted, if the write was successful or
 - the negative of the terminal device's status value (if the operation ends with a status other than "Character Transmitted"). */
 void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR savedState){
 	/* declaring local variables */
-    	devregarea_t *temp; /* pointer to device register area that we can use to read and write the process procASID's terminal device */
+    devregarea_t *temp; /* pointer to device register area that we can use to read and write the process procASID's terminal device */
     int index; /* the index in devreg (and in devSemaphores) of the terminal device associated with process procASID */
 	unsigned int status; /* the contents of the terminal device's status register after a SYS5 call is issued */
 	int statusCode; /* the status code returned by the terminal device after a SYS5 call is issued */
@@ -102,23 +103,24 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
 
 	/* initializing local variables, except for status and statusCode, which will be initialized later */
 	temp = (devregarea_t *) RAMBASEADDR; /* initialization of temp */
-    index = ((TERMINT - OFFSET) * DEVPERINT) + (procASID - 1); /* index of terminal device associated with the u-proc; note that terminal device semaphores for writing come after those for reading */
+    index = ((TERMINT - OFFSET) * DEVPERINT) + (procASID - 1); /* index of terminal device associated with the U-proc; note that terminal device semaphores for writing come after those for reading */
     
     mutex(TRUE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that gains mutual exclusion over the appropriate terminal device's device register */
 
+	/* transmitting each character to the terminal */
     int i;
     for (i = 0; i < strLength; i++){
-	setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
-        temp->devreg[index].t_transm_command = (*(virtAddr + i)  << TERMSHIFT) | TRANSMITCHAR; /* placing the command code for printing the character into the terminal's command field (and the character to be printed) */
-        status = SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
-	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
-	statusCode = status & TERMSTATUSON; /* setting the status code returned by the terminal device after the SYS5 call */
+		setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
+    	temp->devreg[index].t_transm_command = (*(virtAddr + i)  << TERMSHIFT) | TRANSMITCHAR; /* placing the command code for printing the character into the terminal's command field (and the character to be printed) */
+    	status = SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
+		setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
+		statusCode = status & TERMSTATUSON; /* setting the status code returned by the terminal device after the SYS5 call */
 	    
-	if (statusCode != CHARTRANSM){ /* if the write operation led to an error status */
-		savedState->s_v0 = statusCode * (-1); /* returning the negative of the status code */
-		mutex(FALSE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
-   		switchUContext(savedState); /* return control back to the Current Process */
-	}
+		if (statusCode != CHARTRANSM){ /* if the write operation led to an error status */
+			savedState->s_v0 = statusCode * (-1); /* returning the negative of the status code */
+			mutex(FALSE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
+   			switchUContext(savedState); /* return control back to the Current Process */
+		}
     }
 	
 	/* the write operation was successful */
@@ -150,13 +152,13 @@ void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct){
         case SYS10NUM: /* if the sysNum indicates a SYS10 event */
             getTOD(savedState); /* invoking the internal function that handles SYS10 events */
 			
-	case SYS12NUM: /* if the sysNum indicates a SYS12 event */
-		/* a1 should contain the virtual address of the first character of the string to be transmitted */
+		case SYS12NUM: /* if the sysNum indicates a SYS12 event */
+			/* a1 should contain the virtual address of the first character of the string to be transmitted */
 			/* a2 should contain the length of this string */
-		writeToTerminal((char *) (savedState->s_a1), (int) (savedState->s_a2), procASID, savedState); /* invoking the internal function that handles SYS12 events */	
+			writeToTerminal((char *) (savedState->s_a1), (int) (savedState->s_a2), procASID, savedState); /* invoking the internal function that handles SYS12 events */	
 			
-	default: /* the sysNum indicates a SYSCALL event whose number is not between 9 and 12 */
-		programTrapHandler(); /* calling the phase 3 function that handles Program Traps */		
+		default: /* the sysNum indicates a SYSCALL event whose number is not between 9 and 12 */
+			programTrapHandler(); /* calling the phase 3 function that handles Program Traps */		
     }
 }
 
