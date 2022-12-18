@@ -143,7 +143,8 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
     /* terminals: interrupt line 7 */
     devregarea_t *temp; /* pointer to device register area that we can use to read and write the process procASID's terminal device */
     int index; /* the index in devreg (and in devSemaphores) of the terminal device associated with process procASID */
-	int statusCode; /* the terminal device's status value, located within the device's devreg */
+	unsigned int status; /* the contents of the terminal device's status register after a SYS5 call is issued */
+	int statusCode; /* the status code returned by the terminal device after a SYS5 call is issued */
 
     /* pre-checks: (each lead to SYS9)
         error if addr outside of u-proc's logical address space (KUSEG)
@@ -163,9 +164,10 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
     for (i = 0; i < strLength; i++){
 	setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
         temp->devreg[index].t_transm_command = (*(virtAddr + i)  << TERMSHIFT) | TRANSMITCHAR; /* placing the command code for printing the character into the terminal's command field (and the character to be printed) */
-        statusCode = SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
+        status = SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
 	debug2(statusCode);
+	statusCode = status & TERMSTATUSON; /* setting the status code returned by the terminal device after the SYS5 call */
 	if (statusCode != CHARTRANSM){ /* if the write operation led to an error status */
 		savedState->s_v0 = statusCode * (-1); /* returning the negative of the status code */
 		mutex(FALSE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
