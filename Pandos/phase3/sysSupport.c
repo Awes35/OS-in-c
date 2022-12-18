@@ -148,7 +148,7 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
     /* terminals: interrupt line 7 */
     devregarea_t *temp; /* pointer to device register area that we can use to read and write the process procASID's terminal device */
     int index; /* the index in devreg (and in devSemaphores) of the terminal device associated with process procASID */
-	int statusCode; /* the printer device's status value, located within the device's devreg */
+	int statusCode; /* the terminal device's status value, located within the device's devreg */
 
     /* pre-checks: (each lead to SYS9)
         error if addr outside of u-proc's logical address space (KUSEG)
@@ -164,27 +164,24 @@ void writeToTerminal(char *virtAddr, int strLength, int procASID, state_PTR save
     
     mutex(TRUE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that gains mutual exclusion over the appropriate terminal device's device register */
 
-	setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
     int i;
     for (i = 0; i < strLength; i++){
+	setInterrupts(FALSE); /* calling the function that disables interrupts in order to write the COMMAND field and issue the SYS 5 atomically */
         temp->devreg[index].t_transm_command = (*(virtAddr + i)  << TERMSHIFT) | TRANSMITCHAR; /* placing the command code for printing the character into the terminal's command field (and the character to be printed) */
-        SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
-    }
-    
-    /* debug2(((temp->devreg[index].t_transm_status) & TERMSTATUSON), ((temp->devreg[index].t_transm_status) & TERMSTATUSON) * (-1), temp->devreg[index].t_transm_status); */
-	statusCode = (temp->devreg[index].t_transm_status) & TERMSTATUSON; /* setting the status code from the device register of process's associated terminal device */
+        statusCode = SYSCALL(SYS5NUM, LINE7, (procASID - 1), WRITE); /* issuing the SYS 5 call to block the I/O requesting process until the operation completes */
 	setInterrupts(TRUE); /* calling the function that enables interrupts for the Status register, since the atomically-executed steps have now been completed */
-	
-	/* examining the status returned by terminal device */
+	    
 	if (statusCode != CHARTRANSM){ /* if the write operation led to an error status */
 		savedState->s_v0 = statusCode * (-1); /* returning the negative of the status code */
+		mutex(FALSE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
+   		switchUContext(savedState); /* return control back to the Current Process */
 	}
-	else{ /* else, the write operation was successful */
-		savedState->s_v0 = strLength; /* return length of string transmitted */
-	}
-
+    }
+	
+	/* the write operation was successful */
+	savedState->s_v0 = strLength; /* return length of string transmitted */
 	mutex(FALSE, (int *) (&devSemaphores[index + DEVPERINT])); /* calling the function that releases mutual exclusion over the appropriate terminal device's device register */
-    switchUContext(savedState); /* return control back to the Current Process */
+   	switchUContext(savedState); /* return control back to the Current Process */
 }
 
 void sysTrapHandler(state_PTR savedState, support_t *curProcSupportStruct){
