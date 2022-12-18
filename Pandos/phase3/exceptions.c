@@ -53,8 +53,6 @@ HIDDEN void getSupportData();
 int sysNum; /* the number of the SYSCALL that we are addressing */
 cpu_t curr_tod; /* variable to hold the current TOD clock value */
 
-int missingPgNo; /* temp debugging*/
-
 /* Function that copies the saved exception located at the start of the BIOS Data Page to the Current Process' pcb so that
 it contains the updated processor state after an exception (or interrupt) is handled */
 void updateCurrPcb(){
@@ -339,7 +337,7 @@ back to the Current Process to retry the instruction that caused the TLB-Refill 
 void uTLB_RefillHandler(){
 	/* declaring local variables */
 	state_PTR oldState; /* a pointer to the saved exception state at the start of the BIOS Data Page */
-	/* int missingPgNo; */ /* the page number of the missing TLB entry */
+	int missingPgNo; /* the page number of the missing TLB entry */
 
 	/* initializing local variables */
 	oldState = (state_t *) BIOSDATAPAGE; /* initializing oldState to the saved exception state at the start of the BIOS Data Page */
