@@ -18,7 +18,7 @@
 #include "../h/types.h"
 #include "../h/const.h"
 #include "../h/pcb.h"
-#include "../h/scheduler.h" /* ?? */
+#include "../h/scheduler.h" 
 #include "../h/exceptions.h"
 #include "../h/interrupts.h"
 #include "../h/initial.h"
